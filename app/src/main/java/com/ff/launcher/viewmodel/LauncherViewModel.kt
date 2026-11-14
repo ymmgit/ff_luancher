@@ -604,7 +604,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             appWidgetHost.startAppWidgetConfigureActivityForResult(
                 activity,
                 appWidgetId,
-                0,
+                Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS or Intent.FLAG_ACTIVITY_NO_HISTORY,
                 requestCode,
                 null,
             )

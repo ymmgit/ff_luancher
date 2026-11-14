@@ -38,7 +38,8 @@ All notable changes, new features, and bug fixes for FF Launcher.
 - **Home Screen Scroll Inconsistency**: Implemented a stable `NestedScrollConnection` with an intentional 64dp pull-up threshold requiring the bottom to be visible, preventing normal scroll fling momentum from accidentally opening search.
 - **Home Button in Search Screen**: Fixed an issue where pressing the Android system Home button while inside the app search sheet failed to return to the home screen. Unified system `CATEGORY_HOME` intent handling to dismiss all open sheets (Search, Favorites, Settings, Widget Picker) and reset the home screen view.
 - **Widget Initial Refresh (Blank Slot Fix)**: Fixed an issue where newly added widgets displayed blank until returning to the home screen and reopening the deck. Added pre-sized bind options, automatic post-layout size dispatch, and staggered `AppWidgetHost.startListening()` refreshes upon widget creation so new widgets immediately fetch their RemoteViews snapshot.
-- **Excluded Launcher from Recent Apps**: Added `android:excludeFromRecents="true"` to `MainActivity` so FF Launcher does not appear in the Android system task switcher / recent apps carousel.
+- **Excluded Launcher from Recent Apps**: Completely resolved launcher task retention in Android Recent Apps. Removed extraneous `category.LAUNCHER` filter, configured `autoRemoveFromRecents="true"`, `documentLaunchMode="never"`, `taskAffinity=""`, added `FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS` for widget configure activities, and actively evict stale standard tasks via `ActivityManager.appTasks.finishAndRemoveTask()`.
+- **Material 3 Default Launcher Re-engagement Card**: Redesigned the default launcher prompt into an elevated Material Design 3 Card with an icon badge, typography hierarchy, dismiss button, and rounded `FilledTonalButton` action.
 
 ---
 

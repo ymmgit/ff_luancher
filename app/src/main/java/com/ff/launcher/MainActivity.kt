@@ -1,5 +1,6 @@
 package com.ff.launcher
 
+import android.app.ActivityManager
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -78,6 +79,16 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        // Ensure this home launcher task is never retained in the recent apps carousel:
+        val am = getSystemService(ActivityManager::class.java)
+        am?.appTasks?.forEach { appTask ->
+            val info = runCatching { appTask.taskInfo }.getOrNull()
+            if (info != null && info.taskId != taskId) {
+                runCatching { appTask.finishAndRemoveTask() }
+            } else {
+                runCatching { appTask.setExcludeFromRecents(true) }
+            }
+        }
         viewModel.setHostResumed(true)
         // Re-check the default-home role: the user may have just confirmed the system
         // dialog (or changed it in system settings).
