@@ -93,6 +93,7 @@ private const val LIST_LINGER_MS = 2_500L
 fun HomeScreen(
     state: HomeListState,
     listState: LazyListState,
+    homeResetTrigger: Long = 0L,
     onAppClick: (AppInfo) -> Unit,
     onAppLongClick: (AppInfo) -> Unit,
     onOpenDeck: () -> Unit,
@@ -104,6 +105,16 @@ fun HomeScreen(
     var revealed by remember { mutableStateOf(false) }
     val collapseJob = remember { mutableStateOf<Job?>(null) }
     val favListState = rememberLazyListState()
+
+    LaunchedEffect(homeResetTrigger) {
+        if (homeResetTrigger > 0L) {
+            collapseJob.value?.cancel()
+            collapseJob.value = null
+            revealed = false
+            runCatching { listState.scrollToItem(0) }
+            runCatching { favListState.scrollToItem(0) }
+        }
+    }
 
     val showFullList = revealed
     val activeListState = if (showFullList) listState else favListState

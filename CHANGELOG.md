@@ -36,6 +36,7 @@ All notable changes, new features, and bug fixes for FF Launcher.
 - **Widget Back Navigation**: Fixed an issue where pressing the Android system back button from an opened widget app returned directly to the home screen instead of the widget deck.
 - **WaveScroller Gear Icon (⚙) Routing**: Corrected the bottom gear icon on the alphabetical WaveScroller from opening the widget screen (`onOpenDeck`) to opening **Launcher Settings** (`TriggerTuningSheet`).
 - **Home Screen Scroll Inconsistency**: Implemented a stable `NestedScrollConnection` with an intentional 64dp pull-up threshold requiring the bottom to be visible, preventing normal scroll fling momentum from accidentally opening search.
+- **Home Button in Search Screen**: Fixed an issue where pressing the Android system Home button while inside the app search sheet failed to return to the home screen. Unified system `CATEGORY_HOME` intent handling to dismiss all open sheets (Search, Favorites, Settings, Widget Picker) and reset the home screen view.
 
 ---
 

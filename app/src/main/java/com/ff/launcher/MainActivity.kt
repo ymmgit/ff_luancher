@@ -35,7 +35,7 @@ class MainActivity : ComponentActivity() {
                 LauncherRoot(viewModel = viewModel)
             }
         }
-        closeSecondScreenForHomeIntent(intent)
+        handleHomeIntent(intent)
         // Route widget picker intents to the registered launcher. Configure pages take a
         // different path: AppWidgetHost.startAppWidgetConfigureActivityForResult (see
         // onActivityResult), because the system must grant access to non-exported
@@ -93,7 +93,7 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         // Return mechanic #2: the bottom-up Home gesture re-delivers ACTION_MAIN +
         // CATEGORY_HOME to this singleTask activity — collapse the Secondary Screen.
-        closeSecondScreenForHomeIntent(intent)
+        handleHomeIntent(intent)
     }
 
     override fun onStop() {
@@ -102,12 +102,13 @@ class MainActivity : ComponentActivity() {
         // and later taps Back, they return to the Secondary Screen they launched it from.
     }
 
-    private fun closeSecondScreenForHomeIntent(intent: Intent?) {
+    private fun handleHomeIntent(intent: Intent?) {
+        Log.d("MainActivity", "handleHomeIntent: action=${intent?.action}, categories=${intent?.categories}")
         if (intent != null &&
-            intent.action == Intent.ACTION_MAIN &&
-            intent.hasCategory(Intent.CATEGORY_HOME)
+            ((intent.action == Intent.ACTION_MAIN && intent.hasCategory(Intent.CATEGORY_HOME)) ||
+             intent.hasCategory(Intent.CATEGORY_HOME))
         ) {
-            viewModel.closeSecondary()
+            viewModel.onHomeIntent()
         }
     }
 }

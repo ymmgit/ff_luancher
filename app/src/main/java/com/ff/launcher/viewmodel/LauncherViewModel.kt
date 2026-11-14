@@ -149,6 +149,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     private val _isAppSearchOpen = MutableStateFlow(false)
     val isAppSearchOpen: StateFlow<Boolean> = _isAppSearchOpen.asStateFlow()
 
+    private val _homeResetTrigger = MutableStateFlow(0L)
+    val homeResetTrigger: StateFlow<Long> = _homeResetTrigger.asStateFlow()
+
     fun openAppSearch() {
         _isAppSearchOpen.value = true
     }
@@ -329,9 +332,8 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     fun buildSetDefaultIntent(): Intent = onboardingRepository.createSetDefaultIntent()
 
     /**
-     * Closes the Secondary Screen together with the tuning sheet (a deck sub-feature —
-     * `stateNotNeeded` means no saved instance state, so this must be explicit or the
-     * sheet would orphan itself on the primary screen after onStop / the Home gesture).
+     * Closes the Secondary Screen together with any open sheets (tuning sheet, arrange favorites,
+     * search sheet, widget picker) so the launcher returns cleanly to the primary home screen.
      */
     fun closeSecondary() {
         // A pending bind dies with the deck: release the reserved ids, otherwise the
@@ -343,10 +345,21 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         pendingConfigure?.first?.let(::releaseAppWidgetIdAsync)
         pendingConfigure = null
         _pickingWidgetSlotId.value = null
+        _isAppSearchOpen.value = false
         _isSecondScreenOpen.value = false
         _isTuningSheetOpen.value = false
         _selectedAppForManage.value = null
         _isArrangeFavoritesOpen.value = false
+    }
+
+    /**
+     * Handles returning to the primary home screen when the user taps the system Home button
+     * or performs the home navigation gesture. Closes all overlay screens and sheets and
+     * signals the home screen to collapse and scroll back to top.
+     */
+    fun onHomeIntent() {
+        closeSecondary()
+        _homeResetTrigger.value = System.currentTimeMillis()
     }
 
     /**

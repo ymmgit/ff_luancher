@@ -100,6 +100,7 @@ fun LauncherRoot(viewModel: LauncherViewModel) {
     val hiddenApps by viewModel.hiddenApps.collectAsStateWithLifecycle()
     val onboardingDone by viewModel.onboardingDone.collectAsStateWithLifecycle()
     val isDefaultLauncher by viewModel.isDefaultLauncher.collectAsStateWithLifecycle()
+    val homeResetTrigger by viewModel.homeResetTrigger.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -197,6 +198,7 @@ fun LauncherRoot(viewModel: LauncherViewModel) {
             HomeScreen(
                 state = homeState,
                 listState = listState,
+                homeResetTrigger = homeResetTrigger,
                 onAppClick = viewModel::launchApp,
                 onAppLongClick = viewModel::openManageFavorites,
                 onOpenDeck = { viewModel.setSecondScreenOpen(true) },
