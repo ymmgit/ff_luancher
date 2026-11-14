@@ -194,9 +194,17 @@ private fun WidgetSlotHost(
                         factory = { _ ->
                             (hostView.parent as? android.view.ViewGroup)?.removeView(hostView)
                             hostView.onLongPress = { menuOpen = true }
+                            hostView.post {
+                                hostView.updateAppWidgetSizeFromLayout()
+                                hostView.requestLayout()
+                                hostView.invalidate()
+                            }
                             hostView
                         },
-                        update = { view -> view.onLongPress = { menuOpen = true } },
+                        update = { view ->
+                            view.onLongPress = { menuOpen = true }
+                            view.post { view.updateAppWidgetSizeFromLayout() }
+                        },
                         onRelease = { view -> view.onLongPress = null },
                         modifier = Modifier.fillMaxSize(),
                     )

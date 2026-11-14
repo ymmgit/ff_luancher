@@ -38,6 +38,7 @@ import com.ff.launcher.widget.LauncherAppWidgetHost
 import com.ff.launcher.widget.LauncherAppWidgetHostView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -48,6 +49,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
@@ -529,7 +531,15 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
                 return@launch
             }
 
-            val options = Bundle()
+            val displayMetrics = getApplication<Application>().resources.displayMetrics
+            val widthDp = (displayMetrics.widthPixels / displayMetrics.density).roundToInt()
+            val heightDp = ((displayMetrics.heightPixels / displayMetrics.density) / 3).roundToInt()
+            val options = Bundle().apply {
+                putInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, widthDp - 36)
+                putInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, widthDp - 36)
+                putInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, heightDp - 28)
+                putInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, heightDp - 28)
+            }
             val bound = withContext(Dispatchers.IO) {
                 runCatching {
                     appWidgetManager.bindAppWidgetIdIfAllowed(
@@ -654,6 +664,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
                 database.widgetSlotDao().upsert(WidgetSlotEntity(slotId, appWidgetId, weight))
             }.onSuccess {
                 Log.d(TAG, "Successfully bound widget $appWidgetId to slot $slotId")
+                refreshWidgetListening()
             }.onFailure {
                 Log.w(TAG, "bindSlot failed", it)
                 releaseAppWidgetIdAsync(appWidgetId)
@@ -662,6 +673,23 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             if (oldId != null && oldId != appWidgetId) {
                 releaseAppWidgetIdAsync(oldId)
             }
+        }
+    }
+
+    /**
+     * Staggered startListening refresh: newly bound widgets or newly inflated host views
+     * need AppWidgetService to push the latest RemoteViews. Running a staggered refresh
+     * (immediate, 350ms, 800ms) guarantees the initial snapshot is received even if the
+     * widget provider app took a brief moment to generate its views.
+     */
+    fun refreshWidgetListening() {
+        if (!_hostResumed.value) return
+        viewModelScope.launch {
+            runCatching { appWidgetHost.startListening() }
+            delay(350)
+            runCatching { appWidgetHost.startListening() }
+            delay(800)
+            runCatching { appWidgetHost.startListening() }
         }
     }
 

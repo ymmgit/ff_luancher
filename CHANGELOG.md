@@ -37,6 +37,8 @@ All notable changes, new features, and bug fixes for FF Launcher.
 - **WaveScroller Gear Icon (⚙) Routing**: Corrected the bottom gear icon on the alphabetical WaveScroller from opening the widget screen (`onOpenDeck`) to opening **Launcher Settings** (`TriggerTuningSheet`).
 - **Home Screen Scroll Inconsistency**: Implemented a stable `NestedScrollConnection` with an intentional 64dp pull-up threshold requiring the bottom to be visible, preventing normal scroll fling momentum from accidentally opening search.
 - **Home Button in Search Screen**: Fixed an issue where pressing the Android system Home button while inside the app search sheet failed to return to the home screen. Unified system `CATEGORY_HOME` intent handling to dismiss all open sheets (Search, Favorites, Settings, Widget Picker) and reset the home screen view.
+- **Widget Initial Refresh (Blank Slot Fix)**: Fixed an issue where newly added widgets displayed blank until returning to the home screen and reopening the deck. Added pre-sized bind options, automatic post-layout size dispatch, and staggered `AppWidgetHost.startListening()` refreshes upon widget creation so new widgets immediately fetch their RemoteViews snapshot.
+- **Excluded Launcher from Recent Apps**: Added `android:excludeFromRecents="true"` to `MainActivity` so FF Launcher does not appear in the Android system task switcher / recent apps carousel.
 
 ---
 

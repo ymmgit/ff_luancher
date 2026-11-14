@@ -133,7 +133,10 @@ fun LauncherRoot(viewModel: LauncherViewModel) {
             (cached.parent as? ViewGroup)?.removeView(cached)
             hostViewCache.remove(slotId)
         }
-        return viewModel.createHostView(context, appWidgetId)?.also { hostViewCache[slotId] = it }
+        return viewModel.createHostView(context, appWidgetId)?.also {
+            hostViewCache[slotId] = it
+            viewModel.refreshWidgetListening()
+        }
     }
 
     // Return mechanic #1: system edge-back gesture closes the Secondary Screen.
