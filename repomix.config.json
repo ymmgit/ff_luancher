@@ -1,0 +1,24 @@
+{
+  "$schema": "https://repomix.com/schemas/configuration-schema.json",
+  "include": [],
+  "ignore": {
+    "useGitignore": true,
+    "useDefaultIgnore": true,
+    "customPatterns": [
+      "*.lock",
+      "package-lock.json",
+      "pnpm-lock.yaml",
+      "*.log",
+      "dist/**",
+      "build/**",
+      ".env*",
+      "review_bundle*.xml",
+      "repomix-output.*",
+      ".repomix_temp.xml",
+      ".repomix_gitctx.tmp",
+      ".kotlin/",
+      ".gradle/",
+      ".idea/"
+    ]
+  }
+}

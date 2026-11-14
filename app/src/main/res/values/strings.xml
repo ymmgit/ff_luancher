@@ -1,0 +1,94 @@
+<resources>
+    <string name="app_name">FF Launcher</string>
+    <string name="a11y_edge_trigger">Edge trigger. Tap or swipe inward to open the utility deck.</string>
+    <string name="a11y_wave_scroller">App list section scroller</string>
+    <string name="a11y_settings">Settings</string>
+    <string name="menu_add_favorite">Add to favorites</string>
+    <string name="menu_remove_favorite">Remove from favorites</string>
+    <string name="menu_move_up">Move up</string>
+    <string name="menu_move_down">Move down</string>
+    <string name="menu_arrange_favorites">Arrange favorites</string>
+    <string name="menu_hide_app">Hide app</string>
+    <string name="menu_app_info">App info</string>
+    <string name="menu_uninstall">Uninstall</string>
+    <string name="error_launch_failed">Failed to open this app</string>
+    <string name="error_work_profile">Failed to open this app. The work profile may be paused.</string>
+    <string name="hint_trigger_overlaps_scroller">The pill overlaps the A–Z scroller band and yields there — touches on it scroll the list. Move it above 35% to restore it, or use the ⚙ node to open this deck.</string>
+
+    <string name="settings_title">Launcher Settings</string>
+    <string name="settings_intro">Changes apply live to the pill on the screen edge. Tap it or swipe inward to open this deck.</string>
+    <string name="section_edge_trigger">Edge trigger</string>
+    <string name="section_hidden_apps">Hidden apps</string>
+    <string name="settings_no_hidden_apps">Nothing hidden yet. Long-press an app on the home screen and choose "Hide app".</string>
+    <string name="action_unhide">Unhide</string>
+    <string name="setting_edge_side">Edge side</string>
+    <string name="edge_left">Left</string>
+    <string name="edge_right">Right</string>
+    <string name="setting_vertical_position">Vertical position</string>
+    <string name="setting_pill_height">Pill height</string>
+    <string name="setting_pill_width">Pill width</string>
+    <string name="setting_opacity">Opacity</string>
+    <string name="setting_activation_mode">Activation mode</string>
+    <string name="mode_tap">Tap</string>
+    <string name="mode_swipe">Swipe</string>
+    <string name="mode_tap_and_swipe">Tap + Swipe</string>
+    <string name="value_dp">%1$d dp</string>
+    <string name="value_percent">%1$d%%</string>
+
+    <string name="slot_empty_hint">Tap or long-press to add a widget</string>
+    <string name="slot_action_add_widget">Add widget</string>
+    <string name="slot_action_replace_widget">Replace widget</string>
+    <string name="slot_action_remove_widget">Remove widget</string>
+    <string name="menu_slot_size">Slot size</string>
+    <string name="slot_size_small">Small</string>
+    <string name="slot_size_medium">Medium</string>
+    <string name="slot_size_large">Large</string>
+    <string name="settings_tune_trigger">Tune Edge Trigger</string>
+    <string name="widget_picker_title">Select a widget</string>
+    <string name="widget_picker_empty">No widgets available</string>
+    <string name="widget_search_hint">Search widgets &amp; apps…</string>
+    <string name="widget_count_single">%1$d widget</string>
+    <string name="widget_count_multiple">%1$d widgets</string>
+    <string name="widget_size_label">%1$d × %2$d</string>
+    <string name="banner_set_default">Tap to set as your default launcher</string>
+
+    <string name="onboarding_title">Welcome to FF Launcher</string>
+    <string name="onboarding_subtitle">A calm, minimal home screen. Here is what to expect:</string>
+    <string name="onboarding_feature_edge">Edge trigger — tap or swipe the screen edge for your widget deck</string>
+    <string name="onboarding_feature_scroller">Right-edge section scroller to find any app instantly</string>
+    <string name="onboarding_feature_deck">A full-screen widget deck with hideable apps</string>
+    <string name="onboarding_set_default">Set as default launcher</string>
+    <string name="onboarding_skip">Skip for now</string>
+    <string name="onboarding_default_note">You can change the default home anytime in system settings → Apps → Default apps.</string>
+    <string name="onboarding_next">Next</string>
+    <string name="onboarding_get_started">Get started</string>
+    <string name="onboarding_feature_minimal">Minimalist Favorites</string>
+    <string name="onboarding_feature_minimal_desc">Your home screen stays clean and only shows your pinned favorites. Long-press any app in the list to pin or unpin it.</string>
+    <string name="onboarding_feature_scroller_desc">Slide up and down the right edge to jump to any app with one hand. Tap ⚙ at the bottom for your widget deck.</string>
+
+    <string name="home_empty_favorites_title">No favorites pinned yet</string>
+    <string name="home_empty_favorites_desc">Slide the right-edge A–Z bar (or tap below) to browse your apps, then long-press your most-used apps to pin them here.</string>
+    <string name="home_empty_favorites_action">Browse apps to pin</string>
+
+    <string name="arrange_favorites_title">Arrange Favorites</string>
+    <string name="arrange_favorites_desc">Reorder your home screen apps. Tap the arrows to change their sequence.</string>
+    <string name="arrange_favorites_empty">No favorites pinned yet. Long-press any app in the app drawer to add it to favorites.</string>
+    <string name="arrange_favorites_done">Done</string>
+
+    <string name="manage_favorites_title">Home Screen &amp; Favorites</string>
+    <string name="manage_favorites_desc">Pin apps to your home screen, arrange their order, and manage app options.</string>
+    <string name="manage_favorites_selected">Selected App</string>
+    <string name="manage_favorites_pin">Pin to Home</string>
+    <string name="manage_favorites_unpin">Unpin from Home</string>
+    <string name="manage_favorites_sequence_title">Home Screen Sequence</string>
+    <string name="manage_favorites_sequence_desc">Apps appear on your home screen in this exact order.</string>
+    <string name="manage_favorites_all_apps_title">All Apps</string>
+    <string name="manage_favorites_search_hint">Search apps to add…</string>
+    <string name="manage_favorites_pinned_badge">Pinned #%1$d</string>
+
+    <string name="search_apps_hint">Search apps…</string>
+    <string name="search_recent_apps">Recent apps</string>
+    <string name="search_new_apps">Newly installed</string>
+    <string name="search_no_results">No apps match "%1$s"</string>
+    <string name="search_pull_up_hint">Pull up to search</string>
+</resources>
