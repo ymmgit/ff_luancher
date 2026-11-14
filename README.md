@@ -11,6 +11,7 @@ See [CHANGELOG.md](CHANGELOG.md) for recent updates and bug fixes, and [SPEC.md]
 ## Features
 
 ### 📱 Primary Home Screen
+- **Material 3 Smart Header (At-a-Glance)**: Integrated customizable header at the top of the home screen featuring real-time clock, date, upcoming calendar events, and live weather conditions from Open-Meteo. Long-press to switch modes (Combined At-a-Glance, Clock Focus, Calendar Focus, Weather Focus, or Hidden) and toggle °C / °F units.
 - **Minimalist Pinned Favorites**: Shows only your pinned favorite applications on the home screen for a distraction-free environment.
 - **Unified Favorites Manager & Reordering**: Long-press any app in the drawer or home screen to open a consolidated Material 3 bottom sheet to pin/unpin apps and adjust their exact display sequence with live Room database persistence.
 - **Wide Touch Targets**: App rows provide an expanded clickable surface (>80% screen width) for effortless, natural tapping.
@@ -26,6 +27,7 @@ See [CHANGELOG.md](CHANGELOG.md) for recent updates and bug fixes, and [SPEC.md]
 - **Search Context Actions**: Long-press any app in search results to pin it to favorites or open the management options.
 
 ### 🧩 Widget Deck & Material 3 Picker
+- **Bundled FF Launcher Widgets**: Includes three native Android AppWidgets (`ClockWidgetProvider`, `CalendarWidgetProvider`, and `WeatherWidgetProvider`) exported for use both in FF Launcher's widget deck and any third-party Android launcher.
 - **Edge-Triggered Secondary Screen**: A subtle, live-tunable edge pill opens the full-screen widget deck with an animated slide/fade transition.
 - **In-App Material 3 Widget Picker**: Browse and add widgets categorized by parent application with icons, item counts, previews, and size badges.
 - **Floating Over Wallpaper**: The widget deck and slot containers render with clean transparency, letting your wallpaper shine through.
@@ -89,12 +91,18 @@ app/src/main/java/com/ff/launcher/
 │   ├── FavoritesRepository.kt           # Room-backed favorite persistence & ordering
 │   ├── OnboardingRepository.kt          # First-run & default home role state
 │   ├── TriggerPreferencesRepository.kt  # DataStore-backed edge trigger parameters
+│   ├── glance/                          # Smart header & bundled widget data layer
+│   │   ├── TimeProvider.kt              # Zero-polling broadcast receiver for time & date
+│   │   ├── CalendarProvider.kt          # CalendarContract query for upcoming 24h events
+│   │   ├── WeatherRepository.kt         # Open-Meteo client, WMO codes & DataStore cache
+│   │   └── HeaderPreferencesRepository.kt # Smart header display mode & unit preferences
 │   └── db/
 │       └── LauncherDatabase.kt          # Room database (favorites, hidden apps, widget slots)
 ├── ui/
 │   ├── LauncherRoot.kt                  # Root composition (Home, Deck, Edge Trigger, Sheets)
 │   ├── home/
 │   │   ├── HomeScreen.kt                # Pinned favorites, dynamic drawer, overscroll search trigger
+│   │   ├── HomeSmartHeader.kt           # Material 3 top smart header (clock, calendar, weather)
 │   │   ├── AppSearchSheet.kt            # App search, recent applications, newly installed apps
 │   │   ├── ManageFavoritesSheet.kt      # Unified favorites reordering & selection sheet
 │   │   └── WaveScroller.kt              # Right-edge alphabet scroller, wave bubble, settings shortcut
@@ -111,7 +119,11 @@ app/src/main/java/com/ff/launcher/
 │   ├── HomeListState.kt                 # UI row models & alphabetical section collation
 │   └── LauncherViewModel.kt             # Unidirectional state management & widget host interaction
 └── widget/
-    └── LauncherAppWidgetHost.kt         # Custom AppWidgetHost & lifecycle-managed view holders
+    ├── LauncherAppWidgetHost.kt         # Custom AppWidgetHost & lifecycle-managed view holders
+    └── providers/                       # Standard Android AppWidgetProviders for FF Launcher
+        ├── ClockWidgetProvider.kt       # Digital clock & date AppWidget
+        ├── CalendarWidgetProvider.kt    # Date & upcoming event AppWidget
+        └── WeatherWidgetProvider.kt     # Open-Meteo live condition & temp AppWidget
 ```
 
 ---

@@ -70,6 +70,11 @@ import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import com.ff.launcher.R
 import com.ff.launcher.data.AppInfo
+import com.ff.launcher.data.glance.CalendarState
+import com.ff.launcher.data.glance.HeaderConfig
+import com.ff.launcher.data.glance.HeaderMode
+import com.ff.launcher.data.glance.TimeData
+import com.ff.launcher.data.glance.WeatherData
 import com.ff.launcher.ui.theme.TextPrimary
 import com.ff.launcher.ui.theme.TextSecondary
 import com.ff.launcher.viewmodel.HomeListState
@@ -94,6 +99,13 @@ fun HomeScreen(
     state: HomeListState,
     listState: LazyListState,
     homeResetTrigger: Long = 0L,
+    timeData: TimeData = TimeData(),
+    calendarState: CalendarState = CalendarState(),
+    weatherData: WeatherData = WeatherData(),
+    headerConfig: HeaderConfig = HeaderConfig(),
+    onHeaderModeChange: (HeaderMode) -> Unit = {},
+    onHeaderUnitChange: (Boolean) -> Unit = {},
+    onRefreshWeather: () -> Unit = {},
     onAppClick: (AppInfo) -> Unit,
     onAppLongClick: (AppInfo) -> Unit,
     onOpenDeck: () -> Unit,
@@ -285,16 +297,38 @@ fun HomeScreen(
                     }
                 }
             } else if (state.favoriteCount == 0 && state.favoriteKeys.isEmpty() && state.rows.isNotEmpty()) {
-                // No favorites pinned AND full apps have loaded → guide card in the centre of an empty home.
-                EmptyFavoritesGuide(
-                    onBrowseApps = {
-                        revealed = true
-                        scheduleCollapse()
-                    },
+                // No favorites pinned AND full apps have loaded → show Smart Header + guide card.
+                LazyColumn(
+                    state = favListState,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(listContentPadding),
-                )
+                        .nestedScroll(nestedScrollConnection),
+                    contentPadding = listContentPadding,
+                ) {
+                    item(key = "smart_header") {
+                        HomeSmartHeader(
+                            timeData = timeData,
+                            calendarState = calendarState,
+                            weatherData = weatherData,
+                            config = headerConfig,
+                            onModeChange = onHeaderModeChange,
+                            onUnitChange = onHeaderUnitChange,
+                            onRefreshWeather = onRefreshWeather,
+                            modifier = Modifier.padding(bottom = 12.dp),
+                        )
+                    }
+                    item(key = "empty_guide") {
+                        EmptyFavoritesGuide(
+                            onBrowseApps = {
+                                revealed = true
+                                scheduleCollapse()
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 32.dp),
+                        )
+                    }
+                }
             } else {
                 LazyColumn(
                     state = favListState,
@@ -303,6 +337,18 @@ fun HomeScreen(
                         .nestedScroll(nestedScrollConnection),
                     contentPadding = listContentPadding,
                 ) {
+                    item(key = "smart_header") {
+                        HomeSmartHeader(
+                            timeData = timeData,
+                            calendarState = calendarState,
+                            weatherData = weatherData,
+                            config = headerConfig,
+                            onModeChange = onHeaderModeChange,
+                            onUnitChange = onHeaderUnitChange,
+                            onRefreshWeather = onRefreshWeather,
+                            modifier = Modifier.padding(bottom = 12.dp),
+                        )
+                    }
                     items(
                         items = state.rows
                             .takeWhile { it !is HomeRow.Header }

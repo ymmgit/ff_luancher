@@ -91,4 +91,12 @@
     <string name="search_new_apps">Newly installed</string>
     <string name="search_no_results">No apps match "%1$s"</string>
     <string name="search_pull_up_hint">Pull up to search</string>
+
+    <string name="widget_clock_label">Clock</string>
+    <string name="widget_clock_desc">Digital clock and date with quick alarm access</string>
+    <string name="widget_calendar_label">Calendar</string>
+    <string name="widget_calendar_desc">Today\'s date and upcoming calendar events</string>
+    <string name="widget_weather_label">Weather</string>
+    <string name="widget_weather_desc">Current temperature and local weather conditions</string>
+    <string name="widget_no_events">No upcoming events</string>
 </resources>

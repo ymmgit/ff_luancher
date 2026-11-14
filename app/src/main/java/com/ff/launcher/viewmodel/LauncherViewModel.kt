@@ -27,6 +27,16 @@ import com.ff.launcher.data.TriggerConfig
 import com.ff.launcher.data.TriggerEdgeSide
 import com.ff.launcher.data.TriggerMode
 import com.ff.launcher.data.TriggerPreferencesRepository
+import com.ff.launcher.data.glance.CalendarEvent
+import com.ff.launcher.data.glance.CalendarProvider
+import com.ff.launcher.data.glance.CalendarState
+import com.ff.launcher.data.glance.HeaderConfig
+import com.ff.launcher.data.glance.HeaderMode
+import com.ff.launcher.data.glance.HeaderPreferencesRepository
+import com.ff.launcher.data.glance.TimeData
+import com.ff.launcher.data.glance.TimeProvider
+import com.ff.launcher.data.glance.WeatherData
+import com.ff.launcher.data.glance.WeatherRepository
 import com.ff.launcher.data.db.DEFAULT_WIDGET_SLOTS
 import com.ff.launcher.data.db.HiddenAppEntity
 import com.ff.launcher.data.db.LauncherDatabase
@@ -82,6 +92,22 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     private val favoritesRepository = FavoritesRepository(application, database)
     private val triggerRepository = TriggerPreferencesRepository(application)
     private val onboardingRepository = OnboardingRepository(application)
+
+    private val timeProvider = TimeProvider(application, viewModelScope)
+    private val calendarProvider = CalendarProvider(application)
+    private val weatherRepository = WeatherRepository(application)
+    private val headerPreferencesRepository = HeaderPreferencesRepository(application)
+
+    val timeState: StateFlow<TimeData> = timeProvider.timeState
+
+    private val _calendarState = MutableStateFlow(CalendarState())
+    val calendarState: StateFlow<CalendarState> = _calendarState.asStateFlow()
+
+    val weatherState: StateFlow<WeatherData> = weatherRepository.cachedWeather
+        .stateIn(viewModelScope, SharingStarted.Eagerly, WeatherData())
+
+    val headerConfig: StateFlow<HeaderConfig> = headerPreferencesRepository.headerConfig
+        .stateIn(viewModelScope, SharingStarted.Eagerly, HeaderConfig())
 
     private val appWidgetHost = LauncherAppWidgetHost(application)
     private val appWidgetManager = AppWidgetManager.getInstance(application)
@@ -247,7 +273,10 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             favoritesRepository.seedDefaultFavoritesIfNeeded(initialApps)
         }
         // Default-home state: re-checked on every onResume via [refreshDefaultLauncherState].
-        refreshDefaultLauncherState()        // SPEC Module 4: listen ONLY while the deck is open AND the activity is resumed.
+        refreshDefaultLauncherState()
+        refreshCalendar()
+        refreshWeather()
+        // SPEC Module 4: listen ONLY while the deck is open AND the activity is resumed.
         viewModelScope.launch {
             _isDeckActive.collect { active ->
                 if (active) {
@@ -303,6 +332,26 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     fun closeManageFavorites() {
         _selectedAppForManage.value = null
         _isArrangeFavoritesOpen.value = false
+    }
+
+    fun refreshCalendar() {
+        viewModelScope.launch {
+            _calendarState.value = calendarProvider.loadUpcomingEvents()
+        }
+    }
+
+    fun refreshWeather(force: Boolean = false) {
+        viewModelScope.launch {
+            weatherRepository.getOrFetchWeather(forceRefresh = force)
+        }
+    }
+
+    fun setHeaderMode(mode: HeaderMode) {
+        viewModelScope.launch { headerPreferencesRepository.setHeaderMode(mode) }
+    }
+
+    fun setHeaderUseFahrenheit(useFahrenheit: Boolean) {
+        viewModelScope.launch { headerPreferencesRepository.setUseFahrenheit(useFahrenheit) }
     }
 
     fun moveFavorite(componentKey: String, delta: Int) {
@@ -771,6 +820,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     override fun onCleared() {
         appRepository.dispose()
+        timeProvider.dispose()
         runCatching { appWidgetHost.stopListening() }
         super.onCleared()
     }

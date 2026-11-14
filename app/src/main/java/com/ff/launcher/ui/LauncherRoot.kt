@@ -115,6 +115,10 @@ fun LauncherRoot(viewModel: LauncherViewModel) {
     val onboardingDone by viewModel.onboardingDone.collectAsStateWithLifecycle()
     val isDefaultLauncher by viewModel.isDefaultLauncher.collectAsStateWithLifecycle()
     val homeResetTrigger by viewModel.homeResetTrigger.collectAsStateWithLifecycle()
+    val timeState by viewModel.timeState.collectAsStateWithLifecycle()
+    val calendarState by viewModel.calendarState.collectAsStateWithLifecycle()
+    val weatherState by viewModel.weatherState.collectAsStateWithLifecycle()
+    val headerConfig by viewModel.headerConfig.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -216,6 +220,13 @@ fun LauncherRoot(viewModel: LauncherViewModel) {
                 state = homeState,
                 listState = listState,
                 homeResetTrigger = homeResetTrigger,
+                timeData = timeState,
+                calendarState = calendarState,
+                weatherData = weatherState,
+                headerConfig = headerConfig,
+                onHeaderModeChange = viewModel::setHeaderMode,
+                onHeaderUnitChange = viewModel::setHeaderUseFahrenheit,
+                onRefreshWeather = viewModel::refreshWeather,
                 onAppClick = viewModel::launchApp,
                 onAppLongClick = viewModel::openManageFavorites,
                 onOpenDeck = { viewModel.setSecondScreenOpen(true) },

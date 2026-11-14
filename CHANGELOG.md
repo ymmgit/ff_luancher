@@ -4,6 +4,35 @@ All notable changes, new features, and bug fixes for FF Launcher.
 
 ---
 
+## [1.1.0] - 2026-11-15
+
+### 🚀 New Features: Bundled Widgets & Home Smart Header
+
+#### 1. Home Screen Native Smart Header (`HomeSmartHeader.kt`)
+- **Top Placement**: Integrated a native Material 3 Smart Header at the top of the home screen, directly above pinned favorite applications.
+- **Multiple Display Modes**:
+  - **Combined At-a-Glance**: Compact side-by-side time, date, upcoming calendar event pill, and real-time weather summary.
+  - **Clock Focus**: Large digital typography with contextual date and day of week.
+  - **Calendar Focus**: Big numeric day display, month and weekday headers, and detailed upcoming event title and time.
+  - **Weather Focus**: Large current temperature, condition emoji, high/low range, and condition description.
+  - **Hidden**: Fully minimizes the header for users who prefer an empty top screen.
+- **Long-Press Customization Sheet**: Long-pressing the Smart Header opens a Material 3 bottom sheet allowing instant switching between all header modes and toggling between Celsius (°C) and Fahrenheit (°F).
+- **Interactive Deep-Links**: Tapping the time launches the system clock/alarm app; tapping the date/event opens the system calendar at the event timestamp; tapping weather opens weather search.
+
+#### 2. Three Exported Standard Android AppWidgetProviders
+- **Clock Widget (`ClockWidgetProvider.kt`)**: 2×1 digital clock and localized date utilizing `TextClock` for zero battery drain real-time updates.
+- **Calendar Widget (`CalendarWidgetProvider.kt`)**: 3×2 date card with day badge, weekday, and the next upcoming event from `CalendarContract.Instances`.
+- **Weather Widget (`WeatherWidgetProvider.kt`)**: 2×1 weather card with condition emoji, temperature, high/low temperature range, and condition description.
+- **Cross-Launcher Compatibility**: All three widgets are standard `AppWidgetProvider`s registered in `AndroidManifest.xml` with XML metadata and RemoteViews layouts, making them accessible in FF Launcher's own widget deck as well as any other Android launcher (Nova, Niagara, Pixel Launcher, etc.).
+
+#### 3. Data & Battery-Efficient Logic Layer
+- **`TimeProvider.kt`**: Zero-polling, broadcast-driven system time listener responding to `ACTION_TIME_TICK`, `ACTION_TIME_CHANGED`, and `ACTION_TIMEZONE_CHANGED`.
+- **`CalendarProvider.kt`**: Queries Android `CalendarContract` for events within a rolling 24-hour window, handling runtime `READ_CALENDAR` permission gracefully without crashes.
+- **`WeatherRepository.kt`**: Connects to the free Open-Meteo REST API, maps WMO weather codes to localized descriptions and emojis, resolves coarse device location, and caches results in DataStore for 1 hour to conserve data and battery.
+- **`HeaderPreferencesRepository.kt`**: Stores header layout mode and temperature unit preferences in Jetpack DataStore Preferences.
+
+---
+
 ## [1.0.0] - 2026-11-15
 
 ### 🚀 New Features
