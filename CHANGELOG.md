@@ -40,6 +40,7 @@ All notable changes, new features, and bug fixes for FF Launcher.
 - **Widget Initial Refresh (Blank Slot Fix)**: Fixed an issue where newly added widgets displayed blank until returning to the home screen and reopening the deck. Added pre-sized bind options, automatic post-layout size dispatch, and staggered `AppWidgetHost.startListening()` refreshes upon widget creation so new widgets immediately fetch their RemoteViews snapshot.
 - **Excluded Launcher from Recent Apps**: Completely resolved launcher task retention in Android Recent Apps. Removed extraneous `category.LAUNCHER` filter, configured `autoRemoveFromRecents="true"`, `documentLaunchMode="never"`, `taskAffinity=""`, added `FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS` for widget configure activities, and actively evict stale standard tasks via `ActivityManager.appTasks.finishAndRemoveTask()`.
 - **Material 3 Default Launcher Re-engagement Card**: Redesigned the default launcher prompt into an elevated Material Design 3 Card with an icon badge, typography hierarchy, dismiss button, and rounded `FilledTonalButton` action.
+- **External Launcher App Drawer Entry**: Added a dedicated `AppEntryActivity` with `category.LAUNCHER` so other launchers (e.g. Niagara Launcher) display FF Launcher in their app drawers. When tapped, it redirects to the primary home activity and immediately finishes with `finishAndRemoveTask()` and `excludeFromRecents="true"`, ensuring no residual task appears in Recent Apps.
 
 ---
 
