@@ -1,5 +1,6 @@
 package com.ff.launcher.ui.secondary
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,6 +21,7 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -36,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -44,6 +47,8 @@ import com.ff.launcher.R
 import com.ff.launcher.data.TriggerConfig
 import com.ff.launcher.data.TriggerEdgeSide
 import com.ff.launcher.data.TriggerMode
+import com.ff.launcher.data.glance.HeaderConfig
+import com.ff.launcher.data.glance.HeaderMode
 import com.ff.launcher.data.TriggerPreferencesRepository.Companion.HEIGHT_RANGE_F
 import com.ff.launcher.data.TriggerPreferencesRepository.Companion.OPACITY_RANGE
 import com.ff.launcher.data.TriggerPreferencesRepository.Companion.VERTICAL_BIAS_RANGE
@@ -60,6 +65,9 @@ import kotlin.math.roundToInt
 fun TriggerTuningSheet(
     config: TriggerConfig,
     overlapsScroller: Boolean,
+    headerConfig: HeaderConfig = HeaderConfig(),
+    onHeaderModeChange: (HeaderMode) -> Unit = {},
+    onHeaderUnitChange: (Boolean) -> Unit = {},
     hiddenApps: List<HiddenAppUi>,
     isDefaultLauncher: Boolean,
     onRequestDefaultLauncher: () -> Unit,
@@ -132,6 +140,106 @@ fun TriggerTuningSheet(
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                     )
+                }
+            }
+
+            // Home Screen Header & Widgets Card
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                ),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.section_smart_header),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Text(
+                        text = stringResource(R.string.smart_header_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+
+                    Text(
+                        text = stringResource(R.string.setting_header_mode),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+
+                    val modes = listOf(
+                        HeaderMode.COMBINED to stringResource(R.string.header_mode_combined),
+                        HeaderMode.CLOCK_ONLY to stringResource(R.string.header_mode_clock),
+                        HeaderMode.CALENDAR_ONLY to stringResource(R.string.header_mode_calendar),
+                        HeaderMode.WEATHER_ONLY to stringResource(R.string.header_mode_weather),
+                        HeaderMode.HIDDEN to stringResource(R.string.header_mode_hidden),
+                    )
+
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        modes.forEach { (mode, label) ->
+                            val selected = headerConfig.mode == mode
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .clickable { onHeaderModeChange(mode) },
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                ) {
+                                    Text(
+                                        text = label,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                                        color = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
+                                    )
+                                    RadioButton(
+                                        selected = selected,
+                                        onClick = { onHeaderModeChange(mode) },
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    if (headerConfig.mode != HeaderMode.HIDDEN) {
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 4.dp),
+                            thickness = 1.dp,
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                        )
+                        Text(
+                            text = stringResource(R.string.setting_temperature_unit),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                            SegmentedButton(
+                                selected = !headerConfig.useFahrenheit,
+                                onClick = { onHeaderUnitChange(false) },
+                                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                            ) { Text(stringResource(R.string.unit_celsius)) }
+                            SegmentedButton(
+                                selected = headerConfig.useFahrenheit,
+                                onClick = { onHeaderUnitChange(true) },
+                                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                            ) { Text(stringResource(R.string.unit_fahrenheit)) }
+                        }
+                    }
                 }
             }
 

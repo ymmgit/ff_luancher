@@ -17,6 +17,9 @@ All notable changes, new features, and bug fixes for FF Launcher.
   - **Weather Focus**: Large current temperature, condition emoji, high/low range, and condition description.
   - **Hidden**: Fully minimizes the header for users who prefer an empty top screen.
 - **Long-Press Customization Sheet**: Long-pressing the Smart Header opens a Material 3 bottom sheet allowing instant switching between all header modes and toggling between Celsius (°C) and Fahrenheit (°F).
+- **Settings Restoration (When Hidden/Removed)**:
+  - **Launcher Settings (`TriggerTuningSheet.kt`)**: Added a dedicated "Home Screen Header & Widgets" section accessible anytime via the small gear icon (⚙) at the bottom of the alphabet wave scroller, allowing users to restore or switch widget modes (Combined, Clock, Calendar, Weather, or Hidden) and change temperature units.
+  - **Search Panel Quick Action (`AppSearchSheet.kt`)**: Added a dedicated Settings gear button right in the search bar header so users can instantly open Launcher Settings directly from the search panel.
 - **Interactive Deep-Links**: Tapping the time launches the system clock/alarm app; tapping the date/event opens the system calendar at the event timestamp; tapping weather opens weather search.
 
 #### 2. Three Exported Standard Android AppWidgetProviders

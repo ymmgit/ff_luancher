@@ -314,6 +314,9 @@ fun LauncherRoot(viewModel: LauncherViewModel) {
             TriggerTuningSheet(
                 config = triggerConfig,
                 overlapsScroller = overlapsScroller,
+                headerConfig = headerConfig,
+                onHeaderModeChange = viewModel::setHeaderMode,
+                onHeaderUnitChange = viewModel::setHeaderUseFahrenheit,
                 hiddenApps = hiddenApps,
                 isDefaultLauncher = isDefaultLauncher,
                 onRequestDefaultLauncher = {
@@ -362,6 +365,10 @@ fun LauncherRoot(viewModel: LauncherViewModel) {
                 newlyInstalledApps = newlyInstalledApps,
                 onAppClick = viewModel::launchApp,
                 onAppLongClick = viewModel::openManageFavorites,
+                onOpenSettings = {
+                    viewModel.closeAppSearch()
+                    viewModel.setTuningSheetOpen(true)
+                },
                 onDismiss = viewModel::closeAppSearch,
             )
         }
