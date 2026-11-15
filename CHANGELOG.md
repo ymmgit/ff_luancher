@@ -45,6 +45,16 @@ All notable changes, new features, and bug fixes for FF Launcher.
 - **Strict Alphabet Range Clamping**: Decoupled the bottom gear icon (⚙) from the continuous alphabet drag gesture in `WaveScroller.kt`. Scrolling or dragging down the alphabet strip is strictly confined to `0 until sectionLabels.size` and firmly clamps to the last alphabetical apps (e.g. Z or #), completely preventing accidental navigation to the Settings page when scrolling to the bottom.
 - **Independent Tap Target**: The gear icon is now an independent button at the bottom of the scroller that only activates upon a deliberate direct tap.
 
+#### 6. Comprehensive Logging & AppEntry Task Isolation
+- **Structured Activity & Function Logging**:
+  - `MainActivity.kt`: Lifecycle traces (`onCreate`, `onResume`, `onPause`, `onStop`, `onDestroy`, `onNewIntent`, `handleHomeIntent`, and widget binding results).
+  - `AppEntryActivity.kt`: Trampoline execution and redirection logging.
+  - `LauncherViewModel.kt`: Function action logs (`launchApp`, `toggleFavorite`, `updateFavoriteOrder`, `moveFavorite`, `setHeaderMode`, `setHeaderUseFahrenheit`).
+  - AppWidget Providers (`ClockWidgetProvider`, `CalendarWidgetProvider`, `WeatherWidgetProvider`): Broadcast receive and widget update logging.
+- **Trampoline Task Affinity Isolation**:
+  - Assigned distinct `taskAffinity="com.ff.launcher.appentry"` to `AppEntryActivity` in `AndroidManifest.xml` and switched termination from `finishAndRemoveTask()` to `finish()`.
+  - Guarded `MainActivity.onResume()` task cleanup to ensure `MainActivity` never accidentally evicts its own task, guaranteeing seamless home screen navigation and launcher switcher visibility.
+
 ---
 
 ## [1.0.0] - 2026-11-15
