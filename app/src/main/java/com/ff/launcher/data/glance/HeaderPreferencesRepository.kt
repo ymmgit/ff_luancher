@@ -20,9 +20,16 @@ enum class HeaderMode {
     HIDDEN,
 }
 
+enum class HeaderSize {
+    SMALL,
+    MEDIUM,
+    LARGE,
+}
+
 data class HeaderConfig(
     val mode: HeaderMode = HeaderMode.COMBINED,
     val useFahrenheit: Boolean = false,
+    val size: HeaderSize = HeaderSize.MEDIUM,
 )
 
 class HeaderPreferencesRepository(private val context: Context) {
@@ -30,13 +37,16 @@ class HeaderPreferencesRepository(private val context: Context) {
     private companion object {
         val KEY_HEADER_MODE = stringPreferencesKey("header_mode")
         val KEY_USE_FAHRENHEIT = booleanPreferencesKey("header_use_fahrenheit")
+        val KEY_HEADER_SIZE = stringPreferencesKey("header_size")
     }
 
     val headerConfig: Flow<HeaderConfig> = context.headerDataStore.data.map { prefs ->
         val modeStr = prefs[KEY_HEADER_MODE] ?: HeaderMode.COMBINED.name
         val mode = runCatching { HeaderMode.valueOf(modeStr) }.getOrDefault(HeaderMode.COMBINED)
         val useFahrenheit = prefs[KEY_USE_FAHRENHEIT] ?: false
-        HeaderConfig(mode = mode, useFahrenheit = useFahrenheit)
+        val sizeStr = prefs[KEY_HEADER_SIZE] ?: HeaderSize.MEDIUM.name
+        val size = runCatching { HeaderSize.valueOf(sizeStr) }.getOrDefault(HeaderSize.MEDIUM)
+        HeaderConfig(mode = mode, useFahrenheit = useFahrenheit, size = size)
     }
 
     suspend fun setHeaderMode(mode: HeaderMode) {
@@ -48,6 +58,12 @@ class HeaderPreferencesRepository(private val context: Context) {
     suspend fun setUseFahrenheit(useFahrenheit: Boolean) {
         context.headerDataStore.edit { prefs ->
             prefs[KEY_USE_FAHRENHEIT] = useFahrenheit
+        }
+    }
+
+    suspend fun setHeaderSize(size: HeaderSize) {
+        context.headerDataStore.edit { prefs ->
+            prefs[KEY_HEADER_SIZE] = size.name
         }
     }
 }

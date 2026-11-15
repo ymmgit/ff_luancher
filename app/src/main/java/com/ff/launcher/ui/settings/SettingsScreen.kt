@@ -77,6 +77,7 @@ import com.ff.launcher.data.TriggerPreferencesRepository.Companion.HEIGHT_RANGE_
 import com.ff.launcher.data.TriggerPreferencesRepository.Companion.VERTICAL_BIAS_RANGE
 import com.ff.launcher.data.TriggerPreferencesRepository.Companion.WIDTH_RANGE_F
 import com.ff.launcher.data.glance.HeaderMode
+import com.ff.launcher.data.glance.HeaderSize
 import com.ff.launcher.ui.quickaction.QuickActionIcons
 import com.ff.launcher.ui.quickaction.QuickActionPickerSheet
 import com.ff.launcher.ui.theme.FavoriteAmber
@@ -394,6 +395,34 @@ fun SettingsScreen(
                                     onClick = { viewModel.setHeaderUseFahrenheit(true) },
                                     shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
                                 ) { Text(stringResource(R.string.unit_fahrenheit)) }
+                            }
+
+                            HorizontalDivider(
+                                modifier = Modifier.padding(vertical = 4.dp),
+                                thickness = 1.dp,
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                            )
+                            Text(
+                                text = stringResource(R.string.setting_widget_size),
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                                SegmentedButton(
+                                    selected = headerConfig.size == HeaderSize.SMALL,
+                                    onClick = { viewModel.setHeaderSize(HeaderSize.SMALL) },
+                                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3),
+                                ) { Text(stringResource(R.string.size_small)) }
+                                SegmentedButton(
+                                    selected = headerConfig.size == HeaderSize.MEDIUM,
+                                    onClick = { viewModel.setHeaderSize(HeaderSize.MEDIUM) },
+                                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3),
+                                ) { Text(stringResource(R.string.size_medium)) }
+                                SegmentedButton(
+                                    selected = headerConfig.size == HeaderSize.LARGE,
+                                    onClick = { viewModel.setHeaderSize(HeaderSize.LARGE) },
+                                    shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3),
+                                ) { Text(stringResource(R.string.size_large)) }
                             }
                         }
                     }

@@ -37,6 +37,10 @@
     <string name="setting_temperature_unit">Temperature Unit</string>
     <string name="unit_celsius">Celsius (°C)</string>
     <string name="unit_fahrenheit">Fahrenheit (°F)</string>
+    <string name="setting_widget_size">Widget Size</string>
+    <string name="size_small">Small</string>
+    <string name="size_medium">Medium</string>
+    <string name="size_large">Large</string>
     <string name="weather_location_title">Weather Location</string>
     <string name="weather_location_permission_needed">Location access is needed for accurate local weather. Currently using estimated location based on your device timezone.</string>
     <string name="weather_location_allow">Allow Location Access</string>

@@ -73,6 +73,7 @@ import com.ff.launcher.R
 import com.ff.launcher.data.glance.CalendarState
 import com.ff.launcher.data.glance.HeaderConfig
 import com.ff.launcher.data.glance.HeaderMode
+import com.ff.launcher.data.glance.HeaderSize
 import com.ff.launcher.data.glance.TimeData
 import com.ff.launcher.data.glance.WeatherData
 
@@ -90,6 +91,7 @@ fun HomeSmartHeader(
     config: HeaderConfig,
     onModeChange: (HeaderMode) -> Unit,
     onUnitChange: (Boolean) -> Unit,
+    onSizeChange: (HeaderSize) -> Unit = {},
     onRefreshWeather: () -> Unit,
     onReplaceWidget: () -> Unit = {},
     modifier: Modifier = Modifier,
@@ -129,6 +131,7 @@ fun HomeSmartHeader(
                     calendarState = calendarState,
                     weatherData = weatherData,
                     useFahrenheit = config.useFahrenheit,
+                    size = config.size,
                     onClockClick = { openClockApp(context) },
                     onCalendarClick = { openCalendarApp(context) },
                     onWeatherClick = { openWeatherApp(context, weatherData) },
@@ -138,6 +141,7 @@ fun HomeSmartHeader(
             HeaderMode.CLOCK_ONLY -> {
                 ClockFocusView(
                     timeData = timeData,
+                    size = config.size,
                     onClockClick = { openClockApp(context) },
                 )
             }
@@ -145,6 +149,7 @@ fun HomeSmartHeader(
                 CalendarFocusView(
                     timeData = timeData,
                     calendarState = calendarState,
+                    size = config.size,
                     onCalendarClick = { openCalendarApp(context) },
                 )
             }
@@ -152,6 +157,7 @@ fun HomeSmartHeader(
                 WeatherFocusView(
                     weatherData = weatherData,
                     useFahrenheit = config.useFahrenheit,
+                    size = config.size,
                     onWeatherClick = { openWeatherApp(context, weatherData) },
                 )
             }
@@ -165,6 +171,7 @@ fun HomeSmartHeader(
             weatherData = weatherData,
             onModeChange = onModeChange,
             onUnitChange = onUnitChange,
+            onSizeChange = onSizeChange,
             onRefreshWeather = onRefreshWeather,
             onReplaceWidget = {
                 showConfigSheet = false
@@ -182,15 +189,62 @@ private fun CombinedGlanceView(
     calendarState: CalendarState,
     weatherData: WeatherData,
     useFahrenheit: Boolean,
+    size: HeaderSize = HeaderSize.MEDIUM,
     onClockClick: () -> Unit,
     onCalendarClick: () -> Unit,
     onWeatherClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
+    val clockFontSize = when (size) {
+        HeaderSize.SMALL -> 34.sp
+        HeaderSize.MEDIUM -> 45.sp
+        HeaderSize.LARGE -> 58.sp
+    }
+    val clockLetterSpacing = when (size) {
+        HeaderSize.SMALL -> (-0.5).sp
+        HeaderSize.MEDIUM -> (-1).sp
+        HeaderSize.LARGE -> (-1.5).sp
+    }
+    val weatherEmojiSize = when (size) {
+        HeaderSize.SMALL -> 14.sp
+        HeaderSize.MEDIUM -> 16.sp
+        HeaderSize.LARGE -> 20.sp
+    }
+    val weatherTempStyle = when (size) {
+        HeaderSize.SMALL -> MaterialTheme.typography.titleSmall
+        HeaderSize.MEDIUM -> MaterialTheme.typography.titleMedium
+        HeaderSize.LARGE -> MaterialTheme.typography.titleLarge
+    }
+    val weatherPaddingHorizontal = when (size) {
+        HeaderSize.SMALL -> 8.dp
+        HeaderSize.MEDIUM -> 10.dp
+        HeaderSize.LARGE -> 12.dp
+    }
+    val weatherPaddingVertical = when (size) {
+        HeaderSize.SMALL -> 4.dp
+        HeaderSize.MEDIUM -> 6.dp
+        HeaderSize.LARGE -> 8.dp
+    }
+    val dateStyle = when (size) {
+        HeaderSize.SMALL -> MaterialTheme.typography.bodyMedium
+        HeaderSize.MEDIUM -> MaterialTheme.typography.bodyLarge
+        HeaderSize.LARGE -> MaterialTheme.typography.titleMedium
+    }
+    val eventStyle = when (size) {
+        HeaderSize.SMALL -> MaterialTheme.typography.bodySmall
+        HeaderSize.MEDIUM -> MaterialTheme.typography.bodyMedium
+        HeaderSize.LARGE -> MaterialTheme.typography.bodyMedium
+    }
+    val containerVerticalPadding = when (size) {
+        HeaderSize.SMALL -> 2.dp
+        HeaderSize.MEDIUM -> 6.dp
+        HeaderSize.LARGE -> 10.dp
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 6.dp),
+            .padding(horizontal = 12.dp, vertical = containerVerticalPadding),
     ) {
         // Line 1: Big clean clock + Weather Pill
         Row(
@@ -210,19 +264,19 @@ private fun CombinedGlanceView(
             ) {
                 Text(
                     text = timeData.timeText,
-                    style = MaterialTheme.typography.displayMedium,
+                    fontSize = clockFontSize,
                     fontWeight = FontWeight.Light,
-                    letterSpacing = (-1).sp,
+                    letterSpacing = clockLetterSpacing,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 if (timeData.amPmText.isNotBlank()) {
                     Spacer(Modifier.width(4.dp))
                     Text(
                         text = timeData.amPmText,
-                        style = MaterialTheme.typography.labelMedium,
+                        style = if (size == HeaderSize.SMALL) MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(bottom = 6.dp),
+                        modifier = Modifier.padding(bottom = if (size == HeaderSize.SMALL) 4.dp else 6.dp),
                     )
                 }
             }
@@ -238,17 +292,17 @@ private fun CombinedGlanceView(
                     ),
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                    modifier = Modifier.padding(horizontal = weatherPaddingHorizontal, vertical = weatherPaddingVertical),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
                         text = weatherData.conditionEmoji(),
-                        fontSize = 16.sp,
+                        fontSize = weatherEmojiSize,
                     )
                     Spacer(Modifier.width(6.dp))
                     Text(
                         text = weatherData.formatTemp(useFahrenheit),
-                        style = MaterialTheme.typography.titleMedium,
+                        style = weatherTempStyle,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
@@ -273,7 +327,7 @@ private fun CombinedGlanceView(
         ) {
             Text(
                 text = timeData.dateText,
-                style = MaterialTheme.typography.bodyLarge,
+                style = dateStyle,
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.primary,
             )
@@ -281,19 +335,19 @@ private fun CombinedGlanceView(
             if (nextEvent != null) {
                 Text(
                     text = "  ·  ",
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = eventStyle,
                     color = MaterialTheme.colorScheme.outlineVariant,
                 )
                 Icon(
                     imageVector = Icons.Default.DateRange,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.secondary,
-                    modifier = Modifier.size(15.dp),
+                    modifier = Modifier.size(if (size == HeaderSize.SMALL) 13.dp else 15.dp),
                 )
                 Spacer(Modifier.width(4.dp))
                 Text(
                     text = "${nextEvent.formatEventTime()} ${nextEvent.title}",
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = eventStyle,
                     fontWeight = FontWeight.Normal,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
@@ -307,19 +361,36 @@ private fun CombinedGlanceView(
 @Composable
 private fun ClockFocusView(
     timeData: TimeData,
+    size: HeaderSize = HeaderSize.MEDIUM,
     onClockClick: () -> Unit,
 ) {
+    val timeFontSize = when (size) {
+        HeaderSize.SMALL -> 46.sp
+        HeaderSize.MEDIUM -> 57.sp
+        HeaderSize.LARGE -> 72.sp
+    }
+    val dateStyle = when (size) {
+        HeaderSize.SMALL -> MaterialTheme.typography.bodyMedium
+        HeaderSize.MEDIUM -> MaterialTheme.typography.titleMedium
+        HeaderSize.LARGE -> MaterialTheme.typography.headlineSmall
+    }
+    val verticalPadding = when (size) {
+        HeaderSize.SMALL -> 4.dp
+        HeaderSize.MEDIUM -> 8.dp
+        HeaderSize.LARGE -> 14.dp
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 8.dp),
+            .padding(horizontal = 12.dp, vertical = verticalPadding),
     ) {
         Row(
             verticalAlignment = Alignment.Bottom,
         ) {
             Text(
                 text = timeData.timeText,
-                style = MaterialTheme.typography.displayLarge,
+                fontSize = timeFontSize,
                 fontWeight = FontWeight.ExtraLight,
                 color = MaterialTheme.colorScheme.onSurface,
             )
@@ -327,16 +398,16 @@ private fun ClockFocusView(
                 Spacer(Modifier.width(6.dp))
                 Text(
                     text = timeData.amPmText,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = if (size == HeaderSize.SMALL) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Normal,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(bottom = 12.dp),
+                    modifier = Modifier.padding(bottom = if (size == HeaderSize.SMALL) 6.dp else 12.dp),
                 )
             }
         }
         Text(
             text = "${timeData.dayOfWeek}, ${timeData.dateText}",
-            style = MaterialTheme.typography.titleMedium,
+            style = dateStyle,
             fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.primary,
         )
@@ -347,8 +418,25 @@ private fun ClockFocusView(
 private fun CalendarFocusView(
     timeData: TimeData,
     calendarState: CalendarState,
+    size: HeaderSize = HeaderSize.MEDIUM,
     onCalendarClick: () -> Unit,
 ) {
+    val cardPadding = when (size) {
+        HeaderSize.SMALL -> 12.dp
+        HeaderSize.MEDIUM -> 16.dp
+        HeaderSize.LARGE -> 22.dp
+    }
+    val dateStyle = when (size) {
+        HeaderSize.SMALL -> MaterialTheme.typography.titleLarge
+        HeaderSize.MEDIUM -> MaterialTheme.typography.headlineMedium
+        HeaderSize.LARGE -> MaterialTheme.typography.displaySmall
+    }
+    val dayStyle = when (size) {
+        HeaderSize.SMALL -> MaterialTheme.typography.labelSmall
+        HeaderSize.MEDIUM -> MaterialTheme.typography.labelMedium
+        HeaderSize.LARGE -> MaterialTheme.typography.titleSmall
+    }
+
     Card(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
@@ -359,18 +447,18 @@ private fun CalendarFocusView(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(cardPadding),
         ) {
             Text(
                 text = timeData.dayOfWeek.uppercase(),
-                style = MaterialTheme.typography.labelMedium,
+                style = dayStyle,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary,
                 letterSpacing = 1.sp,
             )
             Text(
                 text = timeData.dateText,
-                style = MaterialTheme.typography.headlineMedium,
+                style = dateStyle,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface,
             )
@@ -412,8 +500,30 @@ private fun CalendarFocusView(
 private fun WeatherFocusView(
     weatherData: WeatherData,
     useFahrenheit: Boolean,
+    size: HeaderSize = HeaderSize.MEDIUM,
     onWeatherClick: () -> Unit,
 ) {
+    val cardPadding = when (size) {
+        HeaderSize.SMALL -> 12.dp
+        HeaderSize.MEDIUM -> 16.dp
+        HeaderSize.LARGE -> 22.dp
+    }
+    val locationStyle = when (size) {
+        HeaderSize.SMALL -> MaterialTheme.typography.bodyLarge
+        HeaderSize.MEDIUM -> MaterialTheme.typography.titleMedium
+        HeaderSize.LARGE -> MaterialTheme.typography.titleLarge
+    }
+    val emojiSize = when (size) {
+        HeaderSize.SMALL -> 24.sp
+        HeaderSize.MEDIUM -> 32.sp
+        HeaderSize.LARGE -> 44.sp
+    }
+    val tempStyle = when (size) {
+        HeaderSize.SMALL -> MaterialTheme.typography.headlineMedium
+        HeaderSize.MEDIUM -> MaterialTheme.typography.displaySmall
+        HeaderSize.LARGE -> MaterialTheme.typography.displayLarge
+    }
+
     Card(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
@@ -424,14 +534,14 @@ private fun WeatherFocusView(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(cardPadding),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column {
                 Text(
                     text = weatherData.locationName,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = locationStyle,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
@@ -452,12 +562,12 @@ private fun WeatherFocusView(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = weatherData.conditionEmoji(),
-                    fontSize = 32.sp,
+                    fontSize = emojiSize,
                 )
                 Spacer(Modifier.width(10.dp))
                 Text(
                     text = weatherData.formatTemp(useFahrenheit),
-                    style = MaterialTheme.typography.displaySmall,
+                    style = tempStyle,
                     fontWeight = FontWeight.Light,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
@@ -473,6 +583,7 @@ private fun HeaderSettingsSheet(
     weatherData: WeatherData,
     onModeChange: (HeaderMode) -> Unit,
     onUnitChange: (Boolean) -> Unit,
+    onSizeChange: (HeaderSize) -> Unit,
     onRefreshWeather: () -> Unit,
     onReplaceWidget: () -> Unit,
     onDismiss: () -> Unit,
@@ -721,6 +832,44 @@ private fun HeaderSettingsSheet(
                     shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
                 ) {
                     Text(stringResource(R.string.unit_fahrenheit))
+                }
+            }
+
+            if (config.mode != HeaderMode.HIDDEN) {
+                Spacer(Modifier.height(20.dp))
+
+                Text(
+                    text = stringResource(R.string.setting_widget_size).uppercase(),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    letterSpacing = 1.sp,
+                )
+
+                Spacer(Modifier.height(8.dp))
+
+                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                    SegmentedButton(
+                        selected = config.size == HeaderSize.SMALL,
+                        onClick = { onSizeChange(HeaderSize.SMALL) },
+                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3),
+                    ) {
+                        Text(stringResource(R.string.size_small))
+                    }
+                    SegmentedButton(
+                        selected = config.size == HeaderSize.MEDIUM,
+                        onClick = { onSizeChange(HeaderSize.MEDIUM) },
+                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3),
+                    ) {
+                        Text(stringResource(R.string.size_medium))
+                    }
+                    SegmentedButton(
+                        selected = config.size == HeaderSize.LARGE,
+                        onClick = { onSizeChange(HeaderSize.LARGE) },
+                        shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3),
+                    ) {
+                        Text(stringResource(R.string.size_large))
+                    }
                 }
             }
 

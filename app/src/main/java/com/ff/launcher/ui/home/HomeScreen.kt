@@ -86,6 +86,7 @@ import com.ff.launcher.data.AppInfo
 import com.ff.launcher.data.glance.CalendarState
 import com.ff.launcher.data.glance.HeaderConfig
 import com.ff.launcher.data.glance.HeaderMode
+import com.ff.launcher.data.glance.HeaderSize
 import com.ff.launcher.data.glance.TimeData
 import com.ff.launcher.data.glance.WeatherData
 import com.ff.launcher.data.db.HOME_WIDGET_SLOT_ID
@@ -115,6 +116,7 @@ fun HomeScreen(
     headerConfig: HeaderConfig = HeaderConfig(),
     onHeaderModeChange: (HeaderMode) -> Unit = {},
     onHeaderUnitChange: (Boolean) -> Unit = {},
+    onHeaderSizeChange: (HeaderSize) -> Unit = {},
     onRefreshWeather: () -> Unit = {},
     onReplaceHomeWidget: () -> Unit = {},
     onRestoreDefaultClock: () -> Unit = {},
@@ -243,6 +245,7 @@ fun HomeScreen(
                             headerConfig = headerConfig,
                             onHeaderModeChange = onHeaderModeChange,
                             onHeaderUnitChange = onHeaderUnitChange,
+                            onHeaderSizeChange = onHeaderSizeChange,
                             onRefreshWeather = onRefreshWeather,
                             onReplaceHomeWidget = onReplaceHomeWidget,
                             onRestoreDefaultClock = onRestoreDefaultClock,
@@ -317,6 +320,7 @@ fun HomeScreen(
                             headerConfig = headerConfig,
                             onHeaderModeChange = onHeaderModeChange,
                             onHeaderUnitChange = onHeaderUnitChange,
+                            onHeaderSizeChange = onHeaderSizeChange,
                             onRefreshWeather = onRefreshWeather,
                             onReplaceHomeWidget = onReplaceHomeWidget,
                             onRestoreDefaultClock = onRestoreDefaultClock,
@@ -352,6 +356,7 @@ fun HomeScreen(
                             headerConfig = headerConfig,
                             onHeaderModeChange = onHeaderModeChange,
                             onHeaderUnitChange = onHeaderUnitChange,
+                            onHeaderSizeChange = onHeaderSizeChange,
                             onRefreshWeather = onRefreshWeather,
                             onReplaceHomeWidget = onReplaceHomeWidget,
                             onRestoreDefaultClock = onRestoreDefaultClock,
@@ -582,6 +587,7 @@ private fun HomeHeaderArea(
     headerConfig: HeaderConfig,
     onHeaderModeChange: (HeaderMode) -> Unit,
     onHeaderUnitChange: (Boolean) -> Unit,
+    onHeaderSizeChange: (HeaderSize) -> Unit = {},
     onRefreshWeather: () -> Unit,
     onReplaceHomeWidget: () -> Unit,
     onRestoreDefaultClock: () -> Unit,
@@ -605,6 +611,7 @@ private fun HomeHeaderArea(
             config = headerConfig,
             onModeChange = onHeaderModeChange,
             onUnitChange = onHeaderUnitChange,
+            onSizeChange = onHeaderSizeChange,
             onRefreshWeather = onRefreshWeather,
             onReplaceWidget = onReplaceHomeWidget,
             modifier = modifier,

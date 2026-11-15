@@ -4,6 +4,24 @@ All notable changes, new features, and bug fixes for FF Launcher.
 
 ---
 
+## [1.2.6] - 2026-11-15
+
+### 🎛️ Default Home Widget Size Customization & Conditional Visibility
+- **Selectable Widget Sizes (Small / Medium / Large)**:
+  - Users can now choose the size of the default clock/smart glance widget on the home screen: **Small**, **Medium** (default), or **Large**.
+  - **Dynamic Scaling**: Responsive typography, component proportions, emoji sizes, and layout paddings across all smart header views (`CombinedGlanceView`, `ClockFocusView`, `CalendarFocusView`, and `WeatherFocusView`).
+    - **Small**: Compact layout with 34sp clock, tight paddings, and smaller secondary badges suited for minimalist setups.
+    - **Medium**: Balanced default layout with 45sp clock and standard glance spacing.
+    - **Large**: High-visibility glanceable layout with 58sp (up to 72sp in clock focus) clock, prominent typography, and generous touch targets.
+- **Context-Aware Conditional Settings**:
+  - The **Widget Size** selector is strictly displayed only when the default home widget is active.
+  - When the user chooses to replace the home widget with a **third-party widget** (`hasCustomWidget == true`) or sets the header mode to **Hidden** (`HeaderMode.HIDDEN`), the widget size selector is automatically hidden from both [SettingsScreen.kt](file:///d:/myproject/ff_luancher/app/src/main/java/com/ff/launcher/ui/settings/SettingsScreen.kt) and the widget long-press configuration sheet in [HomeSmartHeader.kt](file:///d:/myproject/ff_luancher/app/src/main/java/com/ff/launcher/ui/home/HomeSmartHeader.kt).
+- **Dual Selection Entry Points**:
+  - Available in the standalone **Settings** activity under the Smart Header card.
+  - Available directly on the home screen by **long-pressing the default clock widget** and opening the quick configuration sheet.
+
+---
+
 ## [1.2.5] - 2026-11-15
 
 ### ⚙️ Standalone Settings Activity & App Drawer Visibility

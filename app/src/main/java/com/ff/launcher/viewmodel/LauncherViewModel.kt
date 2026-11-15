@@ -40,6 +40,7 @@ import com.ff.launcher.data.glance.CalendarState
 import com.ff.launcher.data.glance.HeaderConfig
 import com.ff.launcher.data.glance.HeaderMode
 import com.ff.launcher.data.glance.HeaderPreferencesRepository
+import com.ff.launcher.data.glance.HeaderSize
 import com.ff.launcher.data.glance.TimeData
 import com.ff.launcher.data.glance.TimeProvider
 import com.ff.launcher.data.glance.WeatherData
@@ -400,6 +401,11 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     fun setHeaderUseFahrenheit(useFahrenheit: Boolean) {
         Log.i(TAG, "setHeaderUseFahrenheit: $useFahrenheit")
         viewModelScope.launch { headerPreferencesRepository.setUseFahrenheit(useFahrenheit) }
+    }
+
+    fun setHeaderSize(size: HeaderSize) {
+        Log.i(TAG, "setHeaderSize: $size")
+        viewModelScope.launch { headerPreferencesRepository.setHeaderSize(size) }
     }
 
     fun moveFavorite(componentKey: String, delta: Int) {

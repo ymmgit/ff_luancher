@@ -22,6 +22,7 @@ import com.ff.launcher.data.db.WidgetSlotEntity
 import com.ff.launcher.data.glance.HeaderConfig
 import com.ff.launcher.data.glance.HeaderMode
 import com.ff.launcher.data.glance.HeaderPreferencesRepository
+import com.ff.launcher.data.glance.HeaderSize
 import com.ff.launcher.data.glance.WeatherData
 import com.ff.launcher.data.glance.WeatherRepository
 import kotlinx.coroutines.flow.Flow
@@ -134,6 +135,10 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
     fun setHeaderUseFahrenheit(useFahrenheit: Boolean) {
         viewModelScope.launch { headerPreferencesRepository.setUseFahrenheit(useFahrenheit) }
+    }
+
+    fun setHeaderSize(size: HeaderSize) {
+        viewModelScope.launch { headerPreferencesRepository.setHeaderSize(size) }
     }
 
     fun restoreDefaultHomeWidget() {

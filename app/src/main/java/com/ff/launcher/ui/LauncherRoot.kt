@@ -249,6 +249,7 @@ fun LauncherRoot(viewModel: LauncherViewModel) {
                 headerConfig = headerConfig,
                 onHeaderModeChange = viewModel::setHeaderMode,
                 onHeaderUnitChange = viewModel::setHeaderUseFahrenheit,
+                onHeaderSizeChange = viewModel::setHeaderSize,
                 onRefreshWeather = viewModel::refreshWeather,
                 onReplaceHomeWidget = viewModel::replaceHomeWidget,
                 onRestoreDefaultClock = viewModel::restoreDefaultClockWidget,
