@@ -48,6 +48,13 @@ class SettingsActivity : ComponentActivity() {
                         }
                         startActivity(homeIntent)
                     },
+                    onOpenSecondScreen = {
+                        val homeIntent = Intent(this, MainActivity::class.java).apply {
+                            action = MainActivity.ACTION_OPEN_SECOND_SCREEN
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                        }
+                        startActivity(homeIntent)
+                    },
                 )
             }
         }

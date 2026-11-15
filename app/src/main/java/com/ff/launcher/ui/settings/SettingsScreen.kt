@@ -111,11 +111,13 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onRequestDefaultLauncher: () -> Unit,
     onReplaceHomeWidget: () -> Unit,
+    onOpenSecondScreen: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val triggerConfig by viewModel.triggerConfig.collectAsState()
     val headerConfig by viewModel.headerConfig.collectAsState()
     val homeWidgetSlot by viewModel.homeWidgetSlot.collectAsState()
+    val secondaryWidgetSlots by viewModel.secondaryWidgetSlots.collectAsState()
     val quickActionConfig by viewModel.quickActionConfig.collectAsState()
     val quickActionTargetApp by viewModel.quickActionTargetApp.collectAsState()
     val allInstalledApps by viewModel.allInstalledApps.collectAsState()
@@ -145,14 +147,14 @@ fun SettingsScreen(
     val overlapsScroller = triggerConfig.edgeSide == TriggerEdgeSide.RIGHT && triggerConfig.enabled
 
     var isHeaderExpanded by remember { mutableStateOf(false) }
+    var isWidgetsExpanded by remember { mutableStateOf(false) }
     var isNotificationsExpanded by remember { mutableStateOf(false) }
     var isTriggerExpanded by remember { mutableStateOf(false) }
     var isQuickActionExpanded by remember { mutableStateOf(false) }
     var isHiddenAppsExpanded by remember { mutableStateOf(false) }
 
-    val headerSubtitle = when {
-        homeWidgetSlot?.appWidgetId != null -> stringResource(R.string.home_widget_custom_active)
-        headerConfig.mode == HeaderMode.HIDDEN -> stringResource(R.string.header_mode_hidden)
+    val headerSubtitle = when (headerConfig.mode) {
+        HeaderMode.HIDDEN -> stringResource(R.string.header_mode_hidden)
         else -> {
             val modeStr = when (headerConfig.mode) {
                 HeaderMode.COMBINED -> stringResource(R.string.header_mode_combined)
@@ -167,6 +169,23 @@ fun SettingsScreen(
                 HeaderSize.LARGE -> stringResource(R.string.size_large)
             }
             "$modeStr • $sizeStr"
+        }
+    }
+
+    val widgetsSubtitle = buildString {
+        if (homeWidgetSlot?.appWidgetId != null) {
+            append(stringResource(R.string.home_widget_custom_active))
+        } else {
+            append(stringResource(R.string.home_widget_default_active))
+        }
+        val secondaryCount = secondaryWidgetSlots.size
+        append(" • ")
+        if (secondaryCount == 1) {
+            append(stringResource(R.string.widget_count_one))
+        } else if (secondaryCount > 1) {
+            append(stringResource(R.string.widgets_count_label, secondaryCount))
+        } else {
+            append(stringResource(R.string.secondary_widgets_none))
         }
     }
 
@@ -196,17 +215,12 @@ fun SettingsScreen(
         } else {
             stringResource(R.string.edge_right)
         }
-        val countStr = if (triggerConfig.widgetCount == 1) {
-            stringResource(R.string.widget_count_one)
-        } else {
-            stringResource(R.string.widgets_count_label, triggerConfig.widgetCount)
-        }
         val modeStr = when (triggerConfig.mode) {
             TriggerMode.TAP_ONLY -> stringResource(R.string.mode_tap)
             TriggerMode.SWIPE_ONLY -> stringResource(R.string.mode_swipe)
             TriggerMode.TAP_AND_SWIPE -> stringResource(R.string.mode_tap_and_swipe)
         }
-        "$sideStr • $modeStr • $countStr"
+        "$sideStr • $modeStr"
     }
 
     val quickActionSubtitle = if (!quickActionConfig.enabled) {
@@ -345,106 +359,6 @@ fun SettingsScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
 
-                    val hasCustomWidget = homeWidgetSlot?.appWidgetId != null
-
-                    if (hasCustomWidget) {
-                        Surface(
-                            shape = RoundedCornerShape(14.dp),
-                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f),
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(14.dp),
-                                verticalArrangement = Arrangement.spacedBy(10.dp),
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Edit,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(20.dp),
-                                    )
-                                    Text(
-                                        text = stringResource(R.string.home_widget_custom_active),
-                                        style = MaterialTheme.typography.titleSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    )
-                                }
-                                Text(
-                                    text = stringResource(R.string.home_widget_custom_desc),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                ) {
-                                    FilledTonalButton(
-                                        onClick = onReplaceHomeWidget,
-                                        shape = RoundedCornerShape(12.dp),
-                                        modifier = Modifier.weight(1f),
-                                    ) {
-                                        Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
-                                        Spacer(Modifier.width(6.dp))
-                                        Text(
-                                            text = stringResource(R.string.home_widget_replace),
-                                            style = MaterialTheme.typography.labelMedium,
-                                            fontWeight = FontWeight.Bold,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis,
-                                        )
-                                    }
-
-                                    OutlinedButton(
-                                        onClick = viewModel::restoreDefaultHomeWidget,
-                                        shape = RoundedCornerShape(12.dp),
-                                        modifier = Modifier.weight(1f),
-                                    ) {
-                                        Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
-                                        Spacer(Modifier.width(6.dp))
-                                        Text(
-                                            text = stringResource(R.string.action_restore),
-                                            style = MaterialTheme.typography.labelMedium,
-                                            fontWeight = FontWeight.Bold,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis,
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        FilledTonalButton(
-                            onClick = onReplaceHomeWidget,
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp),
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            Text(
-                                text = stringResource(R.string.home_widget_replace),
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold,
-                            )
-                        }
-
-                        HorizontalDivider(
-                            modifier = Modifier.padding(vertical = 4.dp),
-                            thickness = 1.dp,
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
-                        )
-
                         Text(
                             text = stringResource(R.string.setting_header_mode),
                             style = MaterialTheme.typography.labelLarge,
@@ -544,9 +458,8 @@ fun SettingsScreen(
                                 ) { Text(stringResource(R.string.size_large)) }
                             }
                         }
-                    }
 
-                    HorizontalDivider(
+                        HorizontalDivider(
                         modifier = Modifier.padding(vertical = 4.dp),
                         thickness = 1.dp,
                         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
@@ -662,6 +575,199 @@ fun SettingsScreen(
                             }
                         }
                     }
+                    }
+                }
+            }
+
+            // Widgets Card (Dedicated Main Menu)
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .animateContentSize(),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    SettingsCardHeader(
+                        icon = QuickActionIcons.Widgets,
+                        title = stringResource(R.string.section_widgets),
+                        subtitle = widgetsSubtitle,
+                        isExpanded = isWidgetsExpanded,
+                        onHeaderClick = { isWidgetsExpanded = !isWidgetsExpanded },
+                    )
+
+                    if (isWidgetsExpanded) {
+                        HorizontalDivider(
+                            modifier = Modifier.fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                        )
+
+                        Text(
+                            text = stringResource(R.string.section_widgets_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+
+                        // Home Screen Widget Section
+                        Surface(
+                            shape = RoundedCornerShape(14.dp),
+                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(14.dp),
+                                verticalArrangement = Arrangement.spacedBy(10.dp),
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Home,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(20.dp),
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.section_home_widget),
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                    )
+                                }
+
+                                val hasCustomWidget = homeWidgetSlot?.appWidgetId != null
+                                if (hasCustomWidget) {
+                                    Text(
+                                        text = stringResource(R.string.home_widget_custom_desc),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    ) {
+                                        FilledTonalButton(
+                                            onClick = onReplaceHomeWidget,
+                                            shape = RoundedCornerShape(12.dp),
+                                            modifier = Modifier.weight(1f),
+                                        ) {
+                                            Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
+                                            Spacer(Modifier.width(6.dp))
+                                            Text(
+                                                text = stringResource(R.string.home_widget_replace),
+                                                style = MaterialTheme.typography.labelMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis,
+                                            )
+                                        }
+
+                                        OutlinedButton(
+                                            onClick = viewModel::restoreDefaultHomeWidget,
+                                            shape = RoundedCornerShape(12.dp),
+                                            modifier = Modifier.weight(1f),
+                                        ) {
+                                            Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
+                                            Spacer(Modifier.width(6.dp))
+                                            Text(
+                                                text = stringResource(R.string.action_restore),
+                                                style = MaterialTheme.typography.labelMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis,
+                                            )
+                                        }
+                                    }
+                                } else {
+                                    Text(
+                                        text = stringResource(R.string.home_widget_default_desc),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                    FilledTonalButton(
+                                        onClick = onReplaceHomeWidget,
+                                        shape = RoundedCornerShape(12.dp),
+                                        modifier = Modifier.fillMaxWidth(),
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Add,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(18.dp),
+                                        )
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(
+                                            text = stringResource(R.string.home_widget_replace),
+                                            style = MaterialTheme.typography.labelLarge,
+                                            fontWeight = FontWeight.Bold,
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        // Second Screen Widgets Section
+                        Surface(
+                            shape = RoundedCornerShape(14.dp),
+                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(14.dp),
+                                verticalArrangement = Arrangement.spacedBy(10.dp),
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.PlayArrow,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(20.dp),
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.section_secondary_widgets),
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                    )
+                                }
+                                Text(
+                                    text = stringResource(R.string.section_secondary_widgets_desc),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                FilledTonalButton(
+                                    onClick = onOpenSecondScreen,
+                                    shape = RoundedCornerShape(12.dp),
+                                    modifier = Modifier.fillMaxWidth(),
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.PlayArrow,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp),
+                                    )
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(
+                                        text = stringResource(R.string.action_open_second_screen),
+                                        style = MaterialTheme.typography.labelLarge,
+                                        fontWeight = FontWeight.Bold,
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -1086,32 +1192,6 @@ fun SettingsScreen(
                             onCommit = viewModel::setTriggerOpacity,
                             valueRange = TriggerPreferencesRepository.OPACITY_RANGE,
                         )
-
-                        // Widget Quantity (1, 2, 3, or 4)
-                        Text(
-                            text = stringResource(R.string.setting_widget_quantity),
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                        Text(
-                            text = stringResource(R.string.setting_widget_quantity_desc),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                            listOf(1, 2, 3, 4).forEachIndexed { index, count ->
-                                SegmentedButton(
-                                    selected = triggerConfig.widgetCount == count,
-                                    onClick = { viewModel.setTriggerWidgetCount(count) },
-                                    shape = SegmentedButtonDefaults.itemShape(index = index, count = 4),
-                                ) {
-                                    Text(
-                                        text = stringResource(R.string.widget_count_option, count),
-                                        fontWeight = FontWeight.Bold,
-                                    )
-                                }
-                            }
-                        }
 
                         Text(
                             text = stringResource(R.string.setting_activation_mode),

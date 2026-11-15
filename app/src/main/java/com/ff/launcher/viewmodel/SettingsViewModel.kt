@@ -120,6 +120,11 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         .map { slots -> slots.firstOrNull { it.slotId == HOME_WIDGET_SLOT_ID } }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
+    val secondaryWidgetSlots: StateFlow<List<WidgetSlotEntity>> = database.widgetSlotDao()
+        .observeAll()
+        .map { slots -> slots.filter { it.slotId != HOME_WIDGET_SLOT_ID && it.appWidgetId != null } }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
     val quickActionConfig: StateFlow<QuickActionConfig> = quickActionRepository.config
         .stateIn(viewModelScope, SharingStarted.Eagerly, QuickActionConfig())
 
