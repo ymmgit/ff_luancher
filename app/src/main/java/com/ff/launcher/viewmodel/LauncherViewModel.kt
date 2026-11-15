@@ -384,6 +384,8 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    fun hasLocationPermission(): Boolean = weatherRepository.hasLocationPermission()
+
     fun refreshWeather(force: Boolean = false) {
         viewModelScope.launch {
             weatherRepository.getOrFetchWeather(forceRefresh = force)

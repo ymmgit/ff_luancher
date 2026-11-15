@@ -37,6 +37,11 @@
     <string name="setting_temperature_unit">Temperature Unit</string>
     <string name="unit_celsius">Celsius (°C)</string>
     <string name="unit_fahrenheit">Fahrenheit (°F)</string>
+    <string name="weather_location_title">Weather Location</string>
+    <string name="weather_location_permission_needed">Location access is needed for accurate local weather. Currently using estimated location based on your device timezone.</string>
+    <string name="weather_location_allow">Allow Location Access</string>
+    <string name="weather_location_granted">Location Access Active</string>
+    <string name="weather_location_refresh">Refresh Weather</string>
     <string name="section_hidden_apps">Hidden apps</string>
     <string name="settings_no_hidden_apps">Nothing hidden yet. Long-press an app on the home screen and choose "Hide app".</string>
     <string name="action_unhide">Unhide</string>

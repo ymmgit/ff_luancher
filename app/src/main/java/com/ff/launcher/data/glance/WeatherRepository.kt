@@ -4,8 +4,11 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
+import android.location.Geocoder
 import android.location.Location
 import android.location.LocationManager
+import android.os.Build
+import android.os.CancellationSignal
 import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.datastore.core.DataStore
@@ -20,23 +23,27 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.Locale
+import java.util.TimeZone
+import kotlin.coroutines.resume
 import kotlin.math.roundToInt
 
 private val Context.weatherDataStore: DataStore<Preferences> by preferencesDataStore(name = "weather_cache")
 
 data class WeatherData(
-    val tempC: Float = 22f,
-    val tempF: Float = (22f * 9f / 5f) + 32f,
+    val tempC: Float = 28f,
+    val tempF: Float = (28f * 9f / 5f) + 32f,
     val conditionCode: Int = 0,
     val conditionText: String = "Clear",
-    val highC: Float = 25f,
-    val lowC: Float = 19f,
+    val highC: Float = 31f,
+    val lowC: Float = 25f,
     val locationName: String = "Local Weather",
     val lastUpdatedMs: Long = 0L,
     val isLoading: Boolean = false,
@@ -91,8 +98,20 @@ class WeatherRepository(private val context: Context) {
         }
     }
 
+    fun hasLocationPermission(): Boolean {
+        val hasCoarse = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+        ) == PackageManager.PERMISSION_GRANTED
+        val hasFine = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION,
+        ) == PackageManager.PERMISSION_GRANTED
+        return hasCoarse || hasFine
+    }
+
     val cachedWeather: Flow<WeatherData> = context.weatherDataStore.data.map { prefs ->
-        val tempC = prefs[KEY_TEMP_C] ?: 24f
+        val tempC = prefs[KEY_TEMP_C] ?: 28f
         val code = prefs[KEY_CONDITION_CODE] ?: 0
         WeatherData(
             tempC = tempC,
@@ -110,15 +129,22 @@ class WeatherRepository(private val context: Context) {
     suspend fun getOrFetchWeather(forceRefresh: Boolean = false): WeatherData = withContext(Dispatchers.IO) {
         val current = cachedWeather.first()
         val now = System.currentTimeMillis()
-        if (!forceRefresh && (now - current.lastUpdatedMs) < CACHE_EXPIRATION_MS && current.lastUpdatedMs > 0L) {
+        val isOldFallback = current.locationName == "Los Angeles" || current.locationName == "San Francisco"
+        if (!forceRefresh && !isOldFallback && (now - current.lastUpdatedMs) < CACHE_EXPIRATION_MS && current.lastUpdatedMs > 0L) {
             return@withContext current
         }
 
         val location = resolveLocation()
-        val lat = location?.latitude ?: 37.7749 // San Francisco default if no location
-        val lon = location?.longitude ?: -122.4194
+        val (lat, lon) = if (location != null) {
+            Log.i(TAG, "Using device location: lat=${location.latitude}, lon=${location.longitude}")
+            location.latitude to location.longitude
+        } else {
+            val fallback = getFallbackCoordinates()
+            Log.i(TAG, "Device location unavailable, using timezone fallback: lat=${fallback.first}, lon=${fallback.second}")
+            fallback
+        }
 
-        val fetched = fetchFromOpenMeteo(lat, lon)
+        val fetched = fetchFromOpenMeteo(lat, lon, location != null)
         if (fetched != null) {
             saveToCache(fetched)
             return@withContext fetched
@@ -127,23 +153,105 @@ class WeatherRepository(private val context: Context) {
     }
 
     @SuppressLint("MissingPermission")
-    private fun resolveLocation(): Location? {
-        val hasCoarse = ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.ACCESS_COARSE_LOCATION,
-        ) == PackageManager.PERMISSION_GRANTED
+    private suspend fun resolveLocation(): Location? = withContext(Dispatchers.IO) {
+        if (!hasLocationPermission()) return@withContext null
 
-        if (!hasCoarse) return null
+        val lm = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager ?: return@withContext null
 
-        val lm = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager ?: return null
-        return runCatching {
+        // 1. Check last known location (instant)
+        val lastKnown = runCatching {
             lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
-                ?: lm.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER)
                 ?: lm.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                ?: lm.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER)
         }.getOrNull()
+
+        // If fresh within 30 minutes, use it
+        if (lastKnown != null && (System.currentTimeMillis() - lastKnown.time) < 30 * 60 * 1000L) {
+            return@withContext lastKnown
+        }
+
+        // 2. On Android 11+, request a fresh current location fix if last known is missing/stale
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val fresh = runCatching {
+                suspendCancellableCoroutine<Location?> { cont ->
+                    val cancelSignal = CancellationSignal()
+                    cont.invokeOnCancellation { cancelSignal.cancel() }
+                    val provider = if (lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+                        LocationManager.NETWORK_PROVIDER
+                    } else if (lm.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                        LocationManager.GPS_PROVIDER
+                    } else {
+                        LocationManager.PASSIVE_PROVIDER
+                    }
+                    try {
+                        lm.getCurrentLocation(
+                            provider,
+                            cancelSignal,
+                            ContextCompat.getMainExecutor(context),
+                        ) { loc ->
+                            if (cont.isActive) cont.resume(loc)
+                        }
+                    } catch (e: Exception) {
+                        Log.w(TAG, "getCurrentLocation failed: ${e.message}")
+                        if (cont.isActive) cont.resume(null)
+                    }
+                }
+            }.getOrNull()
+
+            if (fresh != null) return@withContext fresh
+        }
+
+        return@withContext lastKnown
     }
 
-    private fun fetchFromOpenMeteo(lat: Double, lon: Double): WeatherData? {
+    /**
+     * Resolves fallback coordinates using device's default timezone instead of hardcoded US cities.
+     */
+    private fun getFallbackCoordinates(): Pair<Double, Double> {
+        val tzId = TimeZone.getDefault().id
+        Log.d(TAG, "getFallbackCoordinates: resolving for tzId=$tzId")
+        return when {
+            tzId.startsWith("Asia/Singapore") || tzId == "Singapore" -> 1.3521 to 103.8198
+            tzId.startsWith("Asia/Kuala_Lumpur") -> 3.1390 to 101.6869
+            tzId.startsWith("Asia/Hong_Kong") -> 22.3193 to 114.1694
+            tzId.startsWith("Asia/Taipei") -> 25.0330 to 121.5654
+            tzId.startsWith("Asia/Tokyo") -> 35.6762 to 139.6503
+            tzId.startsWith("Asia/Seoul") -> 37.5665 to 126.9780
+            tzId.startsWith("Asia/Shanghai") || tzId.startsWith("Asia/Chongqing") || tzId.startsWith("Asia/Beijing") -> 31.2304 to 121.4737
+            tzId.startsWith("Asia/Bangkok") -> 13.7563 to 100.5018
+            tzId.startsWith("Asia/Jakarta") -> -6.2088 to 106.8456
+            tzId.startsWith("Asia/Manila") -> 14.5995 to 120.9842
+            tzId.startsWith("Asia/Kolkata") || tzId.startsWith("Asia/Calcutta") -> 28.6139 to 77.2090
+            tzId.startsWith("Asia/Dubai") -> 25.2048 to 55.2708
+            tzId.startsWith("Australia/Sydney") -> -33.8688 to 151.2093
+            tzId.startsWith("Australia/Melbourne") -> -37.8136 to 144.9631
+            tzId.startsWith("Australia/Perth") -> -31.9505 to 115.8605
+            tzId.startsWith("Europe/London") -> 51.5074 to -0.1278
+            tzId.startsWith("Europe/Paris") -> 48.8566 to 2.3522
+            tzId.startsWith("Europe/Berlin") -> 52.5200 to 13.4050
+            tzId.startsWith("America/New_York") -> 40.7128 to -74.0060
+            tzId.startsWith("America/Chicago") -> 41.8781 to -87.6298
+            tzId.startsWith("America/Denver") -> 39.7392 to -104.9903
+            tzId.startsWith("America/Los_Angeles") -> 34.0522 to -118.2437
+            tzId.startsWith("America/Toronto") -> 43.6532 to -79.3832
+            tzId.startsWith("America/Vancouver") -> 49.2827 to -123.1207
+            else -> {
+                val offsetHours = TimeZone.getDefault().rawOffset / (1000 * 60 * 60)
+                when (offsetHours) {
+                    8 -> 1.3521 to 103.8198 // Default UTC+8 -> Singapore
+                    9 -> 35.6762 to 139.6503 // UTC+9 -> Tokyo
+                    7 -> 13.7563 to 100.5018 // UTC+7 -> Bangkok
+                    0 -> 51.5074 to -0.1278  // UTC+0 -> London
+                    1 -> 48.8566 to 2.3522   // UTC+1 -> Paris
+                    -5 -> 40.7128 to -74.0060 // UTC-5 -> New York
+                    -8 -> 34.0522 to -118.2437 // UTC-8 -> Los Angeles
+                    else -> 1.3521 to 103.8198 // Safe default: Singapore
+                }
+            }
+        }
+    }
+
+    private fun fetchFromOpenMeteo(lat: Double, lon: Double, isActualLocation: Boolean): WeatherData? {
         return runCatching {
             val urlString = "https://api.open-meteo.com/v1/forecast?" +
                 "latitude=$lat&longitude=$lon" +
@@ -178,7 +286,22 @@ class WeatherRepository(private val context: Context) {
             val lowC = minArray?.optDouble(0, (tempC - 3).toDouble())?.toFloat() ?: (tempC - 3f)
 
             val tz = root.optString("timezone", "").substringAfterLast("/").replace("_", " ")
-            val locName = if (tz.isNotBlank()) tz else "Local Weather"
+
+            // Determine friendly location name:
+            var locName = if (tz.isNotBlank()) tz else "Local Weather"
+            if (isActualLocation) {
+                runCatching {
+                    if (Geocoder.isPresent()) {
+                        val geocoder = Geocoder(context, Locale.getDefault())
+                        val addresses = geocoder.getFromLocation(lat, lon, 1)
+                        val address = addresses?.firstOrNull()
+                        val locality = address?.locality ?: address?.subAdminArea ?: address?.adminArea
+                        if (!locality.isNullOrBlank()) {
+                            locName = locality
+                        }
+                    }
+                }.onFailure { Log.d(TAG, "Geocoder lookup skipped: ${it.message}") }
+            }
 
             WeatherData(
                 tempC = tempC,

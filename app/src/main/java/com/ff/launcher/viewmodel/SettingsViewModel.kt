@@ -22,6 +22,8 @@ import com.ff.launcher.data.db.WidgetSlotEntity
 import com.ff.launcher.data.glance.HeaderConfig
 import com.ff.launcher.data.glance.HeaderMode
 import com.ff.launcher.data.glance.HeaderPreferencesRepository
+import com.ff.launcher.data.glance.WeatherData
+import com.ff.launcher.data.glance.WeatherRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -45,6 +47,18 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     private val triggerRepository = TriggerPreferencesRepository(application)
     private val quickActionRepository = QuickActionPreferencesRepository(application)
     private val headerPreferencesRepository = HeaderPreferencesRepository(application)
+    private val weatherRepository = WeatherRepository(application)
+
+    val weatherData: StateFlow<WeatherData> = weatherRepository.cachedWeather
+        .stateIn(viewModelScope, SharingStarted.Eagerly, WeatherData())
+
+    fun hasLocationPermission(): Boolean = weatherRepository.hasLocationPermission()
+
+    fun refreshWeather(force: Boolean = true) {
+        viewModelScope.launch {
+            weatherRepository.getOrFetchWeather(forceRefresh = force)
+        }
+    }
 
     val triggerConfig: StateFlow<TriggerConfig> = triggerRepository.config
         .stateIn(viewModelScope, SharingStarted.Eagerly, TriggerConfig())

@@ -12,6 +12,11 @@ All notable changes, new features, and bug fixes for FF Launcher.
 - **Drawer Visibility Control**: Kept hidden in FF Launcher's own app drawer via package filtering (`AppRepository.kt`), while registering an intent filter with `ACTION_MAIN` and `CATEGORY_LAUNCHER` (`FF Launcher Settings`) so it surfaces in external launchers when the user switches to another launcher.
 - **TopAppBar & Edge Navigation**: Added a modern Material 3 top app bar with title and back arrow icon, plus native back gesture support and seamless home widget replacement routing.
 
+### 🌤️ Real-Time Weather Location & Permission System
+- **Runtime Location Access in Settings & Widget Menu**: Added interactive location permission requesting in both [SettingsScreen.kt](file:///d:/myproject/ff_luancher/app/src/main/java/com/ff/launcher/ui/settings/SettingsScreen.kt) and the default clock widget long-press sheet in [HomeSmartHeader.kt](file:///d:/myproject/ff_luancher/app/src/main/java/com/ff/launcher/ui/home/HomeSmartHeader.kt). Users can grant `ACCESS_COARSE_LOCATION` and `ACCESS_FINE_LOCATION` with one tap.
+- **Accurate Singapore & Device Geolocation**: Enhanced [WeatherRepository.kt](file:///d:/myproject/ff_luancher/app/src/main/java/com/ff/launcher/data/glance/WeatherRepository.kt) with Android 11+ `LocationManager.getCurrentLocation`, reverse `Geocoder` resolution, and automatic timezone fallback (e.g. `Asia/Singapore` -> `1.3521, 103.8198`), eliminating the hardcoded California coordinates and immediately displaying **Singapore** weather.
+- **Automatic Fallback Cache Invalidation**: Stale "Los Angeles" cache entries are automatically purged and refreshed on startup and permission grant.
+
 ---
 
 ## [1.2.1] - 2026-11-15
