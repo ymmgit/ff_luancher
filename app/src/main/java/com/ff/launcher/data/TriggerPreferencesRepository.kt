@@ -1,6 +1,7 @@
 package com.ff.launcher.data
 
 import android.content.Context
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.floatPreferencesKey
@@ -21,6 +22,7 @@ enum class TriggerMode { TAP_ONLY, SWIPE_ONLY, TAP_AND_SWIPE }
  * and flow back out as a single immutable snapshot.
  */
 data class TriggerConfig(
+    val enabled: Boolean = true,
     val edgeSide: TriggerEdgeSide = TriggerEdgeSide.RIGHT,
     val verticalBias: Float = 0.22f,
     val heightDp: Int = 56,
@@ -29,9 +31,9 @@ data class TriggerConfig(
     val mode: TriggerMode = TriggerMode.TAP_AND_SWIPE,
 ) {
     /** Swipe activation (and therefore gesture exclusion) is active unless tap-only. */
-    val swipeEnabled: Boolean get() = mode != TriggerMode.TAP_ONLY
+    val swipeEnabled: Boolean get() = enabled && mode != TriggerMode.TAP_ONLY
 
-    val tapEnabled: Boolean get() = mode != TriggerMode.SWIPE_ONLY
+    val tapEnabled: Boolean get() = enabled && mode != TriggerMode.SWIPE_ONLY
 }
 
 private val Context.triggerDataStore by preferencesDataStore(name = "trigger_prefs")
@@ -49,6 +51,7 @@ class TriggerPreferencesRepository(context: Context) {
         .catch { e -> if (e is IOException) emit(emptyPreferences()) else throw e }
         .map { prefs ->
             TriggerConfig(
+                enabled = prefs[KEY_ENABLED] ?: DEFAULT.enabled,
                 edgeSide = prefs[KEY_EDGE_SIDE].toEnum(TriggerEdgeSide.RIGHT),
                 verticalBias = (prefs[KEY_VERTICAL_BIAS] ?: DEFAULT.verticalBias)
                     .coerceIn(VERTICAL_BIAS_RANGE),
@@ -58,6 +61,9 @@ class TriggerPreferencesRepository(context: Context) {
                 mode = prefs[KEY_MODE].toEnum(TriggerMode.TAP_AND_SWIPE),
             )
         }
+
+    suspend fun setEnabled(enabled: Boolean) =
+        dataStore.edit { it[KEY_ENABLED] = enabled }
 
     suspend fun setEdgeSide(side: TriggerEdgeSide) =
         dataStore.edit { it[KEY_EDGE_SIDE] = side.name }
@@ -93,6 +99,7 @@ class TriggerPreferencesRepository(context: Context) {
 
         private val DEFAULT = TriggerConfig()
 
+        private val KEY_ENABLED = booleanPreferencesKey("trigger_enabled")
         private val KEY_EDGE_SIDE = stringPreferencesKey("trigger_edge_side")
         private val KEY_VERTICAL_BIAS = floatPreferencesKey("trigger_vertical_bias")
         private val KEY_HEIGHT_DP = intPreferencesKey("trigger_height_dp")

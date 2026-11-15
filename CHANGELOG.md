@@ -4,6 +4,30 @@ All notable changes, new features, and bug fixes for FF Launcher.
 
 ---
 
+## [1.2.0] - 2026-11-15
+
+### 🚀 New Features: Screen Customization & Quick Action Floating Button
+
+#### 1. Show / Hide Second Widget Screen
+- **Safe Memory Preservation**: Added an option in Launcher Settings (`TriggerTuningSheet.kt`) to toggle the second widget screen ON or OFF.
+- **Zero Data Loss**: When hidden, all widgets, slot layout weights, and configurations remain safely preserved in the database and memory.
+- **Instant Restoration**: Switching it back ON immediately restores the edge trigger and the full widget deck with all widgets intact.
+
+#### 2. Customizable Quick Action Floating Button (`QuickActionButton.kt`)
+- **Ergonomic Floating Launcher**: A sleek, glassmorphic floating action button positioned on screen (defaulting to the left edge to balance the right-edge scroller).
+- **One-Tap Quick Launch**: Launches the user's custom-assigned tool or application instantly with a haptic tap.
+- **Long-Press Customization**: Long-pressing the floating button immediately opens the Quick Action Picker Sheet (`QuickActionPickerSheet.kt`).
+- **Quick Tool Presets**:
+  - 📸 **Camera**: One-tap launch to the device's default camera.
+  - ⏰ **Alarm / Clock**: Instant access to system alarms and clock.
+  - 🔦 **Flashlight**: Direct hardware torch toggle via `CameraManager`.
+  - 🤖 **AI / Voice Assistant**: Direct trigger for Google Assistant / Gemini.
+- **Universal App Customization**: Users can select ANY installed application on the device (e.g. Google Gemini, ChatGPT, WhatsApp, Chrome, WeChat, etc.).
+- **Live App Icon Rendering**: When assigned to an installed app, the floating button dynamically displays the app's actual icon.
+- **Full Position & Size Tuning**: Users can tune the edge side (Left/Right), vertical height bias (8% to 92%), and button size (38dp to 60dp) directly in Launcher Settings.
+
+---
+
 ## [1.1.0] - 2026-11-15
 
 ### 🚀 New Features: Bundled Widgets & Home Smart Header

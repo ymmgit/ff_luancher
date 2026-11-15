@@ -113,4 +113,23 @@
     <string name="widget_weather_label">Weather</string>
     <string name="widget_weather_desc">Current temperature and local weather conditions</string>
     <string name="widget_no_events">No upcoming events</string>
+
+    <string name="setting_show_second_screen">Show Second Widget Screen</string>
+    <string name="setting_show_second_screen_desc">Show the edge trigger to access your secondary widget screen. Hiding it keeps your widgets safely in memory.</string>
+
+    <string name="section_quick_action">Quick Action Floating Button</string>
+    <string name="quick_action_desc">Quickly launch a customized tool or app from an ergonomic floating button.</string>
+    <string name="setting_enable_quick_action">Enable Quick Action Button</string>
+    <string name="quick_action_target_label">Assigned Action / App</string>
+    <string name="quick_action_choose_app">Change Action</string>
+    <string name="quick_action_picker_title">Select Quick Action</string>
+    <string name="quick_action_picker_desc">Choose a tool or installed app to launch instantly with one tap.</string>
+    <string name="quick_action_presets">Quick Tools</string>
+    <string name="quick_action_preset_camera">Camera</string>
+    <string name="quick_action_preset_alarm">Alarm / Clock</string>
+    <string name="quick_action_preset_flashlight">Flashlight</string>
+    <string name="quick_action_preset_assistant">AI / Voice Assistant</string>
+    <string name="quick_action_search_hint">Search apps for quick action…</string>
+    <string name="quick_action_tap_hint">Tap to launch, long-press to customize</string>
+    <string name="quick_action_setting_size">Button Size</string>
 </resources>

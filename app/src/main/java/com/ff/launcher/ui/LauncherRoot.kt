@@ -31,10 +31,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ff.launcher.data.QuickActionType
 import com.ff.launcher.data.TriggerEdgeSide
 import com.ff.launcher.ui.home.AppSearchSheet
 import com.ff.launcher.ui.home.HomeScreen
 import com.ff.launcher.ui.home.ManageFavoritesSheet
+import com.ff.launcher.ui.quickaction.QuickActionButton
+import com.ff.launcher.ui.quickaction.QuickActionPickerSheet
 import com.ff.launcher.ui.secondary.SecondaryScreen
 import com.ff.launcher.ui.secondary.TriggerTuningSheet
 import com.ff.launcher.ui.secondary.WidgetPickerSheet
@@ -121,6 +124,14 @@ fun LauncherRoot(viewModel: LauncherViewModel) {
     val calendarState by viewModel.calendarState.collectAsStateWithLifecycle()
     val weatherState by viewModel.weatherState.collectAsStateWithLifecycle()
     val headerConfig by viewModel.headerConfig.collectAsStateWithLifecycle()
+    val quickActionConfig by viewModel.quickActionConfig.collectAsStateWithLifecycle()
+    val isFlashlightOn by viewModel.isFlashlightOn.collectAsStateWithLifecycle()
+    val isQuickActionPickerOpen by viewModel.isQuickActionPickerOpen.collectAsStateWithLifecycle()
+    val quickActionTargetApp = remember(quickActionConfig, allInstalledApps) {
+        if (quickActionConfig.actionType == QuickActionType.APP) {
+            allInstalledApps.firstOrNull { it.componentKey == quickActionConfig.componentKey }
+        } else null
+    }
     val listState = rememberLazyListState()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -299,16 +310,35 @@ fun LauncherRoot(viewModel: LauncherViewModel) {
         // user finishes or skips the 3-step tour (steps 1–2 must not be auto-skipped).
         val showOnboarding = onboardingDone == false
 
-        EdgeTrigger(
-            config = triggerConfig,
-            isSecondScreenOpen = isSecondScreenOpen,
-            // Tapping the trigger opens the deck; tapping it again closes it.
-            onActivate = { viewModel.setSecondScreenOpen(!isSecondScreenOpen) },
-            gesturesEnabled = !showOnboarding && !isArrangeFavoritesOpen && (isSecondScreenOpen || !overlapsScroller),
-            modifier = Modifier
-                .align(if (slideFromEnd) AbsoluteAlignment.TopRight else AbsoluteAlignment.TopLeft)
-                .offset(y = triggerTop),
-        )
+        if (triggerConfig.enabled) {
+            EdgeTrigger(
+                config = triggerConfig,
+                isSecondScreenOpen = isSecondScreenOpen,
+                // Tapping the trigger opens the deck; tapping it again closes it.
+                onActivate = { viewModel.setSecondScreenOpen(!isSecondScreenOpen) },
+                gesturesEnabled = !showOnboarding && !isArrangeFavoritesOpen && (isSecondScreenOpen || !overlapsScroller),
+                modifier = Modifier
+                    .align(if (slideFromEnd) AbsoluteAlignment.TopRight else AbsoluteAlignment.TopLeft)
+                    .offset(y = triggerTop),
+            )
+        }
+
+        val quickActionIsRight = quickActionConfig.edgeSide == TriggerEdgeSide.RIGHT
+        AnimatedVisibility(
+            visible = quickActionConfig.enabled && !showOnboarding && !isSecondScreenOpen && !isArrangeFavoritesOpen,
+            enter = fadeIn(tween(140)),
+            exit = fadeOut(tween(120)),
+            modifier = Modifier.align(if (quickActionIsRight) AbsoluteAlignment.TopRight else AbsoluteAlignment.TopLeft),
+        ) {
+            QuickActionButton(
+                config = quickActionConfig,
+                targetApp = quickActionTargetApp,
+                isFlashlightOn = isFlashlightOn,
+                maxHeight = maxHeight,
+                onExecute = viewModel::executeQuickAction,
+                onCustomize = viewModel::openQuickActionPicker,
+            )
+        }
 
         // Composed inside BoxWithConstraints so the hand-over geometry (maxHeight) is
         // available; the sheet renders into its own window either way.
@@ -319,6 +349,14 @@ fun LauncherRoot(viewModel: LauncherViewModel) {
                 headerConfig = headerConfig,
                 onHeaderModeChange = viewModel::setHeaderMode,
                 onHeaderUnitChange = viewModel::setHeaderUseFahrenheit,
+                onTriggerEnabledChange = viewModel::setTriggerEnabled,
+                quickActionConfig = quickActionConfig,
+                quickActionTargetApp = quickActionTargetApp,
+                onQuickActionEnabledChange = viewModel::setQuickActionEnabled,
+                onOpenQuickActionPicker = viewModel::openQuickActionPicker,
+                onQuickActionEdgeSideChange = viewModel::setQuickActionEdgeSide,
+                onQuickActionVerticalBiasChange = viewModel::setQuickActionVerticalBias,
+                onQuickActionSizeChange = viewModel::setQuickActionSizeDp,
                 hiddenApps = hiddenApps,
                 isDefaultLauncher = isDefaultLauncher,
                 onRequestDefaultLauncher = {
@@ -378,6 +416,15 @@ fun LauncherRoot(viewModel: LauncherViewModel) {
                     viewModel.setTuningSheetOpen(true)
                 },
                 onDismiss = viewModel::closeAppSearch,
+            )
+        }
+
+        if (isQuickActionPickerOpen) {
+            QuickActionPickerSheet(
+                config = quickActionConfig,
+                allApps = allInstalledApps,
+                onSelectAction = viewModel::setQuickAction,
+                onDismiss = viewModel::closeQuickActionPicker,
             )
         }
 

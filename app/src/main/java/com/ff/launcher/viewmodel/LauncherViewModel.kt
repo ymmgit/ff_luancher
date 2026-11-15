@@ -10,10 +10,14 @@ import android.content.Intent
 import android.content.pm.LauncherApps
 import android.icu.text.AlphabeticIndex
 import android.icu.text.RuleBasedCollator
+import android.hardware.camera2.CameraCharacteristics
+import android.hardware.camera2.CameraManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Process
+import android.provider.AlarmClock
+import android.provider.MediaStore
 import android.provider.Settings
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
@@ -23,6 +27,9 @@ import com.ff.launcher.data.AppInfo
 import com.ff.launcher.data.AppRepository
 import com.ff.launcher.data.FavoritesRepository
 import com.ff.launcher.data.OnboardingRepository
+import com.ff.launcher.data.QuickActionConfig
+import com.ff.launcher.data.QuickActionPreferencesRepository
+import com.ff.launcher.data.QuickActionType
 import com.ff.launcher.data.TriggerConfig
 import com.ff.launcher.data.TriggerEdgeSide
 import com.ff.launcher.data.TriggerMode
@@ -91,6 +98,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     private val database = LauncherDatabase.get(application)
     private val favoritesRepository = FavoritesRepository(application, database)
     private val triggerRepository = TriggerPreferencesRepository(application)
+    private val quickActionRepository = QuickActionPreferencesRepository(application)
     private val onboardingRepository = OnboardingRepository(application)
 
     private val timeProvider = TimeProvider(application, viewModelScope)
@@ -108,6 +116,16 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     val headerConfig: StateFlow<HeaderConfig> = headerPreferencesRepository.headerConfig
         .stateIn(viewModelScope, SharingStarted.Eagerly, HeaderConfig())
+
+    val quickActionConfig: StateFlow<QuickActionConfig> = quickActionRepository.config
+        .stateIn(viewModelScope, SharingStarted.Eagerly, QuickActionConfig())
+
+    private val cameraManager = application.getSystemService(Context.CAMERA_SERVICE) as? CameraManager
+    private val _isFlashlightOn = MutableStateFlow(false)
+    val isFlashlightOn: StateFlow<Boolean> = _isFlashlightOn.asStateFlow()
+
+    private val _isQuickActionPickerOpen = MutableStateFlow(false)
+    val isQuickActionPickerOpen: StateFlow<Boolean> = _isQuickActionPickerOpen.asStateFlow()
 
     private val appWidgetHost = LauncherAppWidgetHost(application)
     private val appWidgetManager = AppWidgetManager.getInstance(application)
@@ -276,6 +294,13 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         refreshDefaultLauncherState()
         refreshCalendar()
         refreshWeather()
+        runCatching {
+            cameraManager?.registerTorchCallback(object : CameraManager.TorchCallback() {
+                override fun onTorchModeChanged(cameraId: String, enabled: Boolean) {
+                    _isFlashlightOn.value = enabled
+                }
+            }, null)
+        }
         // SPEC Module 4: listen ONLY while the deck is open AND the activity is resumed.
         viewModelScope.launch {
             _isDeckActive.collect { active ->
@@ -821,6 +846,106 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             val preview = _triggerPreview.value ?: return@launch
             withTimeoutOrNull(1_000) { triggerConfig.first { it == preview } }
             if (_triggerPreview.value == preview) _triggerPreview.value = null
+        }
+    }
+
+    fun setTriggerEnabled(enabled: Boolean) {
+        previewTrigger { it.copy(enabled = enabled) }
+        commitAndSettle { triggerRepository.setEnabled(enabled) }
+    }
+
+    // --- Quick Action Floating Button ---
+
+    fun openQuickActionPicker() {
+        _isQuickActionPickerOpen.value = true
+    }
+
+    fun closeQuickActionPicker() {
+        _isQuickActionPickerOpen.value = false
+    }
+
+    fun setQuickActionEnabled(enabled: Boolean) {
+        viewModelScope.launch { quickActionRepository.setEnabled(enabled) }
+    }
+
+    fun setQuickAction(type: QuickActionType, componentKey: String = "", label: String = "") {
+        viewModelScope.launch { quickActionRepository.setAction(type, componentKey, label) }
+    }
+
+    fun setQuickActionEdgeSide(side: TriggerEdgeSide) {
+        viewModelScope.launch { quickActionRepository.setEdgeSide(side) }
+    }
+
+    fun setQuickActionVerticalBias(bias: Float) {
+        viewModelScope.launch { quickActionRepository.setVerticalBias(bias) }
+    }
+
+    fun setQuickActionSizeDp(size: Int) {
+        viewModelScope.launch { quickActionRepository.setSizeDp(size) }
+    }
+
+    fun toggleFlashlight() {
+        val cm = cameraManager ?: return
+        runCatching {
+            val cameraId = cm.cameraIdList.firstOrNull { id ->
+                val chars = cm.getCameraCharacteristics(id)
+                chars.get(CameraCharacteristics.FLASH_INFO_AVAILABLE) == true
+            } ?: cm.cameraIdList.firstOrNull() ?: return
+            val target = !_isFlashlightOn.value
+            cm.setTorchMode(cameraId, target)
+            _isFlashlightOn.value = target
+        }.onFailure { Log.w(TAG, "Failed to toggle flashlight", it) }
+    }
+
+    fun executeQuickAction() {
+        val config = quickActionConfig.value
+        val context = getApplication<Application>()
+        Log.i(TAG, "executeQuickAction: type=${config.actionType}, key=${config.componentKey}")
+        when (config.actionType) {
+            QuickActionType.FLASHLIGHT -> toggleFlashlight()
+            QuickActionType.CAMERA -> {
+                val intent = Intent(MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                runCatching { context.startActivity(intent) }
+                    .onFailure { _userMessages.tryEmit(context.getString(R.string.error_launch_failed)) }
+            }
+            QuickActionType.ALARM -> {
+                val intent = Intent(AlarmClock.ACTION_SHOW_ALARMS)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                runCatching { context.startActivity(intent) }
+                    .recoverCatching {
+                        context.startActivity(Intent(AlarmClock.ACTION_SET_ALARM).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                    }
+                    .onFailure { _userMessages.tryEmit(context.getString(R.string.error_launch_failed)) }
+            }
+            QuickActionType.ASSISTANT -> {
+                val intent = Intent(Intent.ACTION_ASSIST)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                runCatching { context.startActivity(intent) }
+                    .onFailure { _userMessages.tryEmit(context.getString(R.string.error_launch_failed)) }
+            }
+            QuickActionType.APP -> {
+                if (config.componentKey.isNotBlank()) {
+                    val app = allInstalledApps.value.firstOrNull { it.componentKey == config.componentKey }
+                    if (app != null) {
+                        launchApp(app)
+                    } else {
+                        val component = parseComponent(config.componentKey)
+                        if (component != null) {
+                            val intent = Intent(Intent.ACTION_MAIN)
+                                .addCategory(Intent.CATEGORY_LAUNCHER)
+                                .setComponent(component)
+                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
+                            runCatching { context.startActivity(intent) }
+                                .onFailure { _userMessages.tryEmit(context.getString(R.string.error_launch_failed)) }
+                        } else {
+                            openQuickActionPicker()
+                        }
+                    }
+                } else {
+                    openQuickActionPicker()
+                }
+            }
         }
     }
 

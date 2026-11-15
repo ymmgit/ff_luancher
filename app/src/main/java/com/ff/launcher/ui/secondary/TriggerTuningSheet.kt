@@ -1,5 +1,6 @@
 package com.ff.launcher.ui.secondary
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -8,9 +9,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -19,6 +24,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.RadioButton
@@ -27,6 +33,7 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -39,11 +46,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.ff.launcher.R
+import com.ff.launcher.data.AppInfo
+import com.ff.launcher.data.QuickActionConfig
+import com.ff.launcher.data.QuickActionPreferencesRepository.Companion.SIZE_RANGE_F
+import com.ff.launcher.data.QuickActionType
+import com.ff.launcher.ui.quickaction.QuickActionIcons
 import com.ff.launcher.data.TriggerConfig
 import com.ff.launcher.data.TriggerEdgeSide
 import com.ff.launcher.data.TriggerMode
@@ -68,6 +81,14 @@ fun TriggerTuningSheet(
     headerConfig: HeaderConfig = HeaderConfig(),
     onHeaderModeChange: (HeaderMode) -> Unit = {},
     onHeaderUnitChange: (Boolean) -> Unit = {},
+    onTriggerEnabledChange: (Boolean) -> Unit = {},
+    quickActionConfig: QuickActionConfig = QuickActionConfig(),
+    quickActionTargetApp: AppInfo? = null,
+    onQuickActionEnabledChange: (Boolean) -> Unit = {},
+    onOpenQuickActionPicker: () -> Unit = {},
+    onQuickActionEdgeSideChange: (TriggerEdgeSide) -> Unit = {},
+    onQuickActionVerticalBiasChange: (Float) -> Unit = {},
+    onQuickActionSizeChange: (Int) -> Unit = {},
     hiddenApps: List<HiddenAppUi>,
     isDefaultLauncher: Boolean,
     onRequestDefaultLauncher: () -> Unit,
@@ -243,7 +264,7 @@ fun TriggerTuningSheet(
                 }
             }
 
-            // Edge Trigger Card
+            // Edge Trigger Card (Secondary Screen)
             Card(
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(
@@ -257,85 +278,288 @@ fun TriggerTuningSheet(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
-                    Text(
-                        text = stringResource(R.string.section_edge_trigger),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-
-                    Text(
-                        text = stringResource(R.string.setting_edge_side),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                        SegmentedButton(
-                            selected = config.edgeSide == TriggerEdgeSide.LEFT,
-                            onClick = { onEdgeSideChange(TriggerEdgeSide.LEFT) },
-                            shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
-                        ) { Text(stringResource(R.string.edge_left)) }
-                        SegmentedButton(
-                            selected = config.edgeSide == TriggerEdgeSide.RIGHT,
-                            onClick = { onEdgeSideChange(TriggerEdgeSide.RIGHT) },
-                            shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
-                        ) { Text(stringResource(R.string.edge_right)) }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(R.string.setting_show_second_screen),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                            Text(
+                                text = stringResource(R.string.setting_show_second_screen_desc),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        Switch(
+                            checked = config.enabled,
+                            onCheckedChange = onTriggerEnabledChange,
+                        )
                     }
 
-                    TuningSlider(
-                        label = stringResource(R.string.setting_vertical_position),
-                        externalValue = config.verticalBias,
-                        valueText = { stringResource(R.string.value_percent, (it * 100).roundToInt()) },
-                        onPreview = onVerticalBiasPreview,
-                        onCommit = onVerticalBiasCommit,
-                        valueRange = VERTICAL_BIAS_RANGE,
-                    )
-                    TuningSlider(
-                        label = stringResource(R.string.setting_pill_height),
-                        externalValue = config.heightDp.toFloat(),
-                        valueText = { stringResource(R.string.value_dp, it.roundToInt()) },
-                        onPreview = { onHeightPreview(it.roundToInt()) },
-                        onCommit = { onHeightCommit(it.roundToInt()) },
-                        valueRange = HEIGHT_RANGE_F,
-                    )
-                    TuningSlider(
-                        label = stringResource(R.string.setting_pill_width),
-                        externalValue = config.widthDp.toFloat(),
-                        valueText = { stringResource(R.string.value_dp, it.roundToInt()) },
-                        onPreview = { onWidthPreview(it.roundToInt()) },
-                        onCommit = { onWidthCommit(it.roundToInt()) },
-                        valueRange = WIDTH_RANGE_F,
-                    )
-                    TuningSlider(
-                        label = stringResource(R.string.setting_opacity),
-                        externalValue = config.opacity,
-                        valueText = { stringResource(R.string.value_percent, (it * 100).roundToInt()) },
-                        onPreview = onOpacityPreview,
-                        onCommit = onOpacityCommit,
-                        valueRange = OPACITY_RANGE,
-                    )
+                    if (config.enabled) {
+                        Text(
+                            text = stringResource(R.string.setting_edge_side),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                            SegmentedButton(
+                                selected = config.edgeSide == TriggerEdgeSide.LEFT,
+                                onClick = { onEdgeSideChange(TriggerEdgeSide.LEFT) },
+                                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                            ) { Text(stringResource(R.string.edge_left)) }
+                            SegmentedButton(
+                                selected = config.edgeSide == TriggerEdgeSide.RIGHT,
+                                onClick = { onEdgeSideChange(TriggerEdgeSide.RIGHT) },
+                                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                            ) { Text(stringResource(R.string.edge_right)) }
+                        }
 
-                    Text(
-                        text = stringResource(R.string.setting_activation_mode),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                        SegmentedButton(
-                            selected = config.mode == TriggerMode.TAP_ONLY,
-                            onClick = { onModeChange(TriggerMode.TAP_ONLY) },
-                            shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3),
-                        ) { Text(stringResource(R.string.mode_tap)) }
-                        SegmentedButton(
-                            selected = config.mode == TriggerMode.SWIPE_ONLY,
-                            onClick = { onModeChange(TriggerMode.SWIPE_ONLY) },
-                            shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3),
-                        ) { Text(stringResource(R.string.mode_swipe)) }
-                        SegmentedButton(
-                            selected = config.mode == TriggerMode.TAP_AND_SWIPE,
-                            onClick = { onModeChange(TriggerMode.TAP_AND_SWIPE) },
-                            shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3),
-                        ) { Text(stringResource(R.string.mode_tap_and_swipe)) }
+                        TuningSlider(
+                            label = stringResource(R.string.setting_vertical_position),
+                            externalValue = config.verticalBias,
+                            valueText = { stringResource(R.string.value_percent, (it * 100).roundToInt()) },
+                            onPreview = onVerticalBiasPreview,
+                            onCommit = onVerticalBiasCommit,
+                            valueRange = VERTICAL_BIAS_RANGE,
+                        )
+                        TuningSlider(
+                            label = stringResource(R.string.setting_pill_height),
+                            externalValue = config.heightDp.toFloat(),
+                            valueText = { stringResource(R.string.value_dp, it.roundToInt()) },
+                            onPreview = { onHeightPreview(it.roundToInt()) },
+                            onCommit = { onHeightCommit(it.roundToInt()) },
+                            valueRange = HEIGHT_RANGE_F,
+                        )
+                        TuningSlider(
+                            label = stringResource(R.string.setting_pill_width),
+                            externalValue = config.widthDp.toFloat(),
+                            valueText = { stringResource(R.string.value_dp, it.roundToInt()) },
+                            onPreview = { onWidthPreview(it.roundToInt()) },
+                            onCommit = { onWidthCommit(it.roundToInt()) },
+                            valueRange = WIDTH_RANGE_F,
+                        )
+                        TuningSlider(
+                            label = stringResource(R.string.setting_opacity),
+                            externalValue = config.opacity,
+                            valueText = { stringResource(R.string.value_percent, (it * 100).roundToInt()) },
+                            onPreview = onOpacityPreview,
+                            onCommit = onOpacityCommit,
+                            valueRange = OPACITY_RANGE,
+                        )
+
+                        Text(
+                            text = stringResource(R.string.setting_activation_mode),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                            SegmentedButton(
+                                selected = config.mode == TriggerMode.TAP_ONLY,
+                                onClick = { onModeChange(TriggerMode.TAP_ONLY) },
+                                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3),
+                            ) { Text(stringResource(R.string.mode_tap)) }
+                            SegmentedButton(
+                                selected = config.mode == TriggerMode.SWIPE_ONLY,
+                                onClick = { onModeChange(TriggerMode.SWIPE_ONLY) },
+                                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3),
+                            ) { Text(stringResource(R.string.mode_swipe)) }
+                            SegmentedButton(
+                                selected = config.mode == TriggerMode.TAP_AND_SWIPE,
+                                onClick = { onModeChange(TriggerMode.TAP_AND_SWIPE) },
+                                shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3),
+                            ) { Text(stringResource(R.string.mode_tap_and_swipe)) }
+                        }
+                    }
+                }
+            }
+
+            // Quick Action Floating Button Card
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                ),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(R.string.section_quick_action),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                            Text(
+                                text = stringResource(R.string.quick_action_desc),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        Switch(
+                            checked = quickActionConfig.enabled,
+                            onCheckedChange = onQuickActionEnabledChange,
+                        )
+                    }
+
+                    if (quickActionConfig.enabled) {
+                        Text(
+                            text = stringResource(R.string.quick_action_target_label),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+
+                        Surface(
+                            shape = RoundedCornerShape(14.dp),
+                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(14.dp))
+                                .clickable(onClick = onOpenQuickActionPicker),
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    modifier = Modifier.weight(1f),
+                                ) {
+                                    when (quickActionConfig.actionType) {
+                                        QuickActionType.FLASHLIGHT -> Icon(
+                                            QuickActionIcons.FlashlightOn,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(24.dp),
+                                        )
+                                        QuickActionType.CAMERA -> Icon(
+                                            QuickActionIcons.Camera,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(24.dp),
+                                        )
+                                        QuickActionType.ALARM -> Icon(
+                                            QuickActionIcons.Alarm,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(24.dp),
+                                        )
+                                        QuickActionType.ASSISTANT -> Icon(
+                                            QuickActionIcons.Assistant,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(24.dp),
+                                        )
+                                        QuickActionType.APP -> {
+                                            if (quickActionTargetApp?.icon != null) {
+                                                Image(
+                                                    bitmap = quickActionTargetApp.icon.asImageBitmap(),
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(28.dp),
+                                                )
+                                            } else {
+                                                Icon(
+                                                    QuickActionIcons.Rocket,
+                                                    contentDescription = null,
+                                                    tint = MaterialTheme.colorScheme.primary,
+                                                    modifier = Modifier.size(24.dp),
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    val label = when (quickActionConfig.actionType) {
+                                        QuickActionType.FLASHLIGHT -> stringResource(R.string.quick_action_preset_flashlight)
+                                        QuickActionType.CAMERA -> stringResource(R.string.quick_action_preset_camera)
+                                        QuickActionType.ALARM -> stringResource(R.string.quick_action_preset_alarm)
+                                        QuickActionType.ASSISTANT -> stringResource(R.string.quick_action_preset_assistant)
+                                        QuickActionType.APP -> quickActionTargetApp?.label ?: quickActionConfig.customLabel.ifEmpty { "Select App" }
+                                    }
+
+                                    Text(
+                                        text = label,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                }
+
+                                FilledTonalButton(
+                                    onClick = onOpenQuickActionPicker,
+                                    shape = RoundedCornerShape(10.dp),
+                                ) {
+                                    Icon(
+                                        Icons.Default.Edit,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(14.dp),
+                                    )
+                                    Spacer(Modifier.size(6.dp))
+                                    Text(
+                                        text = stringResource(R.string.quick_action_choose_app),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                    )
+                                }
+                            }
+                        }
+
+                        Text(
+                            text = stringResource(R.string.setting_edge_side),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                            SegmentedButton(
+                                selected = quickActionConfig.edgeSide == TriggerEdgeSide.LEFT,
+                                onClick = { onQuickActionEdgeSideChange(TriggerEdgeSide.LEFT) },
+                                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                            ) { Text(stringResource(R.string.edge_left)) }
+                            SegmentedButton(
+                                selected = quickActionConfig.edgeSide == TriggerEdgeSide.RIGHT,
+                                onClick = { onQuickActionEdgeSideChange(TriggerEdgeSide.RIGHT) },
+                                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                            ) { Text(stringResource(R.string.edge_right)) }
+                        }
+
+                        TuningSlider(
+                            label = stringResource(R.string.setting_vertical_position),
+                            externalValue = quickActionConfig.verticalBias,
+                            valueText = { stringResource(R.string.value_percent, (it * 100).roundToInt()) },
+                            onPreview = {},
+                            onCommit = onQuickActionVerticalBiasChange,
+                            valueRange = 0.08f..0.92f,
+                        )
+
+                        TuningSlider(
+                            label = stringResource(R.string.quick_action_setting_size),
+                            externalValue = quickActionConfig.sizeDp.toFloat(),
+                            valueText = { stringResource(R.string.value_dp, it.roundToInt()) },
+                            onPreview = {},
+                            onCommit = { onQuickActionSizeChange(it.roundToInt()) },
+                            valueRange = SIZE_RANGE_F,
+                        )
                     }
                 }
             }
