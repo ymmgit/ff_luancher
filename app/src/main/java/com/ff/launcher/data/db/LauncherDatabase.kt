@@ -207,9 +207,9 @@ const val HOME_WIDGET_SLOT_ID = 0
 val DEFAULT_WIDGET_SLOTS = listOf(
     WidgetSlotEntity(slotId = HOME_WIDGET_SLOT_ID, appWidgetId = null, heightWeight = 1f),
     WidgetSlotEntity(slotId = 1, appWidgetId = null, heightWeight = SLOT_FRACTION_SMALL),
-    WidgetSlotEntity(slotId = 2, appWidgetId = null, heightWeight = SLOT_FRACTION_MEDIUM),
-    WidgetSlotEntity(slotId = 3, appWidgetId = null, heightWeight = SLOT_FRACTION_LARGE),
-    WidgetSlotEntity(slotId = 4, appWidgetId = null, heightWeight = SLOT_FRACTION_MEDIUM),
+    WidgetSlotEntity(slotId = 2, appWidgetId = null, heightWeight = SLOT_FRACTION_SMALL),
+    WidgetSlotEntity(slotId = 3, appWidgetId = null, heightWeight = SLOT_FRACTION_SMALL),
+    WidgetSlotEntity(slotId = 4, appWidgetId = null, heightWeight = SLOT_FRACTION_SMALL),
 )
 
 /** Transactional toggle helper shared by the repositories. */

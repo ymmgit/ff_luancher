@@ -59,6 +59,7 @@ import com.ff.launcher.data.db.HOME_WIDGET_SLOT_ID
 import com.ff.launcher.data.db.HiddenAppEntity
 import androidx.room.withTransaction
 import com.ff.launcher.data.db.LauncherDatabase
+import com.ff.launcher.data.db.SLOT_FRACTION_SMALL
 import com.ff.launcher.data.db.SLOT_WEIGHT_LARGE
 import com.ff.launcher.data.db.SLOT_WEIGHT_MEDIUM
 import com.ff.launcher.data.db.SLOT_WEIGHT_SMALL
@@ -1009,7 +1010,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             val current = runCatching { database.widgetSlotDao().getById(slotId) }.getOrNull()
             val oldId = current?.appWidgetId
-            val weight = current?.heightWeight ?: SLOT_WEIGHT_MEDIUM
+            val weight = current?.heightWeight?.let(::normalizeSlotFraction) ?: SLOT_FRACTION_SMALL
             runCatching {
                 database.widgetSlotDao().upsert(WidgetSlotEntity(slotId, appWidgetId, weight))
             }.onSuccess {

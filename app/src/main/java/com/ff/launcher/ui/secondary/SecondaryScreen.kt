@@ -114,9 +114,8 @@ fun SecondaryScreen(
     val totalAllocatedFraction = remember(activeSlots) {
         activeSlots.sumOf { normalizeSlotFraction(it.heightWeight).toDouble() }.toFloat()
     }
-    val remainingCapacity = (1.0f - totalAllocatedFraction).coerceAtLeast(0f)
-    val canAddMore = remainingCapacity >= 0.245f && activeSlots.size < 4
-    val nextAvailableSlotId = (activeSlots.size + 1).coerceAtMost(4)
+    val canAddMore = activeSlots.size < 4
+    val nextAvailableSlotId = (1..4).firstOrNull { id -> activeSlots.none { it.slotId == id } } ?: 4
 
     BoxWithConstraints(
         modifier = modifier
@@ -517,26 +516,19 @@ private fun FloatingWidgetCard(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    val canFitSmall = fractionWithoutCurrent + SLOT_FRACTION_SMALL <= 1.01f
-                    val canFitMedium = fractionWithoutCurrent + SLOT_FRACTION_MEDIUM <= 1.01f
-                    val canFitLarge = fractionWithoutCurrent + SLOT_FRACTION_LARGE <= 1.01f
-
                     SizeChip(
                         label = stringResource(R.string.slot_size_s),
                         selected = currentFraction == SLOT_FRACTION_SMALL,
-                        enabled = canFitSmall,
                         onClick = { onUpdateSlotWeight(slot.slotId, SLOT_FRACTION_SMALL) },
                     )
                     SizeChip(
                         label = stringResource(R.string.slot_size_m),
                         selected = currentFraction == SLOT_FRACTION_MEDIUM,
-                        enabled = canFitMedium,
                         onClick = { onUpdateSlotWeight(slot.slotId, SLOT_FRACTION_MEDIUM) },
                     )
                     SizeChip(
                         label = stringResource(R.string.slot_size_l),
                         selected = currentFraction == SLOT_FRACTION_LARGE,
-                        enabled = canFitLarge,
                         onClick = { onUpdateSlotWeight(slot.slotId, SLOT_FRACTION_LARGE) },
                     )
                 }
@@ -622,10 +614,10 @@ private fun FloatingWidgetCard(
 private fun SizeChip(
     label: String,
     selected: Boolean,
-    enabled: Boolean,
     onClick: () -> Unit,
 ) {
     Surface(
+        onClick = onClick,
         shape = RoundedCornerShape(8.dp),
         color = if (selected) {
             MaterialTheme.colorScheme.primaryContainer
@@ -641,17 +633,13 @@ private fun SizeChip(
             },
         ),
         tonalElevation = if (selected) 2.dp else 0.dp,
-        modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
-            .clickable(enabled = enabled, onClick = onClick),
+        modifier = Modifier.clip(RoundedCornerShape(8.dp)),
     ) {
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-            color = if (!enabled) {
-                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-            } else if (selected) {
+            color = if (selected) {
                 MaterialTheme.colorScheme.onPrimaryContainer
             } else {
                 MaterialTheme.colorScheme.onSurfaceVariant
