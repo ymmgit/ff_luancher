@@ -67,7 +67,8 @@
     <string name="slot_action_add_widget">Add widget</string>
     <string name="slot_action_replace_widget">Replace widget</string>
     <string name="slot_action_remove_widget">Remove widget</string>
-    <string name="menu_slot_size">Slot size</string>
+    <string name="menu_slot_size">Canvas size</string>
+    <string name="menu_canvas_size">Canvas size</string>
     <string name="slot_size_small">Small</string>
     <string name="slot_size_medium">Medium</string>
     <string name="slot_size_large">Large</string>
