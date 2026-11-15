@@ -33,6 +33,7 @@ data class QuickActionConfig(
     val edgeSide: TriggerEdgeSide = TriggerEdgeSide.LEFT,
     val verticalBias: Float = 0.82f,
     val sizeDp: Int = 48,
+    val opacity: Float = 0.35f,
 )
 
 private val Context.quickActionDataStore by preferencesDataStore(name = "quick_action_prefs")
@@ -51,6 +52,7 @@ class QuickActionPreferencesRepository(context: Context) {
                 edgeSide = prefs[KEY_EDGE_SIDE].toEnum(DEFAULT.edgeSide),
                 verticalBias = (prefs[KEY_VERTICAL_BIAS] ?: DEFAULT.verticalBias).coerceIn(VERTICAL_BIAS_RANGE),
                 sizeDp = (prefs[KEY_SIZE_DP] ?: DEFAULT.sizeDp).coerceIn(SIZE_RANGE),
+                opacity = (prefs[KEY_OPACITY] ?: DEFAULT.opacity).coerceIn(OPACITY_RANGE),
             )
         }
 
@@ -89,6 +91,14 @@ class QuickActionPreferencesRepository(context: Context) {
         }
     }
 
+    suspend fun setOpacity(opacity: Float) {
+        val clamped = opacity.coerceIn(OPACITY_RANGE)
+        Log.i(TAG, "setOpacity: $clamped")
+        dataStore.edit {
+            it[KEY_OPACITY] = clamped
+        }
+    }
+
     suspend fun resetToDefaults() {
         Log.i(TAG, "resetToDefaults called")
         dataStore.edit { prefs ->
@@ -99,6 +109,7 @@ class QuickActionPreferencesRepository(context: Context) {
             prefs.remove(KEY_EDGE_SIDE)
             prefs.remove(KEY_VERTICAL_BIAS)
             prefs.remove(KEY_SIZE_DP)
+            prefs.remove(KEY_OPACITY)
         }
     }
 
@@ -107,6 +118,7 @@ class QuickActionPreferencesRepository(context: Context) {
         val VERTICAL_BIAS_RANGE = 0.08f..0.92f
         val SIZE_RANGE = 38..60
         val SIZE_RANGE_F = SIZE_RANGE.first.toFloat()..SIZE_RANGE.last.toFloat()
+        val OPACITY_RANGE = 0.15f..1.0f
 
         private val DEFAULT = QuickActionConfig()
         private val KEY_ENABLED = booleanPreferencesKey("quick_action_enabled")
@@ -116,6 +128,7 @@ class QuickActionPreferencesRepository(context: Context) {
         private val KEY_EDGE_SIDE = stringPreferencesKey("quick_action_edge_side")
         private val KEY_VERTICAL_BIAS = floatPreferencesKey("quick_action_vertical_bias")
         private val KEY_SIZE_DP = intPreferencesKey("quick_action_size_dp")
+        private val KEY_OPACITY = floatPreferencesKey("quick_action_opacity")
 
         private inline fun <reified T : Enum<T>> String?.toEnum(default: T): T =
             this?.let { value -> enumValues<T>().firstOrNull { it.name == value } } ?: default

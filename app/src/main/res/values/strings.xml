@@ -133,5 +133,6 @@
     <string name="quick_action_search_hint">Search apps for quick action…</string>
     <string name="quick_action_tap_hint">Tap to launch, long-press to customize</string>
     <string name="quick_action_setting_size">Button Size</string>
+    <string name="quick_action_setting_opacity">Button Opacity</string>
     <string name="quick_action_reset">Reset to defaults</string>
 </resources>

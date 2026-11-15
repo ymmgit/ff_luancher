@@ -909,6 +909,13 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         )
     }
 
+    fun previewQuickActionOpacity(opacity: Float) {
+        val base = _quickActionPreview.value ?: quickActionConfig.value
+        _quickActionPreview.value = base.copy(
+            opacity = opacity.coerceIn(QuickActionPreferencesRepository.OPACITY_RANGE)
+        )
+    }
+
     fun setQuickActionVerticalBias(bias: Float) {
         val clamped = bias.coerceIn(QuickActionPreferencesRepository.VERTICAL_BIAS_RANGE)
         Log.i(TAG, "setQuickActionVerticalBias: bias=$clamped")
@@ -921,6 +928,13 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         Log.i(TAG, "setQuickActionSizeDp: size=$clamped")
         _quickActionPreview.value = null
         viewModelScope.launch { quickActionRepository.setSizeDp(clamped) }
+    }
+
+    fun setQuickActionOpacity(opacity: Float) {
+        val clamped = opacity.coerceIn(QuickActionPreferencesRepository.OPACITY_RANGE)
+        Log.i(TAG, "setQuickActionOpacity: opacity=$clamped")
+        _quickActionPreview.value = null
+        viewModelScope.launch { quickActionRepository.setOpacity(clamped) }
     }
 
     fun resetQuickActionToDefaults() {

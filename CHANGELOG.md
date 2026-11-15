@@ -9,10 +9,12 @@ All notable changes, new features, and bug fixes for FF Launcher.
 ### 🛡️ Hardening, Performance & QA Polish (Master Plan Milestone M1)
 
 #### 1. Quick Action & Screen Gestures
+- **Customizable Low Opacity for Wallpaper Aesthetic**: Added an opacity slider (`15%` to `100%`) for the Quick Action floating button, defaulting to a subtle low opacity (`35%`) with delicate elevation so it preserves and respects the user's wallpaper aesthetic without clutter.
+- **Left / Right Edge Placement**: Quick action floating button supports instant selection between Left and Right screen edges via Settings (`TriggerTuningSheet.kt`), defaulting to Left to naturally balance the right-side scroller.
 - **On-Screen Vertical Drag Repositioning**: Users can now directly drag the Quick Action floating button along the screen edge to adjust vertical height in real-time, with instant haptic feedback and persistence on release.
 - **Search Panel Overlay Protection**: Floating quick action button automatically hides whenever the app search sheet or software keyboard opens (`LauncherRoot.kt`), preventing any touch conflict or screen obstruction.
 - **Reset to Defaults**: Added a one-tap "Reset to defaults" action in Launcher Settings (`TriggerTuningSheet.kt`) for quick action button placement and target configuration.
-- **Live Preview Sliders**: Vertical position and size sliders in `TriggerTuningSheet.kt` now update live on screen while sliding, committing to DataStore only upon gesture release.
+- **Live Preview Sliders**: Vertical position, size, and opacity sliders in `TriggerTuningSheet.kt` now update live on screen while sliding, committing to DataStore only upon gesture release.
 
 #### 2. Stability & Resource Leak Prevention
 - **Safe Torch Callback Lifecycle**: Explicitly bound `CameraManager.TorchCallback` lifecycle in `LauncherViewModel`, registering safely on startup and unregistering cleanly in `onCleared()` to eliminate any memory/callback leaks.

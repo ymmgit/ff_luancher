@@ -55,16 +55,17 @@ import androidx.compose.ui.unit.dp
 import com.ff.launcher.R
 import com.ff.launcher.data.AppInfo
 import com.ff.launcher.data.QuickActionConfig
+import com.ff.launcher.data.QuickActionPreferencesRepository
 import com.ff.launcher.data.QuickActionPreferencesRepository.Companion.SIZE_RANGE_F
 import com.ff.launcher.data.QuickActionType
 import com.ff.launcher.ui.quickaction.QuickActionIcons
 import com.ff.launcher.data.TriggerConfig
 import com.ff.launcher.data.TriggerEdgeSide
 import com.ff.launcher.data.TriggerMode
+import com.ff.launcher.data.TriggerPreferencesRepository
 import com.ff.launcher.data.glance.HeaderConfig
 import com.ff.launcher.data.glance.HeaderMode
 import com.ff.launcher.data.TriggerPreferencesRepository.Companion.HEIGHT_RANGE_F
-import com.ff.launcher.data.TriggerPreferencesRepository.Companion.OPACITY_RANGE
 import com.ff.launcher.data.TriggerPreferencesRepository.Companion.VERTICAL_BIAS_RANGE
 import com.ff.launcher.data.TriggerPreferencesRepository.Companion.WIDTH_RANGE_F
 import com.ff.launcher.ui.theme.FavoriteAmber
@@ -92,6 +93,8 @@ fun TriggerTuningSheet(
     onQuickActionVerticalBiasPreview: (Float) -> Unit = {},
     onQuickActionSizeChange: (Int) -> Unit = {},
     onQuickActionSizePreview: (Int) -> Unit = {},
+    onQuickActionOpacityChange: (Float) -> Unit = {},
+    onQuickActionOpacityPreview: (Float) -> Unit = {},
     onResetQuickAction: () -> Unit = {},
     hiddenApps: List<HiddenAppUi>,
     isDefaultLauncher: Boolean,
@@ -364,7 +367,7 @@ fun TriggerTuningSheet(
                             valueText = { stringResource(R.string.value_percent, (it * 100).roundToInt()) },
                             onPreview = onOpacityPreview,
                             onCommit = onOpacityCommit,
-                            valueRange = OPACITY_RANGE,
+                            valueRange = TriggerPreferencesRepository.OPACITY_RANGE,
                         )
 
                         Text(
@@ -572,6 +575,15 @@ fun TriggerTuningSheet(
                             onPreview = { onQuickActionSizePreview(it.roundToInt()) },
                             onCommit = { onQuickActionSizeChange(it.roundToInt()) },
                             valueRange = SIZE_RANGE_F,
+                        )
+
+                        TuningSlider(
+                            label = stringResource(R.string.quick_action_setting_opacity),
+                            externalValue = quickActionConfig.opacity,
+                            valueText = { stringResource(R.string.value_percent, (it * 100).roundToInt()) },
+                            onPreview = onQuickActionOpacityPreview,
+                            onCommit = onQuickActionOpacityChange,
+                            valueRange = QuickActionPreferencesRepository.OPACITY_RANGE,
                         )
 
                         OutlinedButton(

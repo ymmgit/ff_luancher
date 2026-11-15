@@ -24,6 +24,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
@@ -77,11 +78,20 @@ fun QuickActionButton(
         label = "quickActionScale",
     )
 
+    val currentAlpha = if (config.actionType == QuickActionType.FLASHLIGHT && isFlashlightOn) {
+        1f
+    } else {
+        config.opacity
+    }
+
     Box(
         modifier = modifier
             .offset(y = buttonTop)
             .padding(horizontal = 8.dp)
             .scale(scale)
+            .graphicsLayer {
+                alpha = currentAlpha
+            }
             .semantics {
                 this.contentDescription = description
                 this.role = Role.Button
@@ -92,17 +102,17 @@ fun QuickActionButton(
             color = if (config.actionType == QuickActionType.FLASHLIGHT && isFlashlightOn) {
                 MaterialTheme.colorScheme.primaryContainer
             } else {
-                MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.88f)
+                MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.70f)
             },
             border = BorderStroke(
                 width = 1.dp,
                 color = if (config.actionType == QuickActionType.FLASHLIGHT && isFlashlightOn) {
                     MaterialTheme.colorScheme.primary
                 } else {
-                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.40f)
+                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
                 },
             ),
-            shadowElevation = 6.dp,
+            shadowElevation = (2.dp * currentAlpha).coerceAtLeast(0.dp),
             modifier = Modifier
                 .size(buttonSize)
                 .clip(RoundedCornerShape(16.dp))

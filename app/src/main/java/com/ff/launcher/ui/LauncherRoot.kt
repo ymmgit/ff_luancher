@@ -361,6 +361,8 @@ fun LauncherRoot(viewModel: LauncherViewModel) {
                 onQuickActionVerticalBiasPreview = viewModel::previewQuickActionVerticalBias,
                 onQuickActionSizeChange = viewModel::setQuickActionSizeDp,
                 onQuickActionSizePreview = viewModel::previewQuickActionSizeDp,
+                onQuickActionOpacityChange = viewModel::setQuickActionOpacity,
+                onQuickActionOpacityPreview = viewModel::previewQuickActionOpacity,
                 onResetQuickAction = viewModel::resetQuickActionToDefaults,
                 hiddenApps = hiddenApps,
                 isDefaultLauncher = isDefaultLauncher,
