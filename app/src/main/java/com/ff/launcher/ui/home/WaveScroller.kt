@@ -1,6 +1,5 @@
 package com.ff.launcher.ui.home
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -10,15 +9,20 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
@@ -51,23 +55,18 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ff.launcher.R
-import com.ff.launcher.ui.theme.BubbleBackground
-import com.ff.launcher.ui.theme.TextPrimary
-import com.ff.launcher.ui.theme.TextSecondary
 import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 
 /**
- * Locale-aware section scroller docked to the right edge. The strip renders exactly one
- * node per populated section (labels come from ICU in the device language — pinyin
- * letters on zh, kana buckets on ja, jamo on ko…) plus a settings node at the bottom,
- * so there are no dead nodes to fall back from. A single [awaitEachGesture] state
- * machine drives everything: the instant the finger lands (Down, zero touch-slop
- * latency) the list jumps and the bubble pops; moves track the **absolute** finger
- * position of the initially pressed pointerId only — stray second fingers can't yank
- * it — with a [HapticFeedbackType.TextHandleMove] tick on every node crossing, and
- * release on ⚙ opens settings. [onRevealChanged] toggles the collapsed favorites-only
- * home while the strip is in use.
+ * Locale-aware section scroller docked to the right edge.
+ *
+ * Scrolling/dragging through the alphabetical scroller strictly operates on the
+ * app section labels (A–Z, #). No matter how far down the user drags, the selection
+ * and list position clamp to the last alphabetical apps, never jumping into the settings page.
+ *
+ * The bottom ⚙ settings icon is an independent tap target that only opens settings when
+ * tapped directly, preventing accidental activation during scroll flings or downward drags.
  */
 @Composable
 fun WaveScroller(
@@ -86,106 +85,116 @@ fun WaveScroller(
     var activeIndex by remember { mutableIntStateOf(-1) }
     var isDragging by remember { mutableStateOf(false) }
     var thumbY by remember { mutableFloatStateOf(0f) }
-    var scrollerHeightPx by remember { mutableFloatStateOf(1f) }
+    var alphabetHeightPx by remember { mutableFloatStateOf(1f) }
 
     // Let the last selection linger briefly after release, then fade out.
     LaunchedEffect(isDragging, activeIndex) {
         if (!isDragging) {
-            delay(600)
+            delay(500)
             activeIndex = -1
         }
     }
 
-    val settingsIndex = sectionLabels.size
-
     fun activate(index: Int) {
-        if (index == activeIndex) return
-        activeIndex = index
+        if (sectionLabels.isEmpty()) return
+        val clamped = index.coerceIn(0, sectionLabels.size - 1)
+        if (clamped == activeIndex) return
+        activeIndex = clamped
         haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-        if (index < settingsIndex) currentOnSectionSelected(index)
+        currentOnSectionSelected(clamped)
     }
 
     Box(
-        modifier = modifier
-            .onSizeChanged { scrollerHeightPx = it.height.toFloat().coerceAtLeast(1f) }
-            .semantics { contentDescription = description }
-            .pointerInput(sectionLabels) {
-                awaitEachGesture {
-                    val down = awaitFirstDown()
-                    // Lock onto the initial pointer: a stray second finger elsewhere on
-                    // the screen must not yank thumbY (and the bubble) between heights.
-                    val pointerId = down.id
-                    isDragging = true
-                    currentOnRevealChanged(true)
-                    try {
-                        thumbY = down.position.y.coerceIn(0f, size.height.toFloat())
-                        activate(indexAt(thumbY, size.height, settingsIndex + 1))
-
-                        do {
-                            val event = awaitPointerEvent()
-                            val change = event.changes.firstOrNull { it.id == pointerId }
-                                ?: break
-                            if (change.pressed) {
-                                change.consume()
-                                thumbY = change.position.y.coerceIn(0f, size.height.toFloat())
-                                activate(indexAt(thumbY, size.height, settingsIndex + 1))
-                            } else {
-                                break // the tracked finger lifted — end the gesture
-                            }
-                        } while (true)
-
-                        // The settings node activates on release so a drag passing
-                        // through it never accidentally opens settings. Kept inside the
-                        // try: a cancelled gesture must not open settings.
-                        if (activeIndex == settingsIndex) currentOnSettingsSelected()
-                    } finally {
-                        // awaitPointerEvent can throw CancellationException when the
-                        // system steals the gesture or this node leaves composition —
-                        // the reset below MUST run on that path too, or the bubble and
-                        // dragging state stay latched forever.
-                        isDragging = false
-                        currentOnRevealChanged(false)
-                    }
-                }
-            },
+        modifier = modifier.semantics { contentDescription = description },
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(vertical = 2.dp),
-            verticalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            sectionLabels.forEachIndexed { index, label ->
-                val isActive = index == activeIndex
-                val scale by animateFloatAsState(
-                    targetValue = if (isActive) 1.4f else 1f,
-                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-                    label = "waveSectionScale",
-                )
-                Text(
-                    text = label,
-                    fontSize = 11.sp,
-                    fontWeight = if (isActive) FontWeight.Bold else FontWeight.Medium,
-                    color = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Clip,
-                    modifier = Modifier.graphicsLayer {
-                        scaleX = scale
-                        scaleY = scale
+            // Alphabetical Strip (strictly maps to sectionLabels)
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(vertical = 2.dp)
+                    .onSizeChanged { alphabetHeightPx = it.height.toFloat().coerceAtLeast(1f) }
+                    .pointerInput(sectionLabels) {
+                        if (sectionLabels.isEmpty()) return@pointerInput
+                        awaitEachGesture {
+                            val down = awaitFirstDown()
+                            val pointerId = down.id
+                            isDragging = true
+                            currentOnRevealChanged(true)
+                            try {
+                                thumbY = down.position.y.coerceIn(0f, size.height.toFloat())
+                                activate(indexAt(thumbY, size.height, sectionLabels.size))
+
+                                do {
+                                    val event = awaitPointerEvent()
+                                    val change = event.changes.firstOrNull { it.id == pointerId } ?: break
+                                    if (change.pressed) {
+                                        change.consume()
+                                        thumbY = change.position.y.coerceIn(0f, size.height.toFloat())
+                                        activate(indexAt(thumbY, size.height, sectionLabels.size))
+                                    } else {
+                                        break
+                                    }
+                                } while (true)
+                            } finally {
+                                isDragging = false
+                                currentOnRevealChanged(false)
+                            }
+                        }
                     },
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                sectionLabels.forEachIndexed { index, label ->
+                    val isActive = index == activeIndex
+                    val scale by animateFloatAsState(
+                        targetValue = if (isActive) 1.4f else 1f,
+                        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                        label = "waveSectionScale",
+                    )
+                    Text(
+                        text = label,
+                        fontSize = 11.sp,
+                        fontWeight = if (isActive) FontWeight.Bold else FontWeight.Medium,
+                        color = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Clip,
+                        modifier = Modifier.graphicsLayer {
+                            scaleX = scale
+                            scaleY = scale
+                        },
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(4.dp))
+
+            // Independent Gear Settings Button (Only activates on direct tap)
+            Box(
+                modifier = Modifier
+                    .size(26.dp)
+                    .clip(CircleShape)
+                    .clickable {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        currentOnSettingsSelected()
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Settings,
+                    contentDescription = stringResource(R.string.a11y_settings),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(13.dp),
                 )
             }
-            Icon(
-                imageVector = Icons.Filled.Settings,
-                contentDescription = stringResource(R.string.a11y_settings),
-                tint = if (activeIndex == settingsIndex) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(13.dp),
-            )
         }
 
-        // Wave bubble: floats just left of the thumb so the finger never hides it.
-        AnimatedVisibility(
+        // Wave bubble: floats left of the thumb showing the active letter
+        androidx.compose.animation.AnimatedVisibility(
             visible = isDragging && activeIndex in sectionLabels.indices,
             enter = scaleIn(spring(stiffness = Spring.StiffnessMedium)) + fadeIn(tween(90)),
             exit = scaleOut(spring(stiffness = Spring.StiffnessMedium)) + fadeOut(tween(120)),
@@ -193,7 +202,7 @@ fun WaveScroller(
                 .align(Alignment.TopStart)
                 .offset {
                     val bubbleHeightPx = 52.dp.toPx()
-                    val maxY = (scrollerHeightPx - bubbleHeightPx).coerceAtLeast(0f)
+                    val maxY = (alphabetHeightPx - bubbleHeightPx).coerceAtLeast(0f)
                     IntOffset(
                         (-64.dp).roundToPx(),
                         (thumbY - bubbleHeightPx / 2f).coerceIn(0f, maxY).roundToInt(),
@@ -218,5 +227,7 @@ fun WaveScroller(
     }
 }
 
-private fun indexAt(y: Float, heightPx: Int, nodeCount: Int): Int =
-    ((y / heightPx) * nodeCount).toInt().coerceIn(0, nodeCount - 1)
+private fun indexAt(y: Float, heightPx: Int, nodeCount: Int): Int {
+    if (nodeCount <= 0 || heightPx <= 0) return 0
+    return ((y / heightPx) * nodeCount).toInt().coerceIn(0, nodeCount - 1)
+}

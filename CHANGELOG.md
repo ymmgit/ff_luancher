@@ -41,6 +41,10 @@ All notable changes, new features, and bug fixes for FF Launcher.
 - **Vertical Alphabet Wave Scroller**: Maintained the right-edge A–Z wave scroller for instant alphabetical section jumping across all installed applications.
 - **Drag-and-Drop + Arrow Reordering**: In the Pinned Sequence view, users can drag and drop items via the `≡` handle for instant reordering with haptic feedback, while retaining Up and Down arrow buttons for tap-based adjustment.
 
+#### 5. Alphabetical Scroller Downward Scroll Fix (`WaveScroller.kt`)
+- **Strict Alphabet Range Clamping**: Decoupled the bottom gear icon (⚙) from the continuous alphabet drag gesture in `WaveScroller.kt`. Scrolling or dragging down the alphabet strip is strictly confined to `0 until sectionLabels.size` and firmly clamps to the last alphabetical apps (e.g. Z or #), completely preventing accidental navigation to the Settings page when scrolling to the bottom.
+- **Independent Tap Target**: The gear icon is now an independent button at the bottom of the scroller that only activates upon a deliberate direct tap.
+
 ---
 
 ## [1.0.0] - 2026-11-15
