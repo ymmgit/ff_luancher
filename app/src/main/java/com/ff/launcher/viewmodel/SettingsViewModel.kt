@@ -16,6 +16,7 @@ import com.ff.launcher.data.TriggerConfig
 import com.ff.launcher.data.TriggerEdgeSide
 import com.ff.launcher.data.TriggerMode
 import com.ff.launcher.data.TriggerPreferencesRepository
+import com.ff.launcher.data.db.DEFAULT_WIDGET_SLOTS
 import com.ff.launcher.data.db.HOME_WIDGET_SLOT_ID
 import com.ff.launcher.data.db.LauncherDatabase
 import com.ff.launcher.data.db.WidgetSlotEntity
@@ -150,6 +151,9 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
     init {
         refreshDefaultLauncherState()
+        viewModelScope.launch {
+            database.widgetSlotDao().ensureDefaults(DEFAULT_WIDGET_SLOTS)
+        }
     }
 
     fun refreshDefaultLauncherState() {
@@ -220,6 +224,13 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
     fun setTriggerOpacity(opacity: Float) {
         viewModelScope.launch { triggerRepository.setOpacity(opacity) }
+    }
+
+    fun setTriggerWidgetCount(count: Int) {
+        viewModelScope.launch {
+            database.widgetSlotDao().ensureDefaults(DEFAULT_WIDGET_SLOTS)
+            triggerRepository.setWidgetCount(count)
+        }
     }
 
     fun setQuickActionEnabled(enabled: Boolean) {

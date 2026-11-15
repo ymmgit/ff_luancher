@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -115,6 +116,7 @@ fun QuickActionPickerSheet(
             )
 
             val presets = listOf(
+                PresetItem(QuickActionType.SECOND_SCREEN, stringResource(R.string.quick_action_preset_second_screen), Icons.Default.PlayArrow),
                 PresetItem(QuickActionType.CAMERA, stringResource(R.string.quick_action_preset_camera), QuickActionIcons.Camera),
                 PresetItem(QuickActionType.ALARM, stringResource(R.string.quick_action_preset_alarm), QuickActionIcons.Alarm),
                 PresetItem(QuickActionType.FLASHLIGHT, stringResource(R.string.quick_action_preset_flashlight), QuickActionIcons.FlashlightOn),

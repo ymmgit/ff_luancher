@@ -6,6 +6,17 @@ All notable changes, new features, and bug fixes for FF Launcher.
 
 ## [1.3.0] - 2026-11-15
 
+### 🎛️ Second Widget Screen Intent & Configurable Widget Quantity (1–4)
+- **Direct Second Screen Intent Actions**:
+  - Registered intent filters in `AndroidManifest.xml` and handling in `MainActivity.kt` for `com.ff.launcher.action.OPEN_SECOND_SCREEN` and `com.ff.launcher.action.OPEN_WIDGET_DECK`.
+  - Supports intent extras (`com.ff.launcher.extra.OPEN_SECOND_SCREEN` or `open_second_screen`), allowing system shortcuts, automation tools (Tasker, Macrodroid), and shell commands (`am start -a com.ff.launcher.action.OPEN_SECOND_SCREEN`) to open the secondary widget deck directly.
+  - Added **Second Screen** preset to the Quick Action Floating Button picker (`QuickActionPickerSheet.kt`), allowing users to open their widget deck with a single tap on the floating button.
+- **Customizable Widget Quantity in Settings (1, 2, 3, or 4)**:
+  - Users can now choose the exact number of stacked widget slots displayed on the secondary screen: **1**, **2**, **3**, or **4**.
+  - Configurable directly in the Settings menu under the **Show Second Widget Screen** card using a Material 3 single-choice segmented button row.
+  - Live card subtitle updates immediately with the configured count (e.g. `Right • Tap + Swipe • 4 widgets`).
+  - Automatically provisions slot 4 in SQLite database (`LauncherDatabase.kt`) and dynamically calculates heights so widgets proportionally divide the available screen space.
+
 ### 🗂️ Clean, Collapsible Settings Screen Reorganization
 - **At-a-Glance Dashboard Layout**:
   - Reorganized all launcher settings into 5 clean, distinct Material 3 category cards:

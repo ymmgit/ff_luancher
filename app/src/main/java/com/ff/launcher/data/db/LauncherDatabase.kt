@@ -193,6 +193,7 @@ val DEFAULT_WIDGET_SLOTS = listOf(
     WidgetSlotEntity(slotId = 1, appWidgetId = null, heightWeight = SLOT_WEIGHT_SMALL),
     WidgetSlotEntity(slotId = 2, appWidgetId = null, heightWeight = SLOT_WEIGHT_MEDIUM),
     WidgetSlotEntity(slotId = 3, appWidgetId = null, heightWeight = SLOT_WEIGHT_LARGE),
+    WidgetSlotEntity(slotId = 4, appWidgetId = null, heightWeight = SLOT_WEIGHT_MEDIUM),
 )
 
 /** Transactional toggle helper shared by the repositories. */

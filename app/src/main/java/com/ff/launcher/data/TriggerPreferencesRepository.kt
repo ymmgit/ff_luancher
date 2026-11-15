@@ -30,6 +30,7 @@ data class TriggerConfig(
     val widthDp: Int = 5,
     val opacity: Float = 0.35f,
     val mode: TriggerMode = TriggerMode.TAP_AND_SWIPE,
+    val widgetCount: Int = 3,
 ) {
     /** Swipe activation (and therefore gesture exclusion) is active unless tap-only. */
     val swipeEnabled: Boolean get() = enabled && mode != TriggerMode.TAP_ONLY
@@ -60,6 +61,7 @@ class TriggerPreferencesRepository(context: Context) {
                 widthDp = (prefs[KEY_WIDTH_DP] ?: DEFAULT.widthDp).coerceIn(WIDTH_RANGE),
                 opacity = (prefs[KEY_OPACITY] ?: DEFAULT.opacity).coerceIn(OPACITY_RANGE),
                 mode = prefs[KEY_MODE].toEnum(TriggerMode.TAP_AND_SWIPE),
+                widgetCount = (prefs[KEY_WIDGET_COUNT] ?: DEFAULT.widgetCount).coerceIn(WIDGET_COUNT_RANGE),
             )
         }
 
@@ -110,6 +112,12 @@ class TriggerPreferencesRepository(context: Context) {
         dataStore.edit { it[KEY_MODE] = mode.name }
     }
 
+    suspend fun setWidgetCount(count: Int) {
+        val clamped = count.coerceIn(WIDGET_COUNT_RANGE)
+        Log.i(TAG, "setWidgetCount: $clamped")
+        dataStore.edit { it[KEY_WIDGET_COUNT] = clamped }
+    }
+
     companion object {
         private const val TAG = "FF/TriggerPrefs"
         /** Single source of truth for every tunable range — the UI sliders reference these. */
@@ -117,6 +125,8 @@ class TriggerPreferencesRepository(context: Context) {
         val HEIGHT_RANGE = 32..100
         val WIDTH_RANGE = 3..12
         val OPACITY_RANGE = 0f..1f
+        val WIDGET_COUNT_RANGE = 1..4
+        const val DEFAULT_WIDGET_COUNT = 3
 
         /** Float copies for Material3 [androidx.compose.material3.Slider] value ranges. */
         val HEIGHT_RANGE_F = HEIGHT_RANGE.first.toFloat()..HEIGHT_RANGE.last.toFloat()
@@ -131,6 +141,7 @@ class TriggerPreferencesRepository(context: Context) {
         private val KEY_WIDTH_DP = intPreferencesKey("trigger_width_dp")
         private val KEY_OPACITY = floatPreferencesKey("trigger_opacity")
         private val KEY_MODE = stringPreferencesKey("trigger_mode")
+        private val KEY_WIDGET_COUNT = intPreferencesKey("deck_widget_count")
 
         private inline fun <reified T : Enum<T>> String?.toEnum(default: T): T =
             this?.let { value -> enumValues<T>().firstOrNull { it.name == value } } ?: default

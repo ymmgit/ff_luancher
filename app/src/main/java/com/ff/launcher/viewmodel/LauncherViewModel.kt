@@ -1157,11 +1157,19 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         }.onFailure { Log.w(TAG, "Failed to toggle flashlight", it) }
     }
 
+    fun setDeckWidgetCount(count: Int) {
+        viewModelScope.launch {
+            database.widgetSlotDao().ensureDefaults(DEFAULT_WIDGET_SLOTS)
+            triggerRepository.setWidgetCount(count)
+        }
+    }
+
     fun executeQuickAction() {
         val config = quickActionConfig.value
         val context = getApplication<Application>()
         Log.i(TAG, "executeQuickAction: type=${config.actionType}, key=${config.componentKey}")
         when (config.actionType) {
+            QuickActionType.SECOND_SCREEN -> setSecondScreenOpen(true)
             QuickActionType.FLASHLIGHT -> toggleFlashlight()
             QuickActionType.CAMERA -> {
                 val intent = Intent(MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA)

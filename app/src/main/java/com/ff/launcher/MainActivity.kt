@@ -75,6 +75,9 @@ class MainActivity : ComponentActivity() {
 
     companion object {
         const val ACTION_REPLACE_HOME_WIDGET = "com.ff.launcher.action.REPLACE_HOME_WIDGET"
+        const val ACTION_OPEN_SECOND_SCREEN = "com.ff.launcher.action.OPEN_SECOND_SCREEN"
+        const val ACTION_OPEN_WIDGET_DECK = "com.ff.launcher.action.OPEN_WIDGET_DECK"
+        const val EXTRA_OPEN_SECOND_SCREEN = "com.ff.launcher.extra.OPEN_SECOND_SCREEN"
         private const val REQUEST_CONFIGURE_WIDGET = 1001
         private const val REQUEST_BIND_WIDGET = 1002
     }
@@ -134,6 +137,14 @@ class MainActivity : ComponentActivity() {
         Log.d("MainActivity", "handleHomeIntent: action=${intent?.action}, categories=${intent?.categories}")
         if (intent?.action == ACTION_REPLACE_HOME_WIDGET) {
             viewModel.replaceHomeWidget()
+            return
+        }
+        if (intent?.action == ACTION_OPEN_SECOND_SCREEN ||
+            intent?.action == ACTION_OPEN_WIDGET_DECK ||
+            intent?.getBooleanExtra(EXTRA_OPEN_SECOND_SCREEN, false) == true ||
+            intent?.getBooleanExtra("open_second_screen", false) == true
+        ) {
+            viewModel.setSecondScreenOpen(true)
             return
         }
         if (intent != null &&

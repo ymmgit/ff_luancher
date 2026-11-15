@@ -196,12 +196,17 @@ fun SettingsScreen(
         } else {
             stringResource(R.string.edge_right)
         }
+        val countStr = if (triggerConfig.widgetCount == 1) {
+            stringResource(R.string.widget_count_one)
+        } else {
+            stringResource(R.string.widgets_count_label, triggerConfig.widgetCount)
+        }
         val modeStr = when (triggerConfig.mode) {
             TriggerMode.TAP_ONLY -> stringResource(R.string.mode_tap)
             TriggerMode.SWIPE_ONLY -> stringResource(R.string.mode_swipe)
             TriggerMode.TAP_AND_SWIPE -> stringResource(R.string.mode_tap_and_swipe)
         }
-        "$sideStr • $modeStr"
+        "$sideStr • $modeStr • $countStr"
     }
 
     val quickActionSubtitle = if (!quickActionConfig.enabled) {
@@ -213,6 +218,7 @@ fun SettingsScreen(
             stringResource(R.string.edge_right)
         }
         val actionStr = when (quickActionConfig.actionType) {
+            QuickActionType.SECOND_SCREEN -> stringResource(R.string.quick_action_preset_second_screen)
             QuickActionType.FLASHLIGHT -> stringResource(R.string.quick_action_preset_flashlight)
             QuickActionType.CAMERA -> stringResource(R.string.quick_action_preset_camera)
             QuickActionType.ALARM -> stringResource(R.string.quick_action_preset_alarm)
@@ -1081,6 +1087,32 @@ fun SettingsScreen(
                             valueRange = TriggerPreferencesRepository.OPACITY_RANGE,
                         )
 
+                        // Widget Quantity (1, 2, 3, or 4)
+                        Text(
+                            text = stringResource(R.string.setting_widget_quantity),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Text(
+                            text = stringResource(R.string.setting_widget_quantity_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                            listOf(1, 2, 3, 4).forEachIndexed { index, count ->
+                                SegmentedButton(
+                                    selected = triggerConfig.widgetCount == count,
+                                    onClick = { viewModel.setTriggerWidgetCount(count) },
+                                    shape = SegmentedButtonDefaults.itemShape(index = index, count = 4),
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.widget_count_option, count),
+                                        fontWeight = FontWeight.Bold,
+                                    )
+                                }
+                            }
+                        }
+
                         Text(
                             text = stringResource(R.string.setting_activation_mode),
                             style = MaterialTheme.typography.labelLarge,
@@ -1181,6 +1213,12 @@ fun SettingsScreen(
                                     modifier = Modifier.weight(1f),
                                 ) {
                                     when (quickActionConfig.actionType) {
+                                        QuickActionType.SECOND_SCREEN -> Icon(
+                                            Icons.Default.PlayArrow,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(24.dp),
+                                        )
                                         QuickActionType.FLASHLIGHT -> Icon(
                                             QuickActionIcons.FlashlightOn,
                                             contentDescription = null,
@@ -1225,6 +1263,7 @@ fun SettingsScreen(
                                     }
 
                                     val label = when (quickActionConfig.actionType) {
+                                        QuickActionType.SECOND_SCREEN -> stringResource(R.string.quick_action_preset_second_screen)
                                         QuickActionType.FLASHLIGHT -> stringResource(R.string.quick_action_preset_flashlight)
                                         QuickActionType.CAMERA -> stringResource(R.string.quick_action_preset_camera)
                                         QuickActionType.ALARM -> stringResource(R.string.quick_action_preset_alarm)

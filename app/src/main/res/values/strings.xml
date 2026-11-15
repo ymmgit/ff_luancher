@@ -200,4 +200,12 @@
     <string name="hidden_apps_count">%d apps hidden</string>
     <string name="hidden_apps_one">1 app hidden</string>
     <string name="setting_fine_tuning">Position &amp; Appearance</string>
+
+    <!-- Second Screen Widget Quantity & Intent -->
+    <string name="setting_widget_quantity">Widget Quantity (Deck Slots)</string>
+    <string name="setting_widget_quantity_desc">Choose how many stacked widget slots to show on the second screen.</string>
+    <string name="widget_count_option">%d</string>
+    <string name="widgets_count_label">%d widgets</string>
+    <string name="widget_count_one">1 widget</string>
+    <string name="quick_action_preset_second_screen">Second Screen</string>
 </resources>

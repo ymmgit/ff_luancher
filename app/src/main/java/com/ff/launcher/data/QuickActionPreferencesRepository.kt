@@ -20,6 +20,7 @@ enum class QuickActionType {
     ALARM,
     FLASHLIGHT,
     ASSISTANT,
+    SECOND_SCREEN,
 }
 
 /**

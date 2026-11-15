@@ -35,6 +35,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ff.launcher.data.QuickActionType
 import com.ff.launcher.data.TriggerEdgeSide
 import com.ff.launcher.data.db.HOME_WIDGET_SLOT_ID
+import com.ff.launcher.data.db.WidgetSlotEntity
 import com.ff.launcher.ui.home.AppSearchSheet
 import com.ff.launcher.ui.home.HomeScreen
 import com.ff.launcher.ui.home.ManageFavoritesSheet
@@ -297,6 +298,18 @@ fun LauncherRoot(viewModel: LauncherViewModel) {
         }
 
         val slideFromEnd = triggerConfig.edgeSide == TriggerEdgeSide.RIGHT
+        val secondarySlots = remember(widgetSlots, triggerConfig.widgetCount) {
+            val nonHomeSlots = widgetSlots.filter { it.slotId != HOME_WIDGET_SLOT_ID }
+            val count = triggerConfig.widgetCount.coerceIn(1, 4)
+            if (nonHomeSlots.size < count) {
+                val existingMap = nonHomeSlots.associateBy { it.slotId }
+                (1..count).map { id ->
+                    existingMap[id] ?: WidgetSlotEntity(slotId = id, appWidgetId = null, heightWeight = 3f)
+                }
+            } else {
+                nonHomeSlots.take(count)
+            }
+        }
         AnimatedVisibility(
             visible = isSecondScreenOpen,
             enter = fadeIn(tween(160)) + slideInHorizontally(tween(220)) { full ->
@@ -307,7 +320,7 @@ fun LauncherRoot(viewModel: LauncherViewModel) {
             },
         ) {
             SecondaryScreen(
-                slots = widgetSlots.filter { it.slotId != HOME_WIDGET_SLOT_ID },
+                slots = secondarySlots,
                 onRequestWidget = viewModel::requestWidgetForSlot,
                 onRemoveWidget = viewModel::removeWidgetFromSlot,
                 onOpenTuning = {

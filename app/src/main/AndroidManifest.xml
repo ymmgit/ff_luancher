@@ -44,6 +44,11 @@
                 <category android:name="android.intent.category.HOME" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="com.ff.launcher.action.OPEN_SECOND_SCREEN" />
+                <action android:name="com.ff.launcher.action.OPEN_WIDGET_DECK" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
         </activity>
 
         <!-- Trampoline entry point: visible in other launchers' app drawers so the user can

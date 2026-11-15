@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -158,6 +160,14 @@ fun QuickActionButton(
                 modifier = Modifier.size(buttonSize),
             ) {
                 when (config.actionType) {
+                    QuickActionType.SECOND_SCREEN -> {
+                        Icon(
+                            imageVector = Icons.Default.PlayArrow,
+                            contentDescription = stringResource(R.string.quick_action_preset_second_screen),
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp),
+                        )
+                    }
                     QuickActionType.FLASHLIGHT -> {
                         Icon(
                             imageVector = if (isFlashlightOn) QuickActionIcons.FlashlightOn else QuickActionIcons.FlashlightOff,
