@@ -192,4 +192,12 @@
     <string name="notification_generic_hidden">Hidden content</string>
     <string name="notification_count_label">%d notification</string>
     <string name="notification_counts_label">%d notifications</string>
+
+    <!-- Settings Screen Organization -->
+    <string name="setting_status_off">Disabled</string>
+    <string name="setting_status_on">Enabled</string>
+    <string name="setting_tap_to_configure">Tap to configure</string>
+    <string name="hidden_apps_count">%d apps hidden</string>
+    <string name="hidden_apps_one">1 app hidden</string>
+    <string name="setting_fine_tuning">Position &amp; Appearance</string>
 </resources>

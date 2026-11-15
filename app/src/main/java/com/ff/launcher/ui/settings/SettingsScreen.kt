@@ -4,9 +4,13 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,6 +21,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -25,10 +30,16 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -133,6 +144,90 @@ fun SettingsScreen(
 
     val overlapsScroller = triggerConfig.edgeSide == TriggerEdgeSide.RIGHT && triggerConfig.enabled
 
+    var isHeaderExpanded by remember { mutableStateOf(false) }
+    var isNotificationsExpanded by remember { mutableStateOf(false) }
+    var isTriggerExpanded by remember { mutableStateOf(false) }
+    var isQuickActionExpanded by remember { mutableStateOf(false) }
+    var isHiddenAppsExpanded by remember { mutableStateOf(false) }
+
+    val headerSubtitle = when {
+        homeWidgetSlot?.appWidgetId != null -> stringResource(R.string.home_widget_custom_active)
+        headerConfig.mode == HeaderMode.HIDDEN -> stringResource(R.string.header_mode_hidden)
+        else -> {
+            val modeStr = when (headerConfig.mode) {
+                HeaderMode.COMBINED -> stringResource(R.string.header_mode_combined)
+                HeaderMode.CLOCK_ONLY -> stringResource(R.string.header_mode_clock)
+                HeaderMode.CALENDAR_ONLY -> stringResource(R.string.header_mode_calendar)
+                HeaderMode.WEATHER_ONLY -> stringResource(R.string.header_mode_weather)
+                HeaderMode.HIDDEN -> stringResource(R.string.header_mode_hidden)
+            }
+            val sizeStr = when (headerConfig.size) {
+                HeaderSize.SMALL -> stringResource(R.string.size_small)
+                HeaderSize.MEDIUM -> stringResource(R.string.size_medium)
+                HeaderSize.LARGE -> stringResource(R.string.size_large)
+            }
+            "$modeStr • $sizeStr"
+        }
+    }
+
+    val notificationSubtitle = when {
+        !badgePreferences.enabled -> stringResource(R.string.setting_status_off)
+        !hasNotificationAccess -> stringResource(R.string.setting_notification_access_needed)
+        else -> {
+            val scopeStr = if (badgePreferences.scope == BadgeScope.ALL) {
+                stringResource(R.string.scope_all_apps)
+            } else {
+                stringResource(R.string.scope_pinned_only)
+            }
+            val mutedCount = badgePreferences.mutedPackages.size
+            if (mutedCount > 0) {
+                stringResource(R.string.setting_status_on) + " • $scopeStr ($mutedCount muted)"
+            } else {
+                stringResource(R.string.setting_status_on) + " • $scopeStr"
+            }
+        }
+    }
+
+    val triggerSubtitle = if (!triggerConfig.enabled) {
+        stringResource(R.string.setting_status_off)
+    } else {
+        val sideStr = if (triggerConfig.edgeSide == TriggerEdgeSide.LEFT) {
+            stringResource(R.string.edge_left)
+        } else {
+            stringResource(R.string.edge_right)
+        }
+        val modeStr = when (triggerConfig.mode) {
+            TriggerMode.TAP_ONLY -> stringResource(R.string.mode_tap)
+            TriggerMode.SWIPE_ONLY -> stringResource(R.string.mode_swipe)
+            TriggerMode.TAP_AND_SWIPE -> stringResource(R.string.mode_tap_and_swipe)
+        }
+        "$sideStr • $modeStr"
+    }
+
+    val quickActionSubtitle = if (!quickActionConfig.enabled) {
+        stringResource(R.string.setting_status_off)
+    } else {
+        val sideStr = if (quickActionConfig.edgeSide == TriggerEdgeSide.LEFT) {
+            stringResource(R.string.edge_left)
+        } else {
+            stringResource(R.string.edge_right)
+        }
+        val actionStr = when (quickActionConfig.actionType) {
+            QuickActionType.FLASHLIGHT -> stringResource(R.string.quick_action_preset_flashlight)
+            QuickActionType.CAMERA -> stringResource(R.string.quick_action_preset_camera)
+            QuickActionType.ALARM -> stringResource(R.string.quick_action_preset_alarm)
+            QuickActionType.ASSISTANT -> stringResource(R.string.quick_action_preset_assistant)
+            QuickActionType.APP -> quickActionTargetApp?.label ?: quickActionConfig.customLabel.ifEmpty { "App" }
+        }
+        "$actionStr • $sideStr"
+    }
+
+    val hiddenSubtitle = when (hiddenApps.size) {
+        0 -> stringResource(R.string.settings_no_hidden_apps)
+        1 -> stringResource(R.string.hidden_apps_one)
+        else -> stringResource(R.string.hidden_apps_count, hiddenApps.size)
+    }
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
@@ -214,7 +309,9 @@ fun SettingsScreen(
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainer,
                 ),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .animateContentSize(),
             ) {
                 Column(
                     modifier = Modifier
@@ -222,17 +319,25 @@ fun SettingsScreen(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
-                    Text(
-                        text = stringResource(R.string.section_smart_header),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
+                    SettingsCardHeader(
+                        icon = Icons.Default.Home,
+                        title = stringResource(R.string.section_smart_header),
+                        subtitle = headerSubtitle,
+                        isExpanded = isHeaderExpanded,
+                        onHeaderClick = { isHeaderExpanded = !isHeaderExpanded },
                     )
-                    Text(
-                        text = stringResource(R.string.smart_header_desc),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+
+                    if (isHeaderExpanded) {
+                        HorizontalDivider(
+                            modifier = Modifier.fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                        )
+
+                        Text(
+                            text = stringResource(R.string.smart_header_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
 
                     val hasCustomWidget = homeWidgetSlot?.appWidgetId != null
 
@@ -551,6 +656,7 @@ fun SettingsScreen(
                             }
                         }
                     }
+                    }
                 }
             }
 
@@ -560,7 +666,9 @@ fun SettingsScreen(
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainer,
                 ),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .animateContentSize(),
             ) {
                 Column(
                     modifier = Modifier
@@ -568,29 +676,34 @@ fun SettingsScreen(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = stringResource(R.string.section_notifications),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
+                    SettingsCardHeader(
+                        icon = Icons.Default.Notifications,
+                        title = stringResource(R.string.section_notifications),
+                        subtitle = notificationSubtitle,
+                        isExpanded = isNotificationsExpanded,
+                        onHeaderClick = { isNotificationsExpanded = !isNotificationsExpanded },
+                        trailingContent = {
+                            Switch(
+                                checked = badgePreferences.enabled,
+                                onCheckedChange = { checked ->
+                                    viewModel.setBadgeEnabled(checked)
+                                    if (checked) isNotificationsExpanded = true
+                                },
                             )
-                            Text(
-                                text = stringResource(R.string.setting_notification_arrows_desc),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                        Switch(
-                            checked = badgePreferences.enabled,
-                            onCheckedChange = { viewModel.setBadgeEnabled(it) },
+                        },
+                    )
+
+                    if (isNotificationsExpanded) {
+                        HorizontalDivider(
+                            modifier = Modifier.fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
                         )
-                    }
+
+                        Text(
+                            text = stringResource(R.string.setting_notification_arrows_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
 
                     // Notification Access Status Banner
                     if (!hasNotificationAccess) {
@@ -862,6 +975,7 @@ fun SettingsScreen(
                             )
                         }
                     }
+                    }
                 }
             }
 
@@ -871,7 +985,9 @@ fun SettingsScreen(
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainer,
                 ),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .animateContentSize(),
             ) {
                 Column(
                     modifier = Modifier
@@ -879,29 +995,34 @@ fun SettingsScreen(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = stringResource(R.string.setting_show_second_screen),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
+                    SettingsCardHeader(
+                        icon = Icons.Default.PlayArrow,
+                        title = stringResource(R.string.setting_show_second_screen),
+                        subtitle = triggerSubtitle,
+                        isExpanded = isTriggerExpanded,
+                        onHeaderClick = { isTriggerExpanded = !isTriggerExpanded },
+                        trailingContent = {
+                            Switch(
+                                checked = triggerConfig.enabled,
+                                onCheckedChange = { checked ->
+                                    viewModel.setTriggerEnabled(checked)
+                                    if (checked) isTriggerExpanded = true
+                                },
                             )
-                            Text(
-                                text = stringResource(R.string.setting_show_second_screen_desc),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                        Switch(
-                            checked = triggerConfig.enabled,
-                            onCheckedChange = viewModel::setTriggerEnabled,
+                        },
+                    )
+
+                    if (isTriggerExpanded) {
+                        HorizontalDivider(
+                            modifier = Modifier.fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
                         )
-                    }
+
+                        Text(
+                            text = stringResource(R.string.setting_show_second_screen_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
 
                     if (!triggerConfig.enabled) {
                         Text(
@@ -983,6 +1104,7 @@ fun SettingsScreen(
                             ) { Text(stringResource(R.string.mode_tap_and_swipe)) }
                         }
                     }
+                    }
                 }
             }
 
@@ -992,7 +1114,9 @@ fun SettingsScreen(
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainer,
                 ),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .animateContentSize(),
             ) {
                 Column(
                     modifier = Modifier
@@ -1000,29 +1124,34 @@ fun SettingsScreen(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = stringResource(R.string.section_quick_action),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
+                    SettingsCardHeader(
+                        icon = QuickActionIcons.Rocket,
+                        title = stringResource(R.string.section_quick_action),
+                        subtitle = quickActionSubtitle,
+                        isExpanded = isQuickActionExpanded,
+                        onHeaderClick = { isQuickActionExpanded = !isQuickActionExpanded },
+                        trailingContent = {
+                            Switch(
+                                checked = quickActionConfig.enabled,
+                                onCheckedChange = { checked ->
+                                    viewModel.setQuickActionEnabled(checked)
+                                    if (checked) isQuickActionExpanded = true
+                                },
                             )
-                            Text(
-                                text = stringResource(R.string.quick_action_desc),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                        Switch(
-                            checked = quickActionConfig.enabled,
-                            onCheckedChange = viewModel::setQuickActionEnabled,
+                        },
+                    )
+
+                    if (isQuickActionExpanded) {
+                        HorizontalDivider(
+                            modifier = Modifier.fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
                         )
-                    }
+
+                        Text(
+                            text = stringResource(R.string.quick_action_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
 
                     if (quickActionConfig.enabled) {
                         Text(
@@ -1182,6 +1311,7 @@ fun SettingsScreen(
                             Text(stringResource(R.string.quick_action_reset))
                         }
                     }
+                    }
                 }
             }
 
@@ -1191,7 +1321,9 @@ fun SettingsScreen(
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainer,
                 ),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .animateContentSize(),
             ) {
                 Column(
                     modifier = Modifier
@@ -1199,46 +1331,55 @@ fun SettingsScreen(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    Text(
-                        text = stringResource(R.string.section_hidden_apps),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
+                    SettingsCardHeader(
+                        icon = Icons.Default.Lock,
+                        title = stringResource(R.string.section_hidden_apps),
+                        subtitle = hiddenSubtitle,
+                        isExpanded = isHiddenAppsExpanded,
+                        onHeaderClick = { isHiddenAppsExpanded = !isHiddenAppsExpanded },
                     )
-                    if (hiddenApps.isEmpty()) {
-                        Text(
-                            text = stringResource(R.string.settings_no_hidden_apps),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(vertical = 4.dp),
+
+                    if (isHiddenAppsExpanded) {
+                        HorizontalDivider(
+                            modifier = Modifier.fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
                         )
-                    } else {
-                        hiddenApps.forEach { hidden ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 2.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Text(
-                                    text = hidden.label,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Medium,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.weight(1f),
-                                )
-                                FilledTonalButton(
-                                    onClick = { viewModel.unhideApp(hidden.componentKey) },
-                                    shape = RoundedCornerShape(10.dp),
+
+                        if (hiddenApps.isEmpty()) {
+                            Text(
+                                text = stringResource(R.string.settings_no_hidden_apps),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(vertical = 4.dp),
+                            )
+                        } else {
+                            hiddenApps.forEach { hidden ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 2.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     Text(
-                                        text = stringResource(R.string.action_unhide),
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
+                                        text = hidden.label,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.weight(1f),
                                     )
+                                    FilledTonalButton(
+                                        onClick = { viewModel.unhideApp(hidden.componentKey) },
+                                        shape = RoundedCornerShape(10.dp),
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.action_unhide),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -1302,5 +1443,82 @@ private fun TuningSlider(
             },
             valueRange = valueRange,
         )
+    }
+}
+
+@Composable
+private fun SettingsCardHeader(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    isExpanded: Boolean,
+    onHeaderClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    trailingContent: (@Composable () -> Unit)? = null,
+) {
+    val rotation by animateFloatAsState(
+        targetValue = if (isExpanded) 180f else 0f,
+        animationSpec = tween(200),
+        label = "chevronRotation",
+    )
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(onClick = onHeaderClick)
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Row(
+            modifier = Modifier.weight(1f),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                modifier = Modifier.size(40.dp),
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            trailingContent?.invoke()
+            IconButton(onClick = onHeaderClick) {
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowDown,
+                    contentDescription = if (isExpanded) "Collapse" else "Expand",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.rotate(rotation),
+                )
+            }
+        }
     }
 }

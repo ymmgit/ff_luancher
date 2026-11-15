@@ -6,6 +6,19 @@ All notable changes, new features, and bug fixes for FF Launcher.
 
 ## [1.3.0] - 2026-11-15
 
+### 🗂️ Clean, Collapsible Settings Screen Reorganization
+- **At-a-Glance Dashboard Layout**:
+  - Reorganized all launcher settings into 5 clean, distinct Material 3 category cards:
+    1. 🏠 **Home Screen Header & Widgets**: Live status subtitle (e.g. `Combined • Medium` or `Custom widget active`).
+    2. 🔔 **Notifications**: Live subtitle (`Enabled • All Apps` / `Disabled`), with instant header switch and expandable privacy/scope controls.
+    3. ▶️ **Secondary Screen**: Live subtitle (`Right • Tap + Swipe` / `Disabled`), with instant header switch and expandable edge/slider controls.
+    4. 🚀 **Quick Action Floating Button**: Live subtitle (`Flashlight • Left` / `Disabled`), with instant header switch and expandable action/slider controls.
+    5. 🔒 **Hidden Apps**: Live subtitle (`Nothing hidden yet` / `N apps hidden`), with expandable unhide list.
+- **Accordion Animation & Instant Toggle**:
+  - Cards are collapsed by default with `animateContentSize()` and rotating 180° chevrons, fitting the entire Settings control center neatly onto one screen without scrolling.
+  - Tapping anywhere on a card header expands or collapses its detailed controls.
+  - Toggling any master switch ON automatically expands that card so the user can immediately configure its fine-tuning options.
+
 ### 🔔 App Notification Indicators, Inline Accordion Panel & System Dismiss
 - **Calm Notification Arrow Indicator**:
   - Replaced stressful red badges and numeric counters with a subtle down chevron arrow (`NotificationArrow.kt`) rendered beside the app label when notifications arrive.
