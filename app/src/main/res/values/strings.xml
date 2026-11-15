@@ -1,189 +1,204 @@
 <resources>
     <string name="app_name">FF Launcher</string>
-    <string name="a11y_edge_trigger">Edge trigger. Tap or swipe inward to open the utility deck.</string>
-    <string name="a11y_wave_scroller">App list section scroller</string>
+
+    <!-- Accessibility -->
+    <string name="a11y_edge_trigger">Edge handle. Tap or swipe inward to open your widget screen.</string>
+    <string name="a11y_wave_scroller">A–Z app scroller</string>
     <string name="a11y_settings">Settings</string>
     <string name="a11y_back">Back</string>
-    <string name="settings_activity_label">FF Launcher Settings</string>
-    <string name="menu_add_favorite">Add to favorites</string>
-    <string name="menu_remove_favorite">Remove from favorites</string>
+    <string name="settings_activity_label">FF Launcher settings</string>
+
+    <!-- App context menu -->
+    <string name="menu_add_favorite">Pin to home</string>
+    <string name="menu_remove_favorite">Unpin from home</string>
     <string name="menu_move_up">Move up</string>
     <string name="menu_move_down">Move down</string>
-    <string name="menu_arrange_favorites">Arrange favorites</string>
+    <string name="menu_arrange_favorites">Arrange pinned apps</string>
     <string name="menu_hide_app">Hide app</string>
     <string name="menu_app_info">App info</string>
     <string name="menu_uninstall">Uninstall</string>
-    <string name="error_launch_failed">Failed to open this app</string>
-    <string name="error_work_profile">Failed to open this app. The work profile may be paused.</string>
-    <string name="hint_trigger_overlaps_scroller">The pill overlaps the A–Z scroller band and yields there — touches on it scroll the list. Move it above 35% to restore it, or use the ⚙ node to open this deck.</string>
 
-    <string name="settings_title">Launcher Settings</string>
-    <string name="settings_intro">Changes apply live to the pill on the screen edge. Tap it or swipe inward to open this deck.</string>
-    <string name="section_edge_trigger">Edge trigger</string>
-    <string name="section_smart_header">Home Screen Header</string>
-    <string name="smart_header_desc">Display clock, calendar, and weather at the top of your home screen.</string>
+    <!-- Errors and hints -->
+    <string name="error_launch_failed">Couldn\'t open this app</string>
+    <string name="error_work_profile">Couldn\'t open this app. Your work profile may be paused.</string>
+    <string name="hint_trigger_overlaps_scroller">The handle sits over the A–Z scroller, so touches there scroll the list. Move it above 35% to use it, or open settings from the ⚙ at the bottom of the scroller.</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_intro">Changes apply instantly. Tap the edge handle or swipe inward to open your widget screen.</string>
+    <string name="section_edge_trigger">Edge handle</string>
+    <string name="section_smart_header">Home header</string>
+    <string name="smart_header_desc">Show the clock, calendar and weather at the top of your home screen.</string>
     <string name="section_widgets">Widgets</string>
-    <string name="section_widgets_desc">Manage widgets for your home screen and secondary sliding screen.</string>
-    <string name="section_home_widget">Home Screen Widget</string>
-    <string name="home_widget_default_active">Default Smart Header Active</string>
-    <string name="home_widget_default_desc">The built-in Smart Header is active at the top of your home screen. Tap below to replace it with any Android widget.</string>
-    <string name="section_secondary_widgets">Second Screen Widgets</string>
-    <string name="section_secondary_widgets_desc">Up to 4 custom widgets can be placed on your secondary sliding screen. Long-press on the secondary screen to enter Edit Mode.</string>
-    <string name="action_open_second_screen">Open Second Screen</string>
-    <string name="secondary_widgets_none">No widgets placed</string>
-    <string name="setting_header_mode">Display Style</string>
-    <string name="header_mode_combined">Combined (Clock, Calendar, Weather)</string>
+    <string name="section_widgets_desc">Manage widgets on your home screen and widget screen.</string>
+    <string name="section_home_widget">Home screen widget</string>
+    <string name="home_widget_default_active">Default header in use</string>
+    <string name="home_widget_default_desc">The built-in header is showing at the top of your home screen. You can replace it with any Android widget.</string>
+    <string name="section_secondary_widgets">Widget screen</string>
+    <string name="section_secondary_widgets_desc">Place up to 4 widgets on your widget screen. Long-press it to edit.</string>
+    <string name="action_open_second_screen">Open widget screen</string>
+    <string name="secondary_widgets_none">No widgets yet</string>
+    <string name="setting_header_mode">Display style</string>
+    <string name="header_mode_combined">Combined (clock, calendar, weather)</string>
     <string name="header_mode_clock">Clock</string>
     <string name="header_mode_calendar">Calendar</string>
     <string name="header_mode_weather">Weather</string>
     <string name="header_mode_hidden">Hidden</string>
-    <string name="home_widget_replace">Replace with Widget…</string>
-    <string name="home_widget_restore">Restore Default Clock / Smart Header</string>
-    <string name="home_widget_options">Home Widget Options</string>
-    <string name="home_widget_custom_active">Custom Widget Active</string>
-    <string name="home_widget_custom_desc">A third-party widget is currently placed at the top of your home screen, replacing the default clock header.</string>
-    <string name="action_restore">Restore Default</string>
-    <string name="setting_temperature_unit">Temperature Unit</string>
+    <string name="home_widget_replace">Replace with a widget…</string>
+    <string name="home_widget_restore">Restore default header</string>
+    <string name="home_widget_options">Home widget options</string>
+    <string name="home_widget_custom_active">Custom widget in use</string>
+    <string name="home_widget_custom_desc">A third-party widget has replaced the default header at the top of your home screen.</string>
+    <string name="action_restore">Restore default</string>
+    <string name="setting_temperature_unit">Temperature unit</string>
     <string name="unit_celsius">Celsius (°C)</string>
     <string name="unit_fahrenheit">Fahrenheit (°F)</string>
-    <string name="setting_widget_size">Widget Size</string>
+    <string name="setting_widget_size">Widget size</string>
     <string name="size_small">Small</string>
     <string name="size_medium">Medium</string>
     <string name="size_large">Large</string>
-    <string name="weather_location_title">Weather Location</string>
-    <string name="weather_location_permission_needed">Location access is needed for accurate local weather. Currently using estimated location based on your device timezone.</string>
-    <string name="weather_location_allow">Allow Location Access</string>
-    <string name="weather_location_granted">Location Access Active</string>
-    <string name="weather_location_refresh">Refresh Weather</string>
+    <string name="weather_location_title">Weather location</string>
+    <string name="weather_location_permission_needed">Allow location access for accurate local weather. Until then, your location is estimated from your time zone.</string>
+    <string name="weather_location_allow">Allow location access</string>
+    <string name="weather_location_granted">Location access on</string>
+    <string name="weather_location_refresh">Refresh weather</string>
     <string name="section_hidden_apps">Hidden apps</string>
-    <string name="settings_no_hidden_apps">Nothing hidden yet. Long-press an app on the home screen and choose "Hide app".</string>
+    <string name="settings_no_hidden_apps">Nothing hidden yet. Long-press an app and choose Hide app.</string>
     <string name="action_unhide">Unhide</string>
     <string name="setting_edge_side">Edge side</string>
     <string name="edge_left">Left</string>
     <string name="edge_right">Right</string>
     <string name="setting_vertical_position">Vertical position</string>
-    <string name="setting_pill_height">Pill height</string>
-    <string name="setting_pill_width">Pill width</string>
+    <string name="setting_pill_height">Handle height</string>
+    <string name="setting_pill_width">Handle width</string>
     <string name="setting_opacity">Opacity</string>
-    <string name="setting_activation_mode">Activation mode</string>
+    <string name="setting_activation_mode">Activation</string>
     <string name="mode_tap">Tap</string>
     <string name="mode_swipe">Swipe</string>
-    <string name="mode_tap_and_swipe">Tap + Swipe</string>
+    <string name="mode_tap_and_swipe">Tap or swipe</string>
     <string name="value_dp">%1$d dp</string>
     <string name="value_percent">%1$d%%</string>
 
-    <string name="slot_empty_hint">Tap or long-press to add a widget</string>
+    <!-- Widget slots -->
+    <string name="slot_empty_hint">Tap to add a widget</string>
     <string name="slot_action_add_widget">Add widget</string>
     <string name="slot_action_replace_widget">Replace widget</string>
     <string name="slot_action_remove_widget">Remove widget</string>
-    <string name="menu_slot_size">Canvas size</string>
-    <string name="menu_canvas_size">Canvas size</string>
+    <string name="menu_slot_size">Widget size</string>
+    <string name="menu_canvas_size">Widget size</string>
     <string name="slot_size_small">Small</string>
     <string name="slot_size_medium">Medium</string>
     <string name="slot_size_large">Large</string>
-    <string name="settings_tune_trigger">Tune Edge Trigger</string>
-    <string name="widget_picker_title">Select a widget</string>
+    <string name="settings_tune_trigger">Adjust edge handle</string>
+    <string name="widget_picker_title">Choose a widget</string>
     <string name="widget_picker_empty">No widgets available</string>
-    <string name="widget_search_hint">Search widgets &amp; apps…</string>
+    <string name="widget_search_hint">Search widgets and apps…</string>
     <string name="widget_count_single">%1$d widget</string>
     <string name="widget_count_multiple">%1$d widgets</string>
     <string name="widget_size_label">%1$d × %2$d</string>
-    <string name="banner_set_default">Tap to set as your default launcher</string>
+    <string name="banner_set_default">Tap to make FF Launcher your default home app</string>
 
+    <!-- Onboarding -->
     <string name="onboarding_title">Welcome to FF Launcher</string>
-    <string name="onboarding_subtitle">A calm, minimal home screen. Here is what to expect:</string>
-    <string name="onboarding_feature_edge">Edge trigger — tap or swipe the screen edge for your widget deck</string>
-    <string name="onboarding_feature_scroller">Right-edge section scroller to find any app instantly</string>
-    <string name="onboarding_feature_deck">A full-screen widget deck with hideable apps</string>
+    <string name="onboarding_subtitle">A calm, minimal home screen. Here\'s what to expect:</string>
+    <string name="onboarding_feature_edge">Swipe or tap the screen edge to open your widget screen</string>
+    <string name="onboarding_feature_scroller">Jump to any app with the A–Z scroller on the right edge</string>
+    <string name="onboarding_feature_deck">A full-screen widget screen for the things you check most</string>
     <string name="onboarding_set_default">Set as default launcher</string>
     <string name="onboarding_skip">Skip for now</string>
-    <string name="onboarding_default_note">You can change the default home anytime in system settings → Apps → Default apps.</string>
+    <string name="onboarding_default_note">You can change this anytime in Settings → Apps → Default apps.</string>
     <string name="onboarding_next">Next</string>
     <string name="onboarding_get_started">Get started</string>
-    <string name="onboarding_feature_minimal">Minimalist Favorites</string>
-    <string name="onboarding_feature_minimal_desc">Your home screen stays clean and only shows your pinned favorites. Long-press any app in the list to pin or unpin it.</string>
-    <string name="onboarding_feature_scroller_desc">Slide up and down the right edge to jump to any app with one hand. Tap ⚙ at the bottom for your widget deck.</string>
+    <string name="onboarding_feature_minimal">Only what matters</string>
+    <string name="onboarding_feature_minimal_desc">Your home screen shows just your pinned apps. Long-press any app to pin or unpin it.</string>
+    <string name="onboarding_feature_scroller_desc">Slide along the right edge to reach any app with one hand. Tap ⚙ at the bottom to open settings.</string>
 
-    <string name="home_empty_favorites_title">No favorites pinned yet</string>
-    <string name="home_empty_favorites_desc">Slide the right-edge A–Z bar (or tap below) to browse your apps, then long-press your most-used apps to pin them here.</string>
-    <string name="home_empty_favorites_action">Browse apps to pin</string>
+    <!-- Empty home -->
+    <string name="home_empty_favorites_title">No pinned apps yet</string>
+    <string name="home_empty_favorites_desc">Slide the A–Z bar on the right edge, or tap below, to browse your apps. Long-press an app to pin it here.</string>
+    <string name="home_empty_favorites_action">Browse apps</string>
 
-    <string name="arrange_favorites_title">Arrange Favorites</string>
-    <string name="arrange_favorites_desc">Reorder your home screen apps. Tap the arrows to change their sequence.</string>
-    <string name="arrange_favorites_empty">No favorites pinned yet. Long-press any app in the app drawer to add it to favorites.</string>
+    <!-- Arrange / manage pinned apps -->
+    <string name="arrange_favorites_title">Arrange pinned apps</string>
+    <string name="arrange_favorites_desc">Drag ≡ or use the arrows to change the order of your home screen apps.</string>
+    <string name="arrange_favorites_empty">No pinned apps yet. Long-press any app in the app list to pin it.</string>
     <string name="arrange_favorites_done">Done</string>
 
-    <string name="manage_favorites_title">Home Screen &amp; Favorites</string>
-    <string name="manage_favorites_desc">Pin apps to your home screen, arrange their order, and manage app options.</string>
-    <string name="manage_favorites_selected">Selected App</string>
-    <string name="manage_favorites_pin">Pin to Home</string>
-    <string name="manage_favorites_unpin">Unpin from Home</string>
-    <string name="manage_favorites_sequence_title">Home Screen Sequence</string>
-    <string name="manage_favorites_sequence_desc">Apps appear on your home screen in this exact order.</string>
-    <string name="manage_favorites_all_apps_title">All Apps</string>
-    <string name="manage_favorites_search_hint">Search apps to add…</string>
+    <string name="manage_favorites_title">Home screen apps</string>
+    <string name="manage_favorites_desc">Choose which apps appear on your home screen and set their order.</string>
+    <string name="manage_favorites_selected">Selected app</string>
+    <string name="manage_favorites_pin">Pin to home</string>
+    <string name="manage_favorites_unpin">Unpin from home</string>
+    <string name="manage_favorites_sequence_title">Home order</string>
+    <string name="manage_favorites_sequence_desc">Apps appear on your home screen in this order.</string>
+    <string name="manage_favorites_all_apps_title">All apps</string>
+    <string name="manage_favorites_search_hint">Search apps…</string>
     <string name="manage_favorites_pinned_badge">Pinned #%1$d</string>
-    <string name="tab_all_apps">All Apps (%1$d)</string>
+    <string name="tab_all_apps">All apps (%1$d)</string>
     <string name="tab_pinned_apps">Pinned (%1$d)</string>
-    <string name="drag_to_reorder_hint">Drag ≡ or tap arrows to reorder</string>
+    <string name="drag_to_reorder_hint">Drag ≡ or use the arrows to reorder</string>
 
+    <!-- Search -->
     <string name="search_apps_hint">Search apps…</string>
-    <string name="search_recent_apps">Recent apps</string>
+    <string name="search_recent_apps">Recent</string>
     <string name="search_new_apps">Newly installed</string>
-    <string name="search_no_results">No apps match "%1$s"</string>
+    <string name="search_no_results">No apps match \"%1$s\"</string>
     <string name="search_pull_up_hint">Pull up to search</string>
 
+    <!-- Bundled widgets -->
     <string name="widget_clock_label">Clock</string>
-    <string name="widget_clock_desc">Digital clock and date with quick alarm access</string>
+    <string name="widget_clock_desc">Digital clock and date, with quick alarm access</string>
     <string name="widget_calendar_label">Calendar</string>
-    <string name="widget_calendar_desc">Today\'s date and upcoming calendar events</string>
+    <string name="widget_calendar_desc">Today\'s date and your upcoming events</string>
     <string name="widget_weather_label">Weather</string>
-    <string name="widget_weather_desc">Current temperature and local weather conditions</string>
+    <string name="widget_weather_desc">Current temperature and local conditions</string>
     <string name="widget_no_events">No upcoming events</string>
 
-    <string name="setting_show_second_screen">Show Second Widget Screen</string>
-    <string name="setting_show_second_screen_desc">Show the edge trigger to access your secondary widget screen. Hiding it keeps your widgets safely in memory.</string>
-    <string name="setting_second_screen_hidden_hint">Your widgets are saved and return when you turn this on.</string>
+    <!-- Show / hide widget screen -->
+    <string name="setting_show_second_screen">Widget screen</string>
+    <string name="setting_show_second_screen_desc">Show the edge handle that opens your widget screen. Turning it off hides it but keeps your widgets saved.</string>
+    <string name="setting_second_screen_hidden_hint">Your widgets are saved and will return when you turn this on.</string>
 
-    <string name="section_quick_action">Quick Action Floating Button</string>
-    <string name="quick_action_desc">Quickly launch a customized tool or app from an ergonomic floating button.</string>
-    <string name="setting_enable_quick_action">Enable Quick Action Button</string>
-    <string name="quick_action_target_label">Assigned Action / App</string>
-    <string name="quick_action_choose_app">Change Action</string>
-    <string name="quick_action_picker_title">Select Quick Action</string>
-    <string name="quick_action_picker_desc">Choose a tool or installed app to launch instantly with one tap.</string>
-    <string name="quick_action_presets">Quick Tools</string>
+    <!-- Quick action button -->
+    <string name="section_quick_action">Quick action button</string>
+    <string name="quick_action_desc">A floating button that opens a tool or app in one tap.</string>
+    <string name="setting_enable_quick_action">Show quick action button</string>
+    <string name="quick_action_target_label">Opens</string>
+    <string name="quick_action_choose_app">Change</string>
+    <string name="quick_action_picker_title">Choose a quick action</string>
+    <string name="quick_action_picker_desc">Pick a tool or any installed app to open with one tap.</string>
+    <string name="quick_action_presets">Quick tools</string>
     <string name="quick_action_preset_camera">Camera</string>
-    <string name="quick_action_preset_alarm">Alarm / Clock</string>
+    <string name="quick_action_preset_alarm">Alarm</string>
     <string name="quick_action_preset_flashlight">Flashlight</string>
-    <string name="quick_action_preset_assistant">AI / Voice Assistant</string>
-    <string name="quick_action_search_hint">Search apps for quick action…</string>
-    <string name="quick_action_tap_hint">Tap to launch, long-press to customize</string>
-    <string name="quick_action_setting_size">Button Size</string>
-    <string name="quick_action_setting_opacity">Button Opacity</string>
+    <string name="quick_action_preset_assistant">Assistant</string>
+    <string name="quick_action_search_hint">Search apps…</string>
+    <string name="quick_action_tap_hint">Tap to open. Long-press to customize.</string>
+    <string name="quick_action_setting_size">Button size</string>
+    <string name="quick_action_setting_opacity">Button opacity</string>
     <string name="quick_action_reset">Reset to defaults</string>
 
-    <!-- Notification Indicator & Panel -->
-    <string name="notification_listener_service_label">FF Launcher Notification Listener</string>
+    <!-- Notification indicator and panel -->
+    <string name="notification_listener_service_label">FF Launcher notifications</string>
     <string name="section_notifications">Notifications</string>
-    <string name="setting_notification_arrows">Notification Arrows</string>
-    <string name="setting_notification_arrows_desc">Show a down arrow on apps with notifications to read and clear them.</string>
-    <string name="setting_notification_access_title">Notification Access</string>
-    <string name="setting_notification_access_granted">Notification access is active</string>
-    <string name="setting_notification_access_needed">Notification access is required to detect notifications.</string>
-    <string name="setting_notification_access_grant_button">Grant Notification Access</string>
+    <string name="setting_notification_arrows">Notification arrows</string>
+    <string name="setting_notification_arrows_desc">Show a down arrow on apps with notifications. Tap it to read, open or clear them.</string>
+    <string name="setting_notification_access_title">Notification access</string>
+    <string name="setting_notification_access_granted">Notification access is on</string>
+    <string name="setting_notification_access_needed">Allow notification access so FF Launcher can show which apps have notifications.</string>
+    <string name="setting_notification_access_grant_button">Allow notification access</string>
     <string name="setting_notification_access_manage">Manage</string>
-    <string name="setting_mark_as_read_on_dismiss">Also mark as read when dismissing</string>
-    <string name="setting_mark_as_read_desc">Send read receipts/mark as read in apps that support it.</string>
-    <string name="setting_hide_message_text">Hide message text in panel</string>
-    <string name="setting_hide_message_text_desc">Keep message contents private until the app is opened.</string>
+    <string name="setting_mark_as_read_on_dismiss">Mark as read when dismissing</string>
+    <string name="setting_mark_as_read_desc">Marks the chat as read in apps that support it. This may send a read receipt.</string>
+    <string name="setting_hide_message_text">Hide message text</string>
+    <string name="setting_hide_message_text_desc">Show a generic label instead of message content.</string>
     <string name="setting_include_silent">Include silent notifications</string>
-    <string name="setting_include_silent_desc">Show indicators even for low-priority notifications.</string>
-    <string name="setting_notification_scope">Notification Scope</string>
-    <string name="scope_all_apps">All Apps</string>
-    <string name="scope_pinned_only">Pinned Only</string>
-    <string name="setting_muted_apps">Muted Apps</string>
-    <string name="setting_no_muted_apps">No apps muted</string>
+    <string name="setting_include_silent_desc">Also show arrows for low-priority notifications.</string>
+    <string name="setting_notification_scope">Show arrows for</string>
+    <string name="scope_all_apps">All apps</string>
+    <string name="scope_pinned_only">Pinned apps only</string>
+    <string name="setting_muted_apps">Muted apps</string>
+    <string name="setting_no_muted_apps">No muted apps</string>
     <string name="setting_unmute">Unmute</string>
     <string name="menu_mute_notifications">Mute notifications</string>
     <string name="menu_unmute_notifications">Unmute notifications</string>
@@ -194,7 +209,7 @@
     <string name="notification_show_less">Show less</string>
     <string name="notification_action_mark_read">Mark read</string>
     <string name="notification_action_dismiss">Dismiss</string>
-    <string name="notification_relative_now">Just now</string>
+    <string name="notification_relative_now">Now</string>
     <string name="notification_relative_minutes">%dm ago</string>
     <string name="notification_relative_hours">%dh ago</string>
     <string name="notification_relative_days">%dd ago</string>
@@ -203,29 +218,29 @@
     <string name="notification_count_label">%d notification</string>
     <string name="notification_counts_label">%d notifications</string>
 
-    <!-- Settings Screen Organization -->
-    <string name="setting_status_off">Disabled</string>
-    <string name="setting_status_on">Enabled</string>
-    <string name="setting_tap_to_configure">Tap to configure</string>
+    <!-- Settings screen organization -->
+    <string name="setting_status_off">Off</string>
+    <string name="setting_status_on">On</string>
+    <string name="setting_tap_to_configure">Tap to set up</string>
     <string name="hidden_apps_count">%d apps hidden</string>
     <string name="hidden_apps_one">1 app hidden</string>
-    <string name="setting_fine_tuning">Position &amp; Appearance</string>
+    <string name="setting_fine_tuning">Position and appearance</string>
 
-    <!-- Second Screen Widget Quantity & Intent -->
-    <string name="setting_widget_quantity">Widget Quantity (Deck Slots)</string>
-    <string name="setting_widget_quantity_desc">Choose how many stacked widget slots to show on the second screen.</string>
+    <!-- Widget screen quantity -->
+    <string name="setting_widget_quantity">Number of widgets</string>
+    <string name="setting_widget_quantity_desc">Choose how many widgets to stack on the widget screen (1–4).</string>
     <string name="widget_count_option">%d</string>
     <string name="widgets_count_label">%d widgets</string>
     <string name="widget_count_one">1 widget</string>
-    <string name="quick_action_preset_second_screen">Second Screen</string>
+    <string name="quick_action_preset_second_screen">Widget screen</string>
 
-    <!-- Floating Canvas & Secondary Screen Redesign -->
-    <string name="edit_widgets_title">Edit Widgets</string>
+    <!-- Widget screen editing -->
+    <string name="edit_widgets_title">Edit widgets</string>
     <string name="edit_widgets_done">Done</string>
-    <string name="edit_widgets_add_section">Add another widget</string>
-    <string name="edit_widgets_capacity_full">Screen capacity reached</string>
-    <string name="empty_second_screen_hint">Tap + at the bottom to add a widget</string>
-    <string name="slot_size_s">S 25%</string>
-    <string name="slot_size_m">M 28%</string>
-    <string name="slot_size_l">L 30%</string>
+    <string name="edit_widgets_add_section">Add a widget</string>
+    <string name="edit_widgets_capacity_full">No more room on this screen</string>
+    <string name="empty_second_screen_hint">Tap + below to add a widget</string>
+    <string name="slot_size_s">S · 25%</string>
+    <string name="slot_size_m">M · 28%</string>
+    <string name="slot_size_l">L · 30%</string>
 </resources>

@@ -1,0 +1,246 @@
+<resources>
+    <string name="app_name">FF Launcher</string>
+
+    <!-- Accessibility -->
+    <string name="a11y_edge_trigger">边缘操作。轻点或向内滑动即可打开小组件屏。</string>
+    <string name="a11y_wave_scroller">A–Z 应用索引条</string>
+    <string name="a11y_settings">设置</string>
+    <string name="a11y_back">返回</string>
+    <string name="settings_activity_label">FF Launcher 设置</string>
+
+    <!-- App context menu -->
+    <string name="menu_add_favorite">固定到 Home Screen</string>
+    <string name="menu_remove_favorite">从 Home Screen 取消固定</string>
+    <string name="menu_move_up">上移</string>
+    <string name="menu_move_down">下移</string>
+    <string name="menu_arrange_favorites">排列 Home Screen 应用</string>
+    <string name="menu_hide_app">隐藏应用</string>
+    <string name="menu_app_info">应用信息</string>
+    <string name="menu_uninstall">卸载</string>
+
+    <!-- Errors and hints -->
+    <string name="error_launch_failed">无法打开此应用</string>
+    <string name="error_work_profile">无法打开此应用，您的工作资料可能已暂停。</string>
+    <string name="hint_trigger_overlaps_scroller">边缘操作区域与 A–Z 索引条重叠，此处的触摸会滚动列表。请将它移到 35% 以上的位置再使用，或点按索引条底部的 ⚙ 打开设置。</string>
+
+    <!-- Settings -->
+    <string name="settings_title">设置</string>
+    <string name="settings_intro">更改即时生效。轻点边缘操作区域或向内滑动即可打开小组件屏。</string>
+    <string name="section_edge_trigger">边缘操作</string>
+    <string name="section_smart_header">Home Screen 顶部信息</string>
+    <string name="smart_header_desc">在 Home Screen 顶部显示时钟、日历和天气。</string>
+    <string name="section_widgets">小组件</string>
+    <string name="section_widgets_desc">管理 Home Screen 和小组件屏上的小组件。</string>
+    <string name="section_home_widget">Home Screen 小组件</string>
+    <string name="home_widget_default_active">正在使用默认顶部信息</string>
+    <string name="home_widget_default_desc">Home Screen 顶部正在显示内置信息栏。您可以将它替换为任意 Android 小组件。</string>
+    <string name="section_secondary_widgets">小组件屏</string>
+    <string name="section_secondary_widgets_desc">最多可在小组件屏上放置 4 个小组件。长按小组件屏即可编辑。</string>
+    <string name="action_open_second_screen">打开小组件屏</string>
+    <string name="secondary_widgets_none">暂无小组件</string>
+    <string name="setting_header_mode">显示样式</string>
+    <string name="header_mode_combined">组合（时钟、日历、天气）</string>
+    <string name="header_mode_clock">时钟</string>
+    <string name="header_mode_calendar">日历</string>
+    <string name="header_mode_weather">天气</string>
+    <string name="header_mode_hidden">隐藏</string>
+    <string name="home_widget_replace">替换为小组件…</string>
+    <string name="home_widget_restore">恢复默认顶部信息</string>
+    <string name="home_widget_options">Home Screen 小组件选项</string>
+    <string name="home_widget_custom_active">正在使用自定义小组件</string>
+    <string name="home_widget_custom_desc">第三方小组件已替换 Home Screen 顶部的默认信息栏。</string>
+    <string name="action_restore">恢复默认</string>
+    <string name="setting_temperature_unit">温度单位</string>
+    <string name="unit_celsius">摄氏度 (°C)</string>
+    <string name="unit_fahrenheit">华氏度 (°F)</string>
+    <string name="setting_widget_size">小组件大小</string>
+    <string name="size_small">小</string>
+    <string name="size_medium">中</string>
+    <string name="size_large">大</string>
+    <string name="weather_location_title">天气位置</string>
+    <string name="weather_location_permission_needed">允许访问位置信息可获得准确的本地天气。在此之前，将根据您的时区估算位置。</string>
+    <string name="weather_location_allow">允许访问位置信息</string>
+    <string name="weather_location_granted">位置访问已开启</string>
+    <string name="weather_location_refresh">刷新天气</string>
+    <string name="section_hidden_apps">已隐藏的应用</string>
+    <string name="settings_no_hidden_apps">暂无隐藏的应用。长按应用并选择“隐藏应用”即可。</string>
+    <string name="action_unhide">取消隐藏</string>
+    <string name="setting_edge_side">边缘位置</string>
+    <string name="edge_left">左侧</string>
+    <string name="edge_right">右侧</string>
+    <string name="setting_vertical_position">垂直位置</string>
+    <string name="setting_pill_height">边缘操作高度</string>
+    <string name="setting_pill_width">边缘操作宽度</string>
+    <string name="setting_opacity">不透明度</string>
+    <string name="setting_activation_mode">触发方式</string>
+    <string name="mode_tap">轻点</string>
+    <string name="mode_swipe">滑动</string>
+    <string name="mode_tap_and_swipe">轻点或滑动</string>
+    <string name="value_dp">%1$d dp</string>
+    <string name="value_percent">%1$d%%</string>
+
+    <!-- Widget slots -->
+    <string name="slot_empty_hint">轻点添加小组件</string>
+    <string name="slot_action_add_widget">添加小组件</string>
+    <string name="slot_action_replace_widget">替换小组件</string>
+    <string name="slot_action_remove_widget">移除小组件</string>
+    <string name="menu_slot_size">小组件大小</string>
+    <string name="menu_canvas_size">小组件大小</string>
+    <string name="slot_size_small">小</string>
+    <string name="slot_size_medium">中</string>
+    <string name="slot_size_large">大</string>
+    <string name="settings_tune_trigger">调整边缘操作</string>
+    <string name="widget_picker_title">选择小组件</string>
+    <string name="widget_picker_empty">没有可用的小组件</string>
+    <string name="widget_search_hint">搜索小组件和应用…</string>
+    <string name="widget_count_single">%1$d 个小组件</string>
+    <string name="widget_count_multiple">%1$d 个小组件</string>
+    <string name="widget_size_label">%1$d × %2$d</string>
+    <string name="banner_set_default">轻点即可将 FF Launcher 设为默认桌面</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_title">欢迎使用 FF Launcher</string>
+    <string name="onboarding_subtitle">简洁、安静的 Home Screen。您将体验到：</string>
+    <string name="onboarding_feature_edge">轻点或滑动屏幕边缘，即可打开小组件屏</string>
+    <string name="onboarding_feature_scroller">用右侧的 A–Z 索引条快速找到任意应用</string>
+    <string name="onboarding_feature_deck">全屏小组件屏，汇集您最常查看的内容</string>
+    <string name="onboarding_set_default">设为默认桌面</string>
+    <string name="onboarding_skip">暂时跳过</string>
+    <string name="onboarding_default_note">您可以随时在“设置 → 应用 → 默认应用”中更改。</string>
+    <string name="onboarding_next">下一步</string>
+    <string name="onboarding_get_started">开始使用</string>
+    <string name="onboarding_feature_minimal">只留重要的</string>
+    <string name="onboarding_feature_minimal_desc">Home Screen 只显示您固定的应用。长按任意应用即可固定或取消固定。</string>
+    <string name="onboarding_feature_scroller_desc">沿右侧边缘滑动，单手即可找到任意应用。点按底部的 ⚙ 打开设置。</string>
+
+    <!-- Empty home -->
+    <string name="home_empty_favorites_title">还没有 Home Screen 应用</string>
+    <string name="home_empty_favorites_desc">滑动右侧的 A–Z 索引条，或点按下方按钮浏览应用。长按应用即可固定到这里。</string>
+    <string name="home_empty_favorites_action">浏览应用</string>
+
+    <!-- Arrange / manage Home Screen apps -->
+    <string name="arrange_favorites_title">排列 Home Screen 应用</string>
+    <string name="arrange_favorites_desc">拖动 ≡ 或使用箭头，调整 Home Screen 应用的顺序。</string>
+    <string name="arrange_favorites_empty">还没有 Home Screen 应用。在应用列表中长按任意应用即可固定。</string>
+    <string name="arrange_favorites_done">完成</string>
+
+    <string name="manage_favorites_title">Home Screen 应用</string>
+    <string name="manage_favorites_desc">选择要显示在 Home Screen 上的应用，并设置它们的顺序。</string>
+    <string name="manage_favorites_selected">已选应用</string>
+    <string name="manage_favorites_pin">固定到 Home Screen</string>
+    <string name="manage_favorites_unpin">从 Home Screen 取消固定</string>
+    <string name="manage_favorites_sequence_title">Home Screen 顺序</string>
+    <string name="manage_favorites_sequence_desc">应用将按此顺序显示在 Home Screen 上。</string>
+    <string name="manage_favorites_all_apps_title">所有应用</string>
+    <string name="manage_favorites_search_hint">搜索应用…</string>
+    <string name="manage_favorites_pinned_badge">已固定 #%1$d</string>
+    <string name="tab_all_apps">所有应用 (%1$d)</string>
+    <string name="tab_pinned_apps">Home Screen (%1$d)</string>
+    <string name="drag_to_reorder_hint">拖动 ≡ 或使用箭头调整顺序</string>
+
+    <!-- Search -->
+    <string name="search_apps_hint">搜索应用…</string>
+    <string name="search_recent_apps">最近使用</string>
+    <string name="search_new_apps">新安装</string>
+    <string name="search_no_results">没有匹配“%1$s”的应用</string>
+    <string name="search_pull_up_hint">上拉搜索</string>
+
+    <!-- Bundled widgets -->
+    <string name="widget_clock_label">时钟</string>
+    <string name="widget_clock_desc">数字时钟和日期，可快速进入闹钟</string>
+    <string name="widget_calendar_label">日历</string>
+    <string name="widget_calendar_desc">今天的日期和即将到来的日程</string>
+    <string name="widget_weather_label">天气</string>
+    <string name="widget_weather_desc">当前气温和本地天气状况</string>
+    <string name="widget_no_events">暂无即将到来的日程</string>
+
+    <!-- Show / hide widget screen -->
+    <string name="setting_show_second_screen">小组件屏</string>
+    <string name="setting_show_second_screen_desc">显示用于打开小组件屏的边缘操作。关闭后将隐藏，但您的小组件会被保留。</string>
+    <string name="setting_second_screen_hidden_hint">您的小组件已保存，重新开启后会恢复显示。</string>
+
+    <!-- Quick action button -->
+    <string name="section_quick_action">快捷操作按钮</string>
+    <string name="quick_action_desc">一个悬浮按钮，一键打开工具或应用。</string>
+    <string name="setting_enable_quick_action">显示快捷操作按钮</string>
+    <string name="quick_action_target_label">打开</string>
+    <string name="quick_action_choose_app">更改</string>
+    <string name="quick_action_picker_title">选择快捷操作</string>
+    <string name="quick_action_picker_desc">选择一个工具或任意已安装的应用，轻点即可打开。</string>
+    <string name="quick_action_presets">快捷工具</string>
+    <string name="quick_action_preset_camera">相机</string>
+    <string name="quick_action_preset_alarm">闹钟</string>
+    <string name="quick_action_preset_flashlight">手电筒</string>
+    <string name="quick_action_preset_assistant">语音助手</string>
+    <string name="quick_action_search_hint">搜索应用…</string>
+    <string name="quick_action_tap_hint">轻点打开。长按自定义。</string>
+    <string name="quick_action_setting_size">按钮大小</string>
+    <string name="quick_action_setting_opacity">按钮不透明度</string>
+    <string name="quick_action_reset">恢复默认设置</string>
+
+    <!-- Notification indicator and panel -->
+    <string name="notification_listener_service_label">FF Launcher 通知</string>
+    <string name="section_notifications">通知</string>
+    <string name="setting_notification_arrows">通知箭头指示</string>
+    <string name="setting_notification_arrows_desc">在有通知的应用旁显示向下箭头。轻点可查看、打开或清除通知。</string>
+    <string name="setting_notification_access_title">通知访问权限</string>
+    <string name="setting_notification_access_granted">通知访问权限已开启</string>
+    <string name="setting_notification_access_needed">允许通知访问权限，以便 FF Launcher 显示哪些应用有新通知。</string>
+    <string name="setting_notification_access_grant_button">允许通知访问权限</string>
+    <string name="setting_notification_access_manage">管理</string>
+    <string name="setting_mark_as_read_on_dismiss">清除时标记为已读</string>
+    <string name="setting_mark_as_read_desc">在支持的应用中将对话标记为已读。这可能会发送已读回执。</string>
+    <string name="setting_hide_message_text">隐藏消息内容</string>
+    <string name="setting_hide_message_text_desc">显示通用提示而非具体消息内容。</string>
+    <string name="setting_include_silent">包含静音通知</string>
+    <string name="setting_include_silent_desc">也为低优先级的静音通知显示指示箭头。</string>
+    <string name="setting_notification_scope">显示箭头指示的应用</string>
+    <string name="scope_all_apps">所有应用</string>
+    <string name="scope_pinned_only">仅限固定到 Home Screen 的应用</string>
+    <string name="setting_muted_apps">已静音的应用</string>
+    <string name="setting_no_muted_apps">暂无静音的应用</string>
+    <string name="setting_unmute">取消静音</string>
+    <string name="menu_mute_notifications">静音通知</string>
+    <string name="menu_unmute_notifications">取消静音通知</string>
+    <string name="action_show_notifications">展开通知</string>
+    <string name="action_hide_notifications">收起通知</string>
+    <string name="notification_clear_all">清除全部</string>
+    <string name="notification_show_more">显示另外 %d 条</string>
+    <string name="notification_show_less">收起</string>
+    <string name="notification_action_mark_read">标记为已读</string>
+    <string name="notification_action_dismiss">忽略</string>
+    <string name="notification_relative_now">刚刚</string>
+    <string name="notification_relative_minutes">%d分钟前</string>
+    <string name="notification_relative_hours">%dh前</string>
+    <string name="notification_relative_days">%d天前</string>
+    <string name="notification_generic_new">新通知</string>
+    <string name="notification_generic_hidden">内容已隐藏</string>
+    <string name="notification_count_label">%d 条通知</string>
+    <string name="notification_counts_label">%d 条通知</string>
+
+    <!-- Settings screen organization -->
+    <string name="setting_status_off">已关闭</string>
+    <string name="setting_status_on">已开启</string>
+    <string name="setting_tap_to_configure">轻点设置</string>
+    <string name="hidden_apps_count">已隐藏 %d 个应用</string>
+    <string name="hidden_apps_one">已隐藏 1 个应用</string>
+    <string name="setting_fine_tuning">位置与外观</string>
+
+    <!-- Widget screen quantity -->
+    <string name="setting_widget_quantity">小组件数量</string>
+    <string name="setting_widget_quantity_desc">选择在小组件屏上放置的小组件数量 (1–4)。</string>
+    <string name="widget_count_option">%d</string>
+    <string name="widgets_count_label">%d 个小组件</string>
+    <string name="widget_count_one">1 个小组件</string>
+    <string name="quick_action_preset_second_screen">小组件屏</string>
+
+    <!-- Widget screen editing -->
+    <string name="edit_widgets_title">编辑小组件</string>
+    <string name="edit_widgets_done">完成</string>
+    <string name="edit_widgets_add_section">添加小组件</string>
+    <string name="edit_widgets_capacity_full">屏幕空间已满</string>
+    <string name="empty_second_screen_hint">轻点下方 + 添加小组件</string>
+    <string name="slot_size_s">小 · 25%</string>
+    <string name="slot_size_m">中 · 28%</string>
+    <string name="slot_size_l">大 · 30%</string>
+</resources>
