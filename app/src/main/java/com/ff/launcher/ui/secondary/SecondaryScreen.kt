@@ -2,14 +2,20 @@ package com.ff.launcher.ui.secondary
 
 import android.appwidget.AppWidgetManager
 import android.content.Context
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -22,18 +28,23 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -54,343 +65,647 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LifecycleEventEffect
 import com.ff.launcher.R
-import com.ff.launcher.data.db.SLOT_WEIGHT_LARGE
-import com.ff.launcher.data.db.SLOT_WEIGHT_MEDIUM
-import com.ff.launcher.data.db.SLOT_WEIGHT_SMALL
+import com.ff.launcher.data.db.SLOT_FRACTION_LARGE
+import com.ff.launcher.data.db.SLOT_FRACTION_MEDIUM
+import com.ff.launcher.data.db.SLOT_FRACTION_SMALL
 import com.ff.launcher.data.db.WidgetSlotEntity
+import com.ff.launcher.data.db.normalizeSlotFraction
 import com.ff.launcher.widget.LauncherAppWidgetHostView
+import kotlin.math.roundToInt
 
 /**
- * Secondary Screen — Modern Google Material 3 widget deck:
- * Invisible slot placeholders blend seamlessly with wallpaper.
- * Subtle minimalist "+ Add widget" button in empty slots.
- * Long-pressing anywhere on empty canvas or occupied widget pops out the unified
- * context menu (Add/Replace, Remove, Canvas size, Launcher Settings).
+ * Secondary Screen — Consistent Absolute Proportion Architecture:
+ * - Small: 25% of content height (max 4 widgets fit: 4 * 25% = 100%)
+ * - Medium: 27.5% of content height (max 3 widgets fit: 3 * 27.5% = 82.5%)
+ * - Large: 30% of content height (max 3 widgets fit: 3 * 30% = 90%)
+ *
+ * Sits seamlessly on wallpaper in normal mode with a subtle '+' button at the bottom
+ * aligned with the edge trigger pill. Long-pressing the screen or tapping the '+' button
+ * enters Edit Mode where canvases become floating cards with drag/arrow reordering,
+ * direct S/M/L size chips, and an adding section at the bottom.
  */
 @Composable
 fun SecondaryScreen(
     slots: List<WidgetSlotEntity>,
+    isTriggerOnRight: Boolean,
     onRequestWidget: (Int) -> Unit,
     onRemoveWidget: (Int) -> Unit,
     onOpenTuning: () -> Unit,
     onUpdateSlotWeight: (Int, Float) -> Unit,
+    onReorderSlots: (List<WidgetSlotEntity>) -> Unit,
     obtainHostView: (Context, Int, Int) -> LauncherAppWidgetHostView?,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val currentOnDismiss by rememberUpdatedState(onDismiss)
     val currentOnOpenTuning by rememberUpdatedState(onOpenTuning)
+    val haptics = LocalHapticFeedback.current
     val insets = WindowInsets.systemBars.asPaddingValues()
 
-    Column(
+    var isEditMode by remember { mutableStateOf(false) }
+    BackHandler(enabled = isEditMode) { isEditMode = false }
+
+    val activeSlots = remember(slots) { slots.filter { it.appWidgetId != null } }
+
+    val totalAllocatedFraction = remember(activeSlots) {
+        activeSlots.sumOf { normalizeSlotFraction(it.heightWeight).toDouble() }.toFloat()
+    }
+    val remainingCapacity = (1.0f - totalAllocatedFraction).coerceAtLeast(0f)
+    val canAddMore = remainingCapacity >= 0.245f && activeSlots.size < 4
+    val nextAvailableSlotId = (activeSlots.size + 1).coerceAtMost(4)
+
+    BoxWithConstraints(
         modifier = modifier
             .fillMaxSize()
-            .background(Color.Transparent)
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onTap = { currentOnDismiss() },
-                    onLongPress = { currentOnOpenTuning() },
-                )
-            }
-            .padding(
-                start = 18.dp,
-                end = 18.dp,
-                top = insets.calculateTopPadding() + 14.dp,
-                bottom = insets.calculateBottomPadding() + 14.dp,
-            ),
+            .background(Color.Transparent),
     ) {
-        slots.forEachIndexed { index, slot ->
-            if (index > 0) Spacer(Modifier.height(14.dp))
-            WidgetSlotHost(
-                slot = slot,
-                onRequestWidget = onRequestWidget,
-                onRemoveWidget = onRemoveWidget,
-                onOpenTuning = currentOnOpenTuning,
-                onUpdateSlotWeight = onUpdateSlotWeight,
-                obtainHostView = obtainHostView,
-                onDismiss = currentOnDismiss,
+        val totalScreenHeight = maxHeight
+        val contentHeight = (totalScreenHeight - insets.calculateTopPadding() - insets.calculateBottomPadding() - 56.dp)
+            .coerceAtLeast(200.dp)
+
+        if (!isEditMode) {
+            // ================= NORMAL VIEWING MODE =================
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(slot.heightWeight.coerceAtLeast(1f)),
-            )
-        }
-    }
-}
+                    .fillMaxSize()
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onTap = { currentOnDismiss() },
+                            onLongPress = {
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                isEditMode = true
+                            },
+                        )
+                    }
+                    .padding(
+                        start = 18.dp,
+                        end = 18.dp,
+                        top = insets.calculateTopPadding() + 10.dp,
+                        bottom = insets.calculateBottomPadding() + 10.dp,
+                    ),
+            ) {
+                if (activeSlots.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = stringResource(R.string.empty_second_screen_hint),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                } else {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        activeSlots.forEach { slot ->
+                            val fraction = normalizeSlotFraction(slot.heightWeight)
+                            val slotHeightDp = contentHeight * fraction
 
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun WidgetSlotHost(
-    slot: WidgetSlotEntity,
-    onRequestWidget: (Int) -> Unit,
-    onRemoveWidget: (Int) -> Unit,
-    onOpenTuning: () -> Unit,
-    onUpdateSlotWeight: (Int, Float) -> Unit,
-    obtainHostView: (Context, Int, Int) -> LauncherAppWidgetHostView?,
-    onDismiss: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val context = LocalContext.current
-    val haptics = LocalHapticFeedback.current
-    var menuOpen by remember { mutableStateOf(false) }
-    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { menuOpen = false }
-
-    val appWidgetId = slot.appWidgetId
-    val providerAlive = remember(appWidgetId) {
-        appWidgetId == null ||
-            AppWidgetManager.getInstance(context).getAppWidgetInfo(appWidgetId) != null
-    }
-    LaunchedEffect(appWidgetId, providerAlive) {
-        if (appWidgetId != null && !providerAlive) onRemoveWidget(slot.slotId)
-    }
-    val isEmpty = appWidgetId == null || !providerAlive
-
-    // Invisible canvas placeholder: tapping empty canvas dismisses deck;
-    // long-pressing empty canvas opens unified context menu.
-    val slotModifier = if (isEmpty) {
-        modifier.combinedClickable(
-            interactionSource = remember { MutableInteractionSource() },
-            indication = null,
-            onClick = onDismiss,
-            onLongClick = {
-                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                menuOpen = true
-            },
-        )
-    } else {
-        modifier
-    }
-
-    Box(
-        modifier = slotModifier,
-        contentAlignment = Alignment.Center,
-    ) {
-        if (isEmpty) {
-            SubtleAddWidgetButton(
-                onClick = { onRequestWidget(slot.slotId) },
-                onLongClick = {
-                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    menuOpen = true
-                },
-            )
-        } else {
-            val hostView = remember(slot.slotId, appWidgetId) {
-                obtainHostView(context, slot.slotId, appWidgetId)
-            }
-            if (hostView != null) {
-                AndroidView(
-                    factory = { _ ->
-                        (hostView.parent as? android.view.ViewGroup)?.removeView(hostView)
-                        hostView.onLongPress = { menuOpen = true }
-                        hostView.post {
-                            hostView.updateAppWidgetSizeFromLayout()
-                            hostView.requestLayout()
-                            hostView.invalidate()
+                            NormalWidgetHost(
+                                slot = slot,
+                                heightDp = slotHeightDp,
+                                obtainHostView = obtainHostView,
+                                onLongPress = {
+                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    isEditMode = true
+                                },
+                            )
                         }
-                        hostView
+                    }
+                }
+
+                // Subtle '+' button at the bottom, on the exact same side as edge trigger pill
+                SubtleBottomAddButton(
+                    alignRight = isTriggerOnRight,
+                    onClick = {
+                        if (activeSlots.isEmpty()) {
+                            onRequestWidget(1)
+                        } else {
+                            isEditMode = true
+                        }
                     },
-                    update = { view ->
-                        view.onLongPress = { menuOpen = true }
-                        view.post { view.updateAppWidgetSizeFromLayout() }
-                    },
-                    onRelease = { view -> view.onLongPress = null },
-                    modifier = Modifier.fillMaxSize(),
-                )
-            } else {
-                SubtleAddWidgetButton(
-                    onClick = { onRequestWidget(slot.slotId) },
                     onLongClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        menuOpen = true
+                        isEditMode = true
                     },
+                    modifier = Modifier.align(
+                        if (isTriggerOnRight) Alignment.BottomEnd else Alignment.BottomStart,
+                    ),
                 )
             }
-        }
-
-        DropdownMenu(
-            expanded = menuOpen,
-            onDismissRequest = { menuOpen = false },
-            shape = RoundedCornerShape(16.dp),
-        ) {
-            DropdownMenuItem(
-                leadingIcon = {
-                    Icon(
-                        imageVector = if (isEmpty) Icons.Default.Add else Icons.Default.Refresh,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp),
-                    )
-                },
-                text = {
-                    Text(
-                        stringResource(
-                            if (isEmpty) R.string.slot_action_add_widget
-                            else R.string.slot_action_replace_widget,
-                        ),
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                },
-                onClick = {
-                    menuOpen = false
-                    onRequestWidget(slot.slotId)
-                },
-            )
-            if (!isEmpty) {
-                DropdownMenuItem(
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(20.dp),
-                        )
-                    },
-                    text = {
-                        Text(
-                            stringResource(R.string.slot_action_remove_widget),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.error,
-                        )
-                    },
-                    onClick = {
-                        menuOpen = false
-                        onRemoveWidget(slot.slotId)
-                    },
-                )
-            }
-            HorizontalDivider()
-            Text(
-                text = stringResource(R.string.menu_canvas_size),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
-            )
-            SlotSizeItem(
-                label = stringResource(R.string.slot_size_small),
-                selected = slot.heightWeight == SLOT_WEIGHT_SMALL,
-                onClick = {
-                    menuOpen = false
-                    onUpdateSlotWeight(slot.slotId, SLOT_WEIGHT_SMALL)
-                },
-            )
-            SlotSizeItem(
-                label = stringResource(R.string.slot_size_medium),
-                selected = slot.heightWeight == SLOT_WEIGHT_MEDIUM,
-                onClick = {
-                    menuOpen = false
-                    onUpdateSlotWeight(slot.slotId, SLOT_WEIGHT_MEDIUM)
-                },
-            )
-            SlotSizeItem(
-                label = stringResource(R.string.slot_size_large),
-                selected = slot.heightWeight == SLOT_WEIGHT_LARGE,
-                onClick = {
-                    menuOpen = false
-                    onUpdateSlotWeight(slot.slotId, SLOT_WEIGHT_LARGE)
-                },
-            )
-            HorizontalDivider()
-            DropdownMenuItem(
-                text = {
-                    Text(
-                        stringResource(R.string.settings_title),
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Filled.Settings,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp),
-                    )
-                },
-                onClick = {
-                    menuOpen = false
-                    onOpenTuning()
-                },
+        } else {
+            // ================= FLOATING CANVAS EDIT MODE =================
+            EditModePanel(
+                activeSlots = activeSlots,
+                contentHeight = contentHeight,
+                totalAllocatedFraction = totalAllocatedFraction,
+                canAddMore = canAddMore,
+                nextSlotId = nextAvailableSlotId,
+                obtainHostView = obtainHostView,
+                onUpdateSlotWeight = onUpdateSlotWeight,
+                onRemoveWidget = onRemoveWidget,
+                onReorderSlots = onReorderSlots,
+                onRequestWidget = onRequestWidget,
+                onOpenTuning = currentOnOpenTuning,
+                onDone = { isEditMode = false },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = insets.calculateTopPadding() + 8.dp,
+                        bottom = insets.calculateBottomPadding() + 8.dp,
+                    ),
             )
         }
     }
-}
-
-@Composable
-private fun SlotSizeItem(
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-) {
-    DropdownMenuItem(
-        text = {
-            Text(
-                label,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-            )
-        },
-        leadingIcon = {
-            if (selected) {
-                Icon(
-                    imageVector = Icons.Filled.Check,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(18.dp),
-                )
-            } else {
-                Spacer(Modifier.size(18.dp))
-            }
-        },
-        onClick = onClick,
-    )
 }
 
 /**
- * Subtle, minimalist pill button to add a widget in an empty canvas slot.
- * Discreet opacity ensures the wallpaper aesthetic remains uninterrupted.
+ * Clean widget rendering in Normal Mode at its exact proportional height.
+ */
+@Composable
+private fun NormalWidgetHost(
+    slot: WidgetSlotEntity,
+    heightDp: androidx.compose.ui.unit.Dp,
+    obtainHostView: (Context, Int, Int) -> LauncherAppWidgetHostView?,
+    onLongPress: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val context = LocalContext.current
+    val appWidgetId = slot.appWidgetId ?: return
+
+    val providerAlive = remember(appWidgetId) {
+        AppWidgetManager.getInstance(context).getAppWidgetInfo(appWidgetId) != null
+    }
+    if (!providerAlive) return
+
+    val hostView = remember(slot.slotId, appWidgetId) {
+        obtainHostView(context, slot.slotId, appWidgetId)
+    } ?: return
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(heightDp),
+    ) {
+        AndroidView(
+            factory = { _ ->
+                (hostView.parent as? android.view.ViewGroup)?.removeView(hostView)
+                hostView.onLongPress = onLongPress
+                hostView.post {
+                    hostView.updateAppWidgetSizeFromLayout()
+                    hostView.requestLayout()
+                    hostView.invalidate()
+                }
+                hostView
+            },
+            update = { view ->
+                view.onLongPress = onLongPress
+                view.post { view.updateAppWidgetSizeFromLayout() }
+            },
+            onRelease = { view -> view.onLongPress = null },
+            modifier = Modifier.fillMaxSize(),
+        )
+    }
+}
+
+/**
+ * Edit Mode Panel: Elevated floating canvases, direct S/M/L size chips,
+ * up/down reorder buttons, and the bottom add widget section.
+ */
+@Composable
+private fun EditModePanel(
+    activeSlots: List<WidgetSlotEntity>,
+    contentHeight: androidx.compose.ui.unit.Dp,
+    totalAllocatedFraction: Float,
+    canAddMore: Boolean,
+    nextSlotId: Int,
+    obtainHostView: (Context, Int, Int) -> LauncherAppWidgetHostView?,
+    onUpdateSlotWeight: (Int, Float) -> Unit,
+    onRemoveWidget: (Int) -> Unit,
+    onReorderSlots: (List<WidgetSlotEntity>) -> Unit,
+    onRequestWidget: (Int) -> Unit,
+    onOpenTuning: () -> Unit,
+    onDone: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val scrollState = rememberScrollState()
+
+    Column(
+        modifier = modifier
+            .verticalScroll(scrollState),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        // --- Top Bar ---
+        Surface(
+            shape = RoundedCornerShape(18.dp),
+            color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.90f),
+            tonalElevation = 3.dp,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 14.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Column {
+                    Text(
+                        text = stringResource(R.string.edit_widgets_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    val usagePercent = (totalAllocatedFraction * 100).roundToInt()
+                    Text(
+                        text = "Screen usage: $usagePercent% / 100%",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (totalAllocatedFraction >= 0.99f) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                    )
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onOpenTuning) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = stringResource(R.string.settings_title),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    FilledTonalButton(
+                        onClick = onDone,
+                        colors = ButtonDefaults.filledTonalButtonColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        ),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(stringResource(R.string.edit_widgets_done), fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+
+        // --- Floating Canvases ---
+        activeSlots.forEachIndexed { index, slot ->
+            val fraction = normalizeSlotFraction(slot.heightWeight)
+            val slotHeightDp = contentHeight * fraction
+
+            FloatingWidgetCard(
+                slot = slot,
+                index = index,
+                totalCount = activeSlots.size,
+                heightDp = slotHeightDp,
+                totalAllocatedFraction = totalAllocatedFraction,
+                obtainHostView = obtainHostView,
+                onUpdateSlotWeight = onUpdateSlotWeight,
+                onRemove = { onRemoveWidget(slot.slotId) },
+                onMoveUp = {
+                    if (index > 0) {
+                        val mutable = activeSlots.toMutableList()
+                        val item = mutable.removeAt(index)
+                        mutable.add(index - 1, item)
+                        onReorderSlots(mutable)
+                    }
+                },
+                onMoveDown = {
+                    if (index < activeSlots.lastIndex) {
+                        val mutable = activeSlots.toMutableList()
+                        val item = mutable.removeAt(index)
+                        mutable.add(index + 1, item)
+                        onReorderSlots(mutable)
+                    }
+                },
+            )
+        }
+
+        // --- Bottom Add Widget Section ---
+        if (canAddMore) {
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.45f),
+                border = BorderStroke(
+                    width = 1.5.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
+                ),
+                onClick = { onRequestWidget(nextSlotId) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(68.dp),
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp),
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = stringResource(R.string.edit_widgets_add_section),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
+        } else {
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.35f),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp, horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = stringResource(R.string.edit_widgets_capacity_full),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
+
+        Spacer(Modifier.height(32.dp))
+    }
+}
+
+/**
+ * Individual Floating Canvas Card in Edit Mode:
+ * Features top controls for S (25%), M (28%), L (30%), reorder arrows, and delete button.
+ */
+@Composable
+private fun FloatingWidgetCard(
+    slot: WidgetSlotEntity,
+    index: Int,
+    totalCount: Int,
+    heightDp: androidx.compose.ui.unit.Dp,
+    totalAllocatedFraction: Float,
+    obtainHostView: (Context, Int, Int) -> LauncherAppWidgetHostView?,
+    onUpdateSlotWeight: (Int, Float) -> Unit,
+    onRemove: () -> Unit,
+    onMoveUp: () -> Unit,
+    onMoveDown: () -> Unit,
+) {
+    val context = LocalContext.current
+    val appWidgetId = slot.appWidgetId ?: return
+    val currentFraction = normalizeSlotFraction(slot.heightWeight)
+    val fractionWithoutCurrent = totalAllocatedFraction - currentFraction
+
+    val hostView = remember(slot.slotId, appWidgetId) {
+        obtainHostView(context, slot.slotId, appWidgetId)
+    }
+
+    Surface(
+        shape = RoundedCornerShape(22.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.70f),
+        border = BorderStroke(
+            width = 1.5.dp,
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.65f),
+        ),
+        shadowElevation = 4.dp,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+        ) {
+            // Card Top Controls: Size chips & Reorder/Remove actions
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 6.dp, vertical = 2.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                // Size options S / M / L
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    val canFitSmall = fractionWithoutCurrent + SLOT_FRACTION_SMALL <= 1.01f
+                    val canFitMedium = fractionWithoutCurrent + SLOT_FRACTION_MEDIUM <= 1.01f
+                    val canFitLarge = fractionWithoutCurrent + SLOT_FRACTION_LARGE <= 1.01f
+
+                    SizeChip(
+                        label = stringResource(R.string.slot_size_s),
+                        selected = currentFraction == SLOT_FRACTION_SMALL,
+                        enabled = canFitSmall,
+                        onClick = { onUpdateSlotWeight(slot.slotId, SLOT_FRACTION_SMALL) },
+                    )
+                    SizeChip(
+                        label = stringResource(R.string.slot_size_m),
+                        selected = currentFraction == SLOT_FRACTION_MEDIUM,
+                        enabled = canFitMedium,
+                        onClick = { onUpdateSlotWeight(slot.slotId, SLOT_FRACTION_MEDIUM) },
+                    )
+                    SizeChip(
+                        label = stringResource(R.string.slot_size_l),
+                        selected = currentFraction == SLOT_FRACTION_LARGE,
+                        enabled = canFitLarge,
+                        onClick = { onUpdateSlotWeight(slot.slotId, SLOT_FRACTION_LARGE) },
+                    )
+                }
+
+                // Reorder arrows & Remove
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(
+                        onClick = onMoveUp,
+                        enabled = index > 0,
+                        modifier = Modifier.size(32.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowUp,
+                            contentDescription = "Move up",
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
+                    IconButton(
+                        onClick = onMoveDown,
+                        enabled = index < totalCount - 1,
+                        modifier = Modifier.size(32.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowDown,
+                            contentDescription = "Move down",
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
+                    IconButton(
+                        onClick = onRemove,
+                        modifier = Modifier.size(32.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = stringResource(R.string.slot_action_remove_widget),
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
+                }
+            }
+
+            // Widget view inside floating canvas with touch absorption in edit mode
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(heightDp)
+                    .clip(RoundedCornerShape(16.dp)),
+            ) {
+                if (hostView != null) {
+                    AndroidView(
+                        factory = { _ ->
+                            (hostView.parent as? android.view.ViewGroup)?.removeView(hostView)
+                            hostView.post {
+                                hostView.updateAppWidgetSizeFromLayout()
+                                hostView.requestLayout()
+                                hostView.invalidate()
+                            }
+                            hostView
+                        },
+                        update = { view ->
+                            view.post { view.updateAppWidgetSizeFromLayout() }
+                        },
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
+
+                // In edit mode, absorb touches over the widget preview so tapping/dragging
+                // never accidentally triggers child widget PendingIntents (e.g. launching external apps)
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .pointerInput(Unit) {
+                            detectTapGestures { /* absorb touches in edit mode */ }
+                        },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SizeChip(
+    label: String,
+    selected: Boolean,
+    enabled: Boolean,
+    onClick: () -> Unit,
+) {
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = if (selected) {
+            MaterialTheme.colorScheme.primaryContainer
+        } else {
+            MaterialTheme.colorScheme.surfaceContainer
+        },
+        border = BorderStroke(
+            width = 1.dp,
+            color = if (selected) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+            },
+        ),
+        tonalElevation = if (selected) 2.dp else 0.dp,
+        modifier = Modifier
+            .clip(RoundedCornerShape(8.dp))
+            .clickable(enabled = enabled, onClick = onClick),
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+            color = if (!enabled) {
+                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+            } else if (selected) {
+                MaterialTheme.colorScheme.onPrimaryContainer
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            },
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+        )
+    }
+}
+
+/**
+ * Discreet, subtle '+' button pinned to the screen bottom, aligned to the same side
+ * as the edge trigger pill (left or right).
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun SubtleAddWidgetButton(
+private fun SubtleBottomAddButton(
+    alignRight: Boolean,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Surface(
-        shape = CircleShape,
-        color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.35f),
-        border = BorderStroke(
-            width = 1.dp,
-            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f),
-        ),
-        tonalElevation = 0.dp,
+    Box(
         modifier = modifier
-            .clip(CircleShape)
-            .combinedClickable(
-                onClick = onClick,
-                onLongClick = onLongClick,
-            ),
+            .padding(bottom = 12.dp, start = if (alignRight) 0.dp else 12.dp, end = if (alignRight) 12.dp else 0.dp)
+            .size(48.dp),
+        contentAlignment = Alignment.Center,
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
+        Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.35f),
+            border = BorderStroke(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.30f),
+            ),
+            tonalElevation = 0.dp,
+            modifier = Modifier
+                .size(38.dp)
+                .clip(CircleShape)
+                .combinedClickable(
+                    onClick = onClick,
+                    onLongClick = onLongClick,
+                ),
         ) {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
-                modifier = Modifier.size(16.dp),
-            )
-            Spacer(Modifier.width(6.dp))
-            Text(
-                text = stringResource(R.string.slot_action_add_widget),
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
-            )
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = stringResource(R.string.slot_action_add_widget),
+                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
+                    modifier = Modifier.size(20.dp),
+                )
+            }
         }
     }
 }

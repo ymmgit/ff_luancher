@@ -321,12 +321,14 @@ fun LauncherRoot(viewModel: LauncherViewModel) {
         ) {
             SecondaryScreen(
                 slots = secondarySlots,
+                isTriggerOnRight = slideFromEnd,
                 onRequestWidget = viewModel::requestWidgetForSlot,
                 onRemoveWidget = viewModel::removeWidgetFromSlot,
                 onOpenTuning = {
                     context.startActivity(Intent(context, SettingsActivity::class.java))
                 },
                 onUpdateSlotWeight = viewModel::setSlotHeightWeight,
+                onReorderSlots = viewModel::reorderSlots,
                 obtainHostView = ::obtainHostView,
                 onDismiss = { viewModel.setSecondScreenOpen(false) },
             )

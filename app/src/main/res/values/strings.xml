@@ -209,4 +209,14 @@
     <string name="widgets_count_label">%d widgets</string>
     <string name="widget_count_one">1 widget</string>
     <string name="quick_action_preset_second_screen">Second Screen</string>
+
+    <!-- Floating Canvas & Secondary Screen Redesign -->
+    <string name="edit_widgets_title">Edit Widgets</string>
+    <string name="edit_widgets_done">Done</string>
+    <string name="edit_widgets_add_section">Add another widget</string>
+    <string name="edit_widgets_capacity_full">Screen capacity reached</string>
+    <string name="empty_second_screen_hint">Tap + at the bottom to add a widget</string>
+    <string name="slot_size_s">S 25%</string>
+    <string name="slot_size_m">M 28%</string>
+    <string name="slot_size_l">L 30%</string>
 </resources>

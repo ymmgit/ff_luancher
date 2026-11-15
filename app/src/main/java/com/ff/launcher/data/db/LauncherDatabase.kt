@@ -179,21 +179,37 @@ abstract class LauncherDatabase : RoomDatabase() {
     }
 }
 
-/** Default deck layout: three slots at 20/30/40 weights (SPEC Module 3). */
-/** Slot height presets (SPEC Module 3 weights), selectable per slot from its menu. */
-val SLOT_WEIGHT_SMALL = 2f
-val SLOT_WEIGHT_MEDIUM = 3f
-val SLOT_WEIGHT_LARGE = 4f
+/**
+ * Consistent absolute height fractions of available screen height:
+ * - Small: 25% (0.25f) — max 4 small widgets fit (4 * 25% = 100%)
+ * - Medium: 27.5% (0.275f) — max 3 medium widgets fit (3 * 27.5% = 82.5%)
+ * - Large: 30% (0.30f) — max 3 large widgets fit (3 * 30% = 90%)
+ */
+const val SLOT_FRACTION_SMALL = 0.25f
+const val SLOT_FRACTION_MEDIUM = 0.275f
+const val SLOT_FRACTION_LARGE = 0.30f
+
+val SLOT_WEIGHT_SMALL = SLOT_FRACTION_SMALL
+val SLOT_WEIGHT_MEDIUM = SLOT_FRACTION_MEDIUM
+val SLOT_WEIGHT_LARGE = SLOT_FRACTION_LARGE
+
+fun normalizeSlotFraction(weight: Float): Float {
+    return when {
+        weight <= 0.26f || (weight > 1f && weight <= 2.5f) -> SLOT_FRACTION_SMALL
+        weight >= 0.29f || weight >= 3.8f -> SLOT_FRACTION_LARGE
+        else -> SLOT_FRACTION_MEDIUM
+    }
+}
 
 /** Slot 0 is reserved for the primary Home Screen widget (or default smart clock when null). */
 const val HOME_WIDGET_SLOT_ID = 0
 
 val DEFAULT_WIDGET_SLOTS = listOf(
     WidgetSlotEntity(slotId = HOME_WIDGET_SLOT_ID, appWidgetId = null, heightWeight = 1f),
-    WidgetSlotEntity(slotId = 1, appWidgetId = null, heightWeight = SLOT_WEIGHT_SMALL),
-    WidgetSlotEntity(slotId = 2, appWidgetId = null, heightWeight = SLOT_WEIGHT_MEDIUM),
-    WidgetSlotEntity(slotId = 3, appWidgetId = null, heightWeight = SLOT_WEIGHT_LARGE),
-    WidgetSlotEntity(slotId = 4, appWidgetId = null, heightWeight = SLOT_WEIGHT_MEDIUM),
+    WidgetSlotEntity(slotId = 1, appWidgetId = null, heightWeight = SLOT_FRACTION_SMALL),
+    WidgetSlotEntity(slotId = 2, appWidgetId = null, heightWeight = SLOT_FRACTION_MEDIUM),
+    WidgetSlotEntity(slotId = 3, appWidgetId = null, heightWeight = SLOT_FRACTION_LARGE),
+    WidgetSlotEntity(slotId = 4, appWidgetId = null, heightWeight = SLOT_FRACTION_MEDIUM),
 )
 
 /** Transactional toggle helper shared by the repositories. */

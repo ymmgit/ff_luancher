@@ -57,11 +57,13 @@ import com.ff.launcher.notification.NotificationCard
 import com.ff.launcher.data.db.DEFAULT_WIDGET_SLOTS
 import com.ff.launcher.data.db.HOME_WIDGET_SLOT_ID
 import com.ff.launcher.data.db.HiddenAppEntity
+import androidx.room.withTransaction
 import com.ff.launcher.data.db.LauncherDatabase
 import com.ff.launcher.data.db.SLOT_WEIGHT_LARGE
 import com.ff.launcher.data.db.SLOT_WEIGHT_MEDIUM
 import com.ff.launcher.data.db.SLOT_WEIGHT_SMALL
 import com.ff.launcher.data.db.WidgetSlotEntity
+import com.ff.launcher.data.db.normalizeSlotFraction
 import com.ff.launcher.widget.LauncherAppWidgetHost
 import com.ff.launcher.widget.LauncherAppWidgetHostView
 import kotlinx.coroutines.Dispatchers
@@ -730,9 +732,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun setSlotHeightWeight(slotId: Int, heightWeight: Float) {
-        val safeWeight = heightWeight.coerceIn(SLOT_WEIGHT_SMALL, SLOT_WEIGHT_LARGE)
+        val safeFraction = normalizeSlotFraction(heightWeight)
         viewModelScope.launch {
-            runCatching { database.widgetSlotDao().updateHeightWeight(slotId, safeWeight) }
+            runCatching { database.widgetSlotDao().updateHeightWeight(slotId, safeFraction) }
                 .onFailure { Log.w(TAG, "updateHeightWeight failed", it) }
         }
     }
@@ -913,9 +915,68 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     fun removeWidgetFromSlot(slotId: Int) {
         viewModelScope.launch {
-            val slot = runCatching { database.widgetSlotDao().getById(slotId) }.getOrNull()
-            database.widgetSlotDao().clearWidget(slotId)
-            slot?.appWidgetId?.let(::releaseAppWidgetIdAsync)
+            if (slotId == HOME_WIDGET_SLOT_ID) {
+                val slot = runCatching { database.widgetSlotDao().getById(HOME_WIDGET_SLOT_ID) }.getOrNull()
+                database.widgetSlotDao().clearWidget(HOME_WIDGET_SLOT_ID)
+                slot?.appWidgetId?.let(::releaseAppWidgetIdAsync)
+                refreshWidgetListening()
+                return@launch
+            }
+
+            val allSlots = runCatching { database.widgetSlotDao().getAll() }.getOrDefault(emptyList())
+            val slotToRemove = allSlots.firstOrNull { it.slotId == slotId }
+            val widgetIdToRelease = slotToRemove?.appWidgetId
+
+            val remainingActive = allSlots
+                .filter { it.slotId != HOME_WIDGET_SLOT_ID && it.slotId != slotId && it.appWidgetId != null }
+
+            runCatching {
+                database.withTransaction {
+                    val dao = database.widgetSlotDao()
+                    (1..4).forEach { id ->
+                        val matching = remainingActive.getOrNull(id - 1)
+                        if (matching != null) {
+                            dao.upsert(
+                                WidgetSlotEntity(
+                                    slotId = id,
+                                    appWidgetId = matching.appWidgetId,
+                                    heightWeight = normalizeSlotFraction(matching.heightWeight),
+                                )
+                            )
+                        } else {
+                            dao.clearWidget(id)
+                        }
+                    }
+                }
+            }.onFailure { Log.w(TAG, "removeWidgetFromSlot failed to compact slots", it) }
+
+            widgetIdToRelease?.let(::releaseAppWidgetIdAsync)
+            refreshWidgetListening()
+        }
+    }
+
+    /**
+     * Persists a new sequence of active secondary screen slots (drag-and-drop reorder).
+     * Slots are written contiguously starting at slotId = 1.
+     */
+    fun reorderSlots(reorderedSlots: List<WidgetSlotEntity>) {
+        viewModelScope.launch {
+            runCatching {
+                database.withTransaction {
+                    val dao = database.widgetSlotDao()
+                    reorderedSlots.forEachIndexed { index, slot ->
+                        val targetSlotId = index + 1
+                        dao.upsert(
+                            WidgetSlotEntity(
+                                slotId = targetSlotId,
+                                appWidgetId = slot.appWidgetId,
+                                heightWeight = normalizeSlotFraction(slot.heightWeight),
+                            )
+                        )
+                    }
+                }
+            }.onFailure { Log.w(TAG, "reorderSlots failed", it) }
+            refreshWidgetListening()
         }
     }
 
