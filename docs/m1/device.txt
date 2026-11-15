@@ -1,0 +1,10 @@
+* daemon not running. starting it now on port 5037 *
+* daemon started successfully *
+12
+
+Physical size: 1080x2160
+
+    versionCode=1 minSdk=26 targetSdk=35
+    versionName=0.1.0-phase1
+    firstInstallTime=2026-11-14 15:50:41
+

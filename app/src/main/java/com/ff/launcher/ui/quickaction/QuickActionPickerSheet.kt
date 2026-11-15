@@ -1,5 +1,7 @@
 package com.ff.launcher.ui.quickaction
 
+import android.util.Log
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -132,6 +134,7 @@ fun QuickActionPickerSheet(
                             .clip(RoundedCornerShape(16.dp))
                             .clickable {
                                 haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                Log.i("FF/QuickActionPicker", "Selected preset: ${preset.type}")
                                 onSelectAction(preset.type, "", preset.label)
                                 onDismiss()
                             },
@@ -225,6 +228,7 @@ fun QuickActionPickerSheet(
                             .clip(RoundedCornerShape(12.dp))
                             .clickable {
                                 haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                Log.i("FF/QuickActionPicker", "Selected app: ${app.componentKey} (${app.label})")
                                 onSelectAction(QuickActionType.APP, app.componentKey, app.label)
                                 onDismiss()
                             },

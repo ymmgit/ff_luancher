@@ -1,11 +1,13 @@
 package com.ff.launcher.ui.quickaction
 
+import android.util.Log
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -23,6 +25,8 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -34,8 +38,11 @@ import androidx.compose.ui.unit.dp
 import com.ff.launcher.R
 import com.ff.launcher.data.AppInfo
 import com.ff.launcher.data.QuickActionConfig
+import com.ff.launcher.data.QuickActionPreferencesRepository
 import com.ff.launcher.data.QuickActionType
 import com.ff.launcher.data.TriggerEdgeSide
+
+private const val TAG = "FF/QuickActionButton"
 
 /**
  * Ergonomic floating quick-action button for instant launch of user-customized app or tool.
@@ -49,10 +56,13 @@ fun QuickActionButton(
     maxHeight: Dp,
     onExecute: () -> Unit,
     onCustomize: () -> Unit,
+    onPreviewVerticalBias: (Float) -> Unit = {},
+    onCommitVerticalBias: (Float) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     if (!config.enabled) return
 
+    val density = LocalDensity.current
     val haptics = LocalHapticFeedback.current
     val buttonSize = config.sizeDp.dp
     val buttonTop = (maxHeight * config.verticalBias - buttonSize / 2)
@@ -96,13 +106,39 @@ fun QuickActionButton(
             modifier = Modifier
                 .size(buttonSize)
                 .clip(RoundedCornerShape(16.dp))
+                .pointerInput(maxHeight) {
+                    val maxHeightPx = maxHeight.toPx()
+                    detectVerticalDragGestures(
+                        onDragStart = {
+                            haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            Log.d(TAG, "Vertical drag started at bias=${config.verticalBias}")
+                        },
+                        onVerticalDrag = { change, dragAmount ->
+                            change.consume()
+                            val deltaBias = dragAmount / maxHeightPx
+                            val newBias = (config.verticalBias + deltaBias)
+                                .coerceIn(QuickActionPreferencesRepository.VERTICAL_BIAS_RANGE)
+                            onPreviewVerticalBias(newBias)
+                        },
+                        onDragEnd = {
+                            Log.i(TAG, "Vertical drag committed at bias=${config.verticalBias}")
+                            onCommitVerticalBias(config.verticalBias)
+                        },
+                        onDragCancel = {
+                            Log.d(TAG, "Vertical drag cancelled")
+                            onCommitVerticalBias(config.verticalBias)
+                        },
+                    )
+                }
                 .combinedClickable(
                     onClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        Log.i(TAG, "Tapped quick action: ${config.actionType}")
                         onExecute()
                     },
                     onLongClick = {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        Log.i(TAG, "Long clicked quick action: open customization")
                         onCustomize()
                     },
                 ),

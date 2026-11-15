@@ -1,6 +1,7 @@
 package com.ff.launcher.data
 
 import android.content.Context
+import android.util.Log
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
@@ -62,31 +63,55 @@ class TriggerPreferencesRepository(context: Context) {
             )
         }
 
-    suspend fun setEnabled(enabled: Boolean) =
+    suspend fun setEnabled(enabled: Boolean) {
+        Log.i(TAG, "setEnabled: $enabled")
         dataStore.edit { it[KEY_ENABLED] = enabled }
+    }
 
-    suspend fun setEdgeSide(side: TriggerEdgeSide) =
+    suspend fun setEdgeSide(side: TriggerEdgeSide) {
+        Log.i(TAG, "setEdgeSide: $side")
         dataStore.edit { it[KEY_EDGE_SIDE] = side.name }
-
-    suspend fun setVerticalBias(bias: Float) = dataStore.edit {
-        it[KEY_VERTICAL_BIAS] = bias.coerceIn(VERTICAL_BIAS_RANGE)
     }
 
-    suspend fun setHeightDp(height: Int) = dataStore.edit {
-        it[KEY_HEIGHT_DP] = height.coerceIn(HEIGHT_RANGE)
+    suspend fun setVerticalBias(bias: Float) {
+        val clamped = bias.coerceIn(VERTICAL_BIAS_RANGE)
+        Log.i(TAG, "setVerticalBias: $clamped")
+        dataStore.edit {
+            it[KEY_VERTICAL_BIAS] = clamped
+        }
     }
 
-    suspend fun setWidthDp(width: Int) = dataStore.edit {
-        it[KEY_WIDTH_DP] = width.coerceIn(WIDTH_RANGE)
+    suspend fun setHeightDp(height: Int) {
+        val clamped = height.coerceIn(HEIGHT_RANGE)
+        Log.i(TAG, "setHeightDp: $clamped")
+        dataStore.edit {
+            it[KEY_HEIGHT_DP] = clamped
+        }
     }
 
-    suspend fun setOpacity(opacity: Float) = dataStore.edit {
-        it[KEY_OPACITY] = opacity.coerceIn(OPACITY_RANGE)
+    suspend fun setWidthDp(width: Int) {
+        val clamped = width.coerceIn(WIDTH_RANGE)
+        Log.i(TAG, "setWidthDp: $clamped")
+        dataStore.edit {
+            it[KEY_WIDTH_DP] = clamped
+        }
     }
 
-    suspend fun setMode(mode: TriggerMode) = dataStore.edit { it[KEY_MODE] = mode.name }
+    suspend fun setOpacity(opacity: Float) {
+        val clamped = opacity.coerceIn(OPACITY_RANGE)
+        Log.i(TAG, "setOpacity: $clamped")
+        dataStore.edit {
+            it[KEY_OPACITY] = clamped
+        }
+    }
+
+    suspend fun setMode(mode: TriggerMode) {
+        Log.i(TAG, "setMode: $mode")
+        dataStore.edit { it[KEY_MODE] = mode.name }
+    }
 
     companion object {
+        private const val TAG = "FF/TriggerPrefs"
         /** Single source of truth for every tunable range — the UI sliders reference these. */
         val VERTICAL_BIAS_RANGE = 0.05f..0.90f
         val HEIGHT_RANGE = 32..100

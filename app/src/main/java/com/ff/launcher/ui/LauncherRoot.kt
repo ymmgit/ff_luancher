@@ -124,7 +124,7 @@ fun LauncherRoot(viewModel: LauncherViewModel) {
     val calendarState by viewModel.calendarState.collectAsStateWithLifecycle()
     val weatherState by viewModel.weatherState.collectAsStateWithLifecycle()
     val headerConfig by viewModel.headerConfig.collectAsStateWithLifecycle()
-    val quickActionConfig by viewModel.quickActionConfig.collectAsStateWithLifecycle()
+    val quickActionConfig by viewModel.quickActionDisplay.collectAsStateWithLifecycle()
     val isFlashlightOn by viewModel.isFlashlightOn.collectAsStateWithLifecycle()
     val isQuickActionPickerOpen by viewModel.isQuickActionPickerOpen.collectAsStateWithLifecycle()
     val quickActionTargetApp = remember(quickActionConfig, allInstalledApps) {
@@ -325,7 +325,7 @@ fun LauncherRoot(viewModel: LauncherViewModel) {
 
         val quickActionIsRight = quickActionConfig.edgeSide == TriggerEdgeSide.RIGHT
         AnimatedVisibility(
-            visible = quickActionConfig.enabled && !showOnboarding && !isSecondScreenOpen && !isArrangeFavoritesOpen,
+            visible = quickActionConfig.enabled && !showOnboarding && !isSecondScreenOpen && !isArrangeFavoritesOpen && !isAppSearchOpen,
             enter = fadeIn(tween(140)),
             exit = fadeOut(tween(120)),
             modifier = Modifier.align(if (quickActionIsRight) AbsoluteAlignment.TopRight else AbsoluteAlignment.TopLeft),
@@ -337,6 +337,8 @@ fun LauncherRoot(viewModel: LauncherViewModel) {
                 maxHeight = maxHeight,
                 onExecute = viewModel::executeQuickAction,
                 onCustomize = viewModel::openQuickActionPicker,
+                onPreviewVerticalBias = viewModel::previewQuickActionVerticalBias,
+                onCommitVerticalBias = viewModel::setQuickActionVerticalBias,
             )
         }
 
@@ -356,7 +358,10 @@ fun LauncherRoot(viewModel: LauncherViewModel) {
                 onOpenQuickActionPicker = viewModel::openQuickActionPicker,
                 onQuickActionEdgeSideChange = viewModel::setQuickActionEdgeSide,
                 onQuickActionVerticalBiasChange = viewModel::setQuickActionVerticalBias,
+                onQuickActionVerticalBiasPreview = viewModel::previewQuickActionVerticalBias,
                 onQuickActionSizeChange = viewModel::setQuickActionSizeDp,
+                onQuickActionSizePreview = viewModel::previewQuickActionSizeDp,
+                onResetQuickAction = viewModel::resetQuickActionToDefaults,
                 hiddenApps = hiddenApps,
                 isDefaultLauncher = isDefaultLauncher,
                 onRequestDefaultLauncher = {

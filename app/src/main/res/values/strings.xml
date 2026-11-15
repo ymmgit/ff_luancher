@@ -116,6 +116,7 @@
 
     <string name="setting_show_second_screen">Show Second Widget Screen</string>
     <string name="setting_show_second_screen_desc">Show the edge trigger to access your secondary widget screen. Hiding it keeps your widgets safely in memory.</string>
+    <string name="setting_second_screen_hidden_hint">Your widgets are saved and return when you turn this on.</string>
 
     <string name="section_quick_action">Quick Action Floating Button</string>
     <string name="quick_action_desc">Quickly launch a customized tool or app from an ergonomic floating button.</string>
@@ -132,4 +133,5 @@
     <string name="quick_action_search_hint">Search apps for quick action…</string>
     <string name="quick_action_tap_hint">Tap to launch, long-press to customize</string>
     <string name="quick_action_setting_size">Button Size</string>
+    <string name="quick_action_reset">Reset to defaults</string>
 </resources>

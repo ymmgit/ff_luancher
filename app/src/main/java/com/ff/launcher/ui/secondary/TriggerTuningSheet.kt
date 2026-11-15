@@ -27,6 +27,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -88,7 +89,10 @@ fun TriggerTuningSheet(
     onOpenQuickActionPicker: () -> Unit = {},
     onQuickActionEdgeSideChange: (TriggerEdgeSide) -> Unit = {},
     onQuickActionVerticalBiasChange: (Float) -> Unit = {},
+    onQuickActionVerticalBiasPreview: (Float) -> Unit = {},
     onQuickActionSizeChange: (Int) -> Unit = {},
+    onQuickActionSizePreview: (Int) -> Unit = {},
+    onResetQuickAction: () -> Unit = {},
     hiddenApps: List<HiddenAppUi>,
     isDefaultLauncher: Boolean,
     onRequestDefaultLauncher: () -> Unit,
@@ -299,6 +303,15 @@ fun TriggerTuningSheet(
                         Switch(
                             checked = config.enabled,
                             onCheckedChange = onTriggerEnabledChange,
+                        )
+                    }
+
+                    if (!config.enabled) {
+                        Text(
+                            text = stringResource(R.string.setting_second_screen_hidden_hint),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(top = 4.dp),
                         )
                     }
 
@@ -547,7 +560,7 @@ fun TriggerTuningSheet(
                             label = stringResource(R.string.setting_vertical_position),
                             externalValue = quickActionConfig.verticalBias,
                             valueText = { stringResource(R.string.value_percent, (it * 100).roundToInt()) },
-                            onPreview = {},
+                            onPreview = onQuickActionVerticalBiasPreview,
                             onCommit = onQuickActionVerticalBiasChange,
                             valueRange = 0.08f..0.92f,
                         )
@@ -556,10 +569,18 @@ fun TriggerTuningSheet(
                             label = stringResource(R.string.quick_action_setting_size),
                             externalValue = quickActionConfig.sizeDp.toFloat(),
                             valueText = { stringResource(R.string.value_dp, it.roundToInt()) },
-                            onPreview = {},
+                            onPreview = { onQuickActionSizePreview(it.roundToInt()) },
                             onCommit = { onQuickActionSizeChange(it.roundToInt()) },
                             valueRange = SIZE_RANGE_F,
                         )
+
+                        OutlinedButton(
+                            onClick = onResetQuickAction,
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.align(Alignment.End),
+                        ) {
+                            Text(stringResource(R.string.quick_action_reset))
+                        }
                     }
                 }
             }

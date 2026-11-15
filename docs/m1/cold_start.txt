@@ -1,0 +1,6 @@
+Starting: Intent { cmp=com.ff.launcher/.MainActivity }
+Status: ok
+LaunchState: UNKNOWN (0)
+Activity: com.ff.launcher/.MainActivity
+WaitTime: 3025
+Complete

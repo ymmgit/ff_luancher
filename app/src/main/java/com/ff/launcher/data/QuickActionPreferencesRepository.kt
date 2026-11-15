@@ -1,6 +1,7 @@
 package com.ff.launcher.data
 
 import android.content.Context
+import android.util.Log
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
@@ -53,26 +54,56 @@ class QuickActionPreferencesRepository(context: Context) {
             )
         }
 
-    suspend fun setEnabled(enabled: Boolean) = dataStore.edit { it[KEY_ENABLED] = enabled }
+    suspend fun setEnabled(enabled: Boolean) {
+        Log.i(TAG, "setEnabled: $enabled")
+        dataStore.edit { it[KEY_ENABLED] = enabled }
+    }
 
-    suspend fun setAction(type: QuickActionType, componentKey: String = "", label: String = "") =
+    suspend fun setAction(type: QuickActionType, componentKey: String = "", label: String = "") {
+        Log.i(TAG, "setAction: type=$type, componentKey=$componentKey, label=$label")
         dataStore.edit {
             it[KEY_ACTION_TYPE] = type.name
             it[KEY_COMPONENT_KEY] = componentKey
             it[KEY_CUSTOM_LABEL] = label
         }
-
-    suspend fun setEdgeSide(side: TriggerEdgeSide) = dataStore.edit { it[KEY_EDGE_SIDE] = side.name }
-
-    suspend fun setVerticalBias(bias: Float) = dataStore.edit {
-        it[KEY_VERTICAL_BIAS] = bias.coerceIn(VERTICAL_BIAS_RANGE)
     }
 
-    suspend fun setSizeDp(sizeDp: Int) = dataStore.edit {
-        it[KEY_SIZE_DP] = sizeDp.coerceIn(SIZE_RANGE)
+    suspend fun setEdgeSide(side: TriggerEdgeSide) {
+        Log.i(TAG, "setEdgeSide: $side")
+        dataStore.edit { it[KEY_EDGE_SIDE] = side.name }
+    }
+
+    suspend fun setVerticalBias(bias: Float) {
+        val clamped = bias.coerceIn(VERTICAL_BIAS_RANGE)
+        Log.i(TAG, "setVerticalBias: $clamped")
+        dataStore.edit {
+            it[KEY_VERTICAL_BIAS] = clamped
+        }
+    }
+
+    suspend fun setSizeDp(sizeDp: Int) {
+        val clamped = sizeDp.coerceIn(SIZE_RANGE)
+        Log.i(TAG, "setSizeDp: $clamped")
+        dataStore.edit {
+            it[KEY_SIZE_DP] = clamped
+        }
+    }
+
+    suspend fun resetToDefaults() {
+        Log.i(TAG, "resetToDefaults called")
+        dataStore.edit { prefs ->
+            prefs.remove(KEY_ENABLED)
+            prefs.remove(KEY_ACTION_TYPE)
+            prefs.remove(KEY_COMPONENT_KEY)
+            prefs.remove(KEY_CUSTOM_LABEL)
+            prefs.remove(KEY_EDGE_SIDE)
+            prefs.remove(KEY_VERTICAL_BIAS)
+            prefs.remove(KEY_SIZE_DP)
+        }
     }
 
     companion object {
+        private const val TAG = "FF/QuickActionPrefs"
         val VERTICAL_BIAS_RANGE = 0.08f..0.92f
         val SIZE_RANGE = 38..60
         val SIZE_RANGE_F = SIZE_RANGE.first.toFloat()..SIZE_RANGE.last.toFloat()

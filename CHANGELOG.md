@@ -4,6 +4,27 @@ All notable changes, new features, and bug fixes for FF Launcher.
 
 ---
 
+## [1.2.1] - 2026-11-15
+
+### 🛡️ Hardening, Performance & QA Polish (Master Plan Milestone M1)
+
+#### 1. Quick Action & Screen Gestures
+- **On-Screen Vertical Drag Repositioning**: Users can now directly drag the Quick Action floating button along the screen edge to adjust vertical height in real-time, with instant haptic feedback and persistence on release.
+- **Search Panel Overlay Protection**: Floating quick action button automatically hides whenever the app search sheet or software keyboard opens (`LauncherRoot.kt`), preventing any touch conflict or screen obstruction.
+- **Reset to Defaults**: Added a one-tap "Reset to defaults" action in Launcher Settings (`TriggerTuningSheet.kt`) for quick action button placement and target configuration.
+- **Live Preview Sliders**: Vertical position and size sliders in `TriggerTuningSheet.kt` now update live on screen while sliding, committing to DataStore only upon gesture release.
+
+#### 2. Stability & Resource Leak Prevention
+- **Safe Torch Callback Lifecycle**: Explicitly bound `CameraManager.TorchCallback` lifecycle in `LauncherViewModel`, registering safely on startup and unregistering cleanly in `onCleared()` to eliminate any memory/callback leaks.
+- **Discrete Switch Persistence**: Hiding the second widget screen now bypasses slider preview delays, cleanly closing the open widget deck if visible and writing immediately to DataStore.
+- **Helpful Guidance State**: Added descriptive helper text in Settings when the second widget screen is hidden: *"Your widgets are saved and return when you turn this on."*
+
+#### 3. Observability & Logging Audit
+- **Full Tag Coverage**: Added structured logs (`FF/QuickActionPrefs`, `FF/TriggerPrefs`, `FF/QuickActionButton`, `FF/QuickActionPicker`, `LauncherViewModel`) across all user mutations, torch hardware events, and action launches.
+- **Version & Build Verification**: Bumped `versionCode` to 121 and `versionName` to `1.2.1`. Tested APK size maintained at **10.58 MB** (well under the 15 MB budget).
+
+---
+
 ## [1.2.0] - 2026-11-15
 
 ### 🚀 New Features: Screen Customization & Quick Action Floating Button

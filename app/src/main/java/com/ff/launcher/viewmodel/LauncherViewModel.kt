@@ -120,9 +120,21 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     val quickActionConfig: StateFlow<QuickActionConfig> = quickActionRepository.config
         .stateIn(viewModelScope, SharingStarted.Eagerly, QuickActionConfig())
 
+    private val _quickActionPreview = MutableStateFlow<QuickActionConfig?>(null)
+    val quickActionDisplay: StateFlow<QuickActionConfig> =
+        combine(quickActionConfig, _quickActionPreview) { persisted, preview -> preview ?: persisted }
+            .stateIn(viewModelScope, SharingStarted.Eagerly, QuickActionConfig())
+
     private val cameraManager = application.getSystemService(Context.CAMERA_SERVICE) as? CameraManager
     private val _isFlashlightOn = MutableStateFlow(false)
     val isFlashlightOn: StateFlow<Boolean> = _isFlashlightOn.asStateFlow()
+
+    private val torchCallback = object : CameraManager.TorchCallback() {
+        override fun onTorchModeChanged(cameraId: String, enabled: Boolean) {
+            Log.d(TAG, "onTorchModeChanged: cameraId=$cameraId, enabled=$enabled")
+            _isFlashlightOn.value = enabled
+        }
+    }
 
     private val _isQuickActionPickerOpen = MutableStateFlow(false)
     val isQuickActionPickerOpen: StateFlow<Boolean> = _isQuickActionPickerOpen.asStateFlow()
@@ -295,12 +307,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         refreshCalendar()
         refreshWeather()
         runCatching {
-            cameraManager?.registerTorchCallback(object : CameraManager.TorchCallback() {
-                override fun onTorchModeChanged(cameraId: String, enabled: Boolean) {
-                    _isFlashlightOn.value = enabled
-                }
-            }, null)
-        }
+            cameraManager?.registerTorchCallback(torchCallback, null)
+            Log.i(TAG, "Registered torch callback")
+        }.onFailure { Log.w(TAG, "Failed to register torch callback", it) }
         // SPEC Module 4: listen ONLY while the deck is open AND the activity is resumed.
         viewModelScope.launch {
             _isDeckActive.collect { active ->
@@ -850,38 +859,74 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun setTriggerEnabled(enabled: Boolean) {
-        previewTrigger { it.copy(enabled = enabled) }
-        commitAndSettle { triggerRepository.setEnabled(enabled) }
+        Log.i(TAG, "setTriggerEnabled: enabled=$enabled")
+        if (!enabled && _isSecondScreenOpen.value) {
+            setSecondScreenOpen(false)
+        }
+        viewModelScope.launch {
+            triggerRepository.setEnabled(enabled)
+        }
     }
 
     // --- Quick Action Floating Button ---
 
     fun openQuickActionPicker() {
+        Log.i(TAG, "openQuickActionPicker")
         _isQuickActionPickerOpen.value = true
     }
 
     fun closeQuickActionPicker() {
+        Log.i(TAG, "closeQuickActionPicker")
         _isQuickActionPickerOpen.value = false
     }
 
     fun setQuickActionEnabled(enabled: Boolean) {
+        Log.i(TAG, "setQuickActionEnabled: enabled=$enabled")
         viewModelScope.launch { quickActionRepository.setEnabled(enabled) }
     }
 
     fun setQuickAction(type: QuickActionType, componentKey: String = "", label: String = "") {
+        Log.i(TAG, "setQuickAction: type=$type, componentKey=$componentKey, label=$label")
         viewModelScope.launch { quickActionRepository.setAction(type, componentKey, label) }
     }
 
     fun setQuickActionEdgeSide(side: TriggerEdgeSide) {
+        Log.i(TAG, "setQuickActionEdgeSide: side=$side")
         viewModelScope.launch { quickActionRepository.setEdgeSide(side) }
     }
 
+    fun previewQuickActionVerticalBias(bias: Float) {
+        val base = _quickActionPreview.value ?: quickActionConfig.value
+        _quickActionPreview.value = base.copy(
+            verticalBias = bias.coerceIn(QuickActionPreferencesRepository.VERTICAL_BIAS_RANGE)
+        )
+    }
+
+    fun previewQuickActionSizeDp(sizeDp: Int) {
+        val base = _quickActionPreview.value ?: quickActionConfig.value
+        _quickActionPreview.value = base.copy(
+            sizeDp = sizeDp.coerceIn(QuickActionPreferencesRepository.SIZE_RANGE)
+        )
+    }
+
     fun setQuickActionVerticalBias(bias: Float) {
-        viewModelScope.launch { quickActionRepository.setVerticalBias(bias) }
+        val clamped = bias.coerceIn(QuickActionPreferencesRepository.VERTICAL_BIAS_RANGE)
+        Log.i(TAG, "setQuickActionVerticalBias: bias=$clamped")
+        _quickActionPreview.value = null
+        viewModelScope.launch { quickActionRepository.setVerticalBias(clamped) }
     }
 
     fun setQuickActionSizeDp(size: Int) {
-        viewModelScope.launch { quickActionRepository.setSizeDp(size) }
+        val clamped = size.coerceIn(QuickActionPreferencesRepository.SIZE_RANGE)
+        Log.i(TAG, "setQuickActionSizeDp: size=$clamped")
+        _quickActionPreview.value = null
+        viewModelScope.launch { quickActionRepository.setSizeDp(clamped) }
+    }
+
+    fun resetQuickActionToDefaults() {
+        Log.i(TAG, "resetQuickActionToDefaults")
+        _quickActionPreview.value = null
+        viewModelScope.launch { quickActionRepository.resetToDefaults() }
     }
 
     fun toggleFlashlight() {
@@ -892,6 +937,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
                 chars.get(CameraCharacteristics.FLASH_INFO_AVAILABLE) == true
             } ?: cm.cameraIdList.firstOrNull() ?: return
             val target = !_isFlashlightOn.value
+            Log.i(TAG, "toggleFlashlight: target=$target, cameraId=$cameraId")
             cm.setTorchMode(cameraId, target)
             _isFlashlightOn.value = target
         }.onFailure { Log.w(TAG, "Failed to toggle flashlight", it) }
@@ -952,6 +998,10 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     override fun onCleared() {
         appRepository.dispose()
         timeProvider.dispose()
+        runCatching {
+            cameraManager?.unregisterTorchCallback(torchCallback)
+            Log.i(TAG, "Unregistered torch callback")
+        }
         runCatching { appWidgetHost.stopListening() }
         super.onCleared()
     }

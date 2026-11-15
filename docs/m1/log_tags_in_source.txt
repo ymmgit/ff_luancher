@@ -1,0 +1,95 @@
+
+app\src\main\java\com\ff\launcher\AppEntryActivity.kt:20:        Log.i("AppEntryActivity", "onCreate: trampoline invoked, redirecting to MainActivity")
+app\src\main\java\com\ff\launcher\AppEntryActivity.kt:27:        Log.i("AppEntryActivity", "finishing trampoline activity")
+app\src\main\java\com\ff\launcher\MainActivity.kt:27:            Log.d("MainActivity", "widgetBindLauncher result: ${result.resultCode}, data: ${result.data}")
+app\src\main\java\com\ff\launcher\MainActivity.kt:33:        Log.i("MainActivity", "onCreate called, savedInstanceState=${savedInstanceState != null}")
+app\src\main\java\com\ff\launcher\MainActivity.kt:48:                    Log.d("MainActivity", "widgetRequests received: $request")
+app\src\main\java\com\ff\launcher\MainActivity.kt:68:        Log.d("MainActivity", "onActivityResult: requestCode=$requestCode, resultCode=$resultCode")
+app\src\main\java\com\ff\launcher\MainActivity.kt:83:        Log.i("MainActivity", "onResume called")
+app\src\main\java\com\ff\launcher\MainActivity.kt:104:        Log.i("MainActivity", "onPause called")
+app\src\main\java\com\ff\launcher\MainActivity.kt:110:        Log.i("MainActivity", "onNewIntent called with intent=$intent")
+app\src\main\java\com\ff\launcher\MainActivity.kt:118:        Log.i("MainActivity", "onStop called")
+app\src\main\java\com\ff\launcher\MainActivity.kt:125:        Log.i("MainActivity", "onDestroy called")
+app\src\main\java\com\ff\launcher\MainActivity.kt:129:        Log.d("MainActivity", "handleHomeIntent: action=${intent?.action}, categories=${intent?.categories}")
+app\src\main\java\com\ff\launcher\data\AppRepository.kt:130:                    .onFailure { Log.w(TAG, "getActivityList failed for $user", it) }
+app\src\main\java\com\ff\launcher\data\AppRepository.kt:138:                    .onFailure { Log.w(TAG, "Failed to load ${info.componentName}", it) }
+app\src\main\java\com\ff\launcher\data\AppRepository.kt:170:                }.onFailure { Log.w(TAG, "Failed to load $activityInfo", it) }
+app\src\main\java\com\ff\launcher\data\AppRepository.kt:338:            .onFailure { Log.w(TAG, "LauncherApps.registerCallback failed", it) }
+app\src\main\java\com\ff\launcher\data\AppRepository.kt:357:        private const val TAG = "AppRepository"
+app\src\main\java\com\ff\launcher\data\FavoritesRepository.kt:109:        }.onFailure { Log.w(TAG, "Legacy favorites migration failed", it) }
+app\src\main\java\com\ff\launcher\data\FavoritesRepository.kt:189:            Log.i(TAG, "Seeded ${toSeed.size} default favorites")
+app\src\main\java\com\ff\launcher\data\FavoritesRepository.kt:190:        }.onFailure { Log.w(TAG, "Default favorites seeding failed", it) }
+app\src\main\java\com\ff\launcher\data\FavoritesRepository.kt:194:        private const val TAG = "FavoritesRepository"
+app\src\main\java\com\ff\launcher\data\QuickActionPreferencesRepository.kt:58:        Log.i(TAG, "setEnabled: $enabled")
+app\src\main\java\com\ff\launcher\data\QuickActionPreferencesRepository.kt:63:        Log.i(TAG, "setAction: type=$type, componentKey=$componentKey, label=$label")
+app\src\main\java\com\ff\launcher\data\QuickActionPreferencesRepository.kt:72:        Log.i(TAG, "setEdgeSide: $side")
+app\src\main\java\com\ff\launcher\data\QuickActionPreferencesRepository.kt:78:        Log.i(TAG, "setVerticalBias: $clamped")
+app\src\main\java\com\ff\launcher\data\QuickActionPreferencesRepository.kt:86:        Log.i(TAG, "setSizeDp: $clamped")
+app\src\main\java\com\ff\launcher\data\QuickActionPreferencesRepository.kt:93:        Log.i(TAG, "resetToDefaults called")
+app\src\main\java\com\ff\launcher\data\QuickActionPreferencesRepository.kt:106:        private const val TAG = "FF/QuickActionPrefs"
+app\src\main\java\com\ff\launcher\data\TriggerPreferencesRepository.kt:67:        Log.i(TAG, "setEnabled: $enabled")
+app\src\main\java\com\ff\launcher\data\TriggerPreferencesRepository.kt:72:        Log.i(TAG, "setEdgeSide: $side")
+app\src\main\java\com\ff\launcher\data\TriggerPreferencesRepository.kt:78:        Log.i(TAG, "setVerticalBias: $clamped")
+app\src\main\java\com\ff\launcher\data\TriggerPreferencesRepository.kt:86:        Log.i(TAG, "setHeightDp: $clamped")
+app\src\main\java\com\ff\launcher\data\TriggerPreferencesRepository.kt:94:        Log.i(TAG, "setWidthDp: $clamped")
+app\src\main\java\com\ff\launcher\data\TriggerPreferencesRepository.kt:102:        Log.i(TAG, "setOpacity: $clamped")
+app\src\main\java\com\ff\launcher\data\TriggerPreferencesRepository.kt:109:        Log.i(TAG, "setMode: $mode")
+app\src\main\java\com\ff\launcher\data\TriggerPreferencesRepository.kt:114:        private const val TAG = "FF/TriggerPrefs"
+app\src\main\java\com\ff\launcher\data\glance\CalendarProvider.kt:110:        }.onFailure { Log.w("CalendarProvider", "Failed to query calendar events", it) }
+app\src\main\java\com\ff\launcher\data\glance\WeatherRepository.kt:68:        private const val TAG = "WeatherRepository"
+app\src\main\java\com\ff\launcher\data\glance\WeatherRepository.kt:161:                Log.w(TAG, "Open-Meteo returned HTTP ${conn.responseCode}")
+app\src\main\java\com\ff\launcher\data\glance\WeatherRepository.kt:194:        }.onFailure { Log.w(TAG, "Weather fetch error", it) }.getOrNull()
+app\src\main\java\com\ff\launcher\ui\quickaction\QuickActionButton.kt:45:private const val TAG = "FF/QuickActionButton"
+app\src\main\java\com\ff\launcher\ui\quickaction\QuickActionButton.kt:114:                            Log.d(TAG, "Vertical drag started at bias=${config.verticalBias}")
+app\src\main\java\com\ff\launcher\ui\quickaction\QuickActionButton.kt:124:                            Log.i(TAG, "Vertical drag committed at bias=${config.verticalBias}")
+app\src\main\java\com\ff\launcher\ui\quickaction\QuickActionButton.kt:128:                            Log.d(TAG, "Vertical drag cancelled")
+app\src\main\java\com\ff\launcher\ui\quickaction\QuickActionButton.kt:136:                        Log.i(TAG, "Tapped quick action: ${config.actionType}")
+app\src\main\java\com\ff\launcher\ui\quickaction\QuickActionButton.kt:141:                        Log.i(TAG, "Long clicked quick action: open customization")
+app\src\main\java\com\ff\launcher\ui\quickaction\QuickActionPickerSheet.kt:137:                                Log.i("FF/QuickActionPicker", "Selected preset: ${preset.type}")
+app\src\main\java\com\ff\launcher\ui\quickaction\QuickActionPickerSheet.kt:231:                                Log.i("FF/QuickActionPicker", "Selected app: ${app.componentKey} (${app.label})")
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:134:            Log.d(TAG, "onTorchModeChanged: cameraId=$cameraId, enabled=$enabled")
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:291:            .onFailure { Log.w(TAG, "startListening failed", it) }
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:311:            Log.i(TAG, "Registered torch callback")
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:312:        }.onFailure { Log.w(TAG, "Failed to register torch callback", it) }
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:384:        Log.i(TAG, "setHeaderMode: $mode")
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:389:        Log.i(TAG, "setHeaderUseFahrenheit: $useFahrenheit")
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:394:        Log.i(TAG, "moveFavorite: $componentKey, delta=$delta")
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:399:        Log.i(TAG, "updateFavoriteOrder: count=${orderedKeys.size}")
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:463:                .onFailure { Log.w(TAG, "deleteAppWidgetId failed for $appWidgetId", it) }
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:478:        Log.i(TAG, "launchApp: ${app.label} (${app.componentKey})")
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:498:            }.onFailure { Log.w(TAG, "startMainActivity failed for ${app.label}", it) }
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:517:                Log.w(TAG, "startActivity failed for ${app.label}", it)
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:523:        Log.i(TAG, "toggleFavorite: ${app.label} (${app.componentKey})")
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:546:                .onFailure { Log.w(TAG, "updateHeightWeight failed", it) }
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:560:            }.onFailure { Log.w(TAG, "startAppDetailsActivity failed for ${app.label}", it) }
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:578:                Log.w(TAG, "openAppInfo failed for ${app.label}", it)
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:589:                Log.w(TAG, "uninstall failed for ${app.label}", it)
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:619:                Log.w(TAG, "Failed to allocate appWidgetId for slot $slotId")
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:643:            Log.d(TAG, "onWidgetProviderSelected: slotId=$slotId, appWidgetId=$appWidgetId, bound=$bound, provider=${providerInfo.provider}")
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:664:        Log.d(TAG, "onBindPermissionResult: resultCode=$resultCode, slotId=$slotId, appWidgetId=$appWidgetId")
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:676:        Log.d(TAG, "proceedAfterWidgetBound: slotId=$slotId, appWidgetId=$appWidgetId, provider=$provider, configure=${provider?.configure}")
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:700:        }.onFailure { Log.w(TAG, "startWidgetConfigure failed for widget $appWidgetId", it) }
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:710:        Log.d(TAG, "onWidgetConfigureResult: resultCode=$resultCode, slotId=$slotId, appWidgetId=$actualId")
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:743:        }.onFailure { Log.w(TAG, "createView failed for widget $appWidgetId", it) }
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:755:                Log.d(TAG, "Successfully bound widget $appWidgetId to slot $slotId")
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:758:                Log.w(TAG, "bindSlot failed", it)
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:851:                .onFailure { Log.w(TAG, "Trigger persist failed", it) }
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:862:        Log.i(TAG, "setTriggerEnabled: enabled=$enabled")
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:874:        Log.i(TAG, "openQuickActionPicker")
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:879:        Log.i(TAG, "closeQuickActionPicker")
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:884:        Log.i(TAG, "setQuickActionEnabled: enabled=$enabled")
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:889:        Log.i(TAG, "setQuickAction: type=$type, componentKey=$componentKey, label=$label")
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:894:        Log.i(TAG, "setQuickActionEdgeSide: side=$side")
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:914:        Log.i(TAG, "setQuickActionVerticalBias: bias=$clamped")
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:921:        Log.i(TAG, "setQuickActionSizeDp: size=$clamped")
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:927:        Log.i(TAG, "resetQuickActionToDefaults")
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:940:            Log.i(TAG, "toggleFlashlight: target=$target, cameraId=$cameraId")
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:943:        }.onFailure { Log.w(TAG, "Failed to toggle flashlight", it) }
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:949:        Log.i(TAG, "executeQuickAction: type=${config.actionType}, key=${config.componentKey}")
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:1003:            Log.i(TAG, "Unregistered torch callback")
+app\src\main\java\com\ff\launcher\viewmodel\LauncherViewModel.kt:1135:        private const val TAG = "LauncherViewModel"
+app\src\main\java\com\ff\launcher\widget\providers\CalendarWidgetProvider.kt:39:        Log.i("CalendarWidgetProvider", "onUpdate called for ${appWidgetIds.size} widgets")
+app\src\main\java\com\ff\launcher\widget\providers\ClockWidgetProvider.kt:26:        Log.i("ClockWidgetProvider", "onUpdate called for ${appWidgetIds.size} widgets")
+app\src\main\java\com\ff\launcher\widget\providers\WeatherWidgetProvider.kt:38:        Log.i("WeatherWidgetProvider", "onUpdate called for ${appWidgetIds.size} widgets")
+app\src\main\java\com\ff\launcher\widget\providers\WeatherWidgetProvider.kt:58:        Log.i("WeatherWidgetProvider", "onReceive action=${intent.action}")
+
