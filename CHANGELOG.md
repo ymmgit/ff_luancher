@@ -4,6 +4,35 @@ All notable changes, new features, and bug fixes for FF Launcher.
 
 ---
 
+## [1.3.0] - 2026-11-15
+
+### 🔔 App Notification Indicators, Inline Accordion Panel & System Dismiss
+- **Calm Notification Arrow Indicator**:
+  - Replaced stressful red badges and numeric counters with a subtle down chevron arrow (`NotificationArrow.kt`) rendered beside the app label when notifications arrive.
+  - Isolated 44dp hit target allows tapping the arrow to toggle notification details without launching the app, while tapping the app row continues to open the app normally.
+  - Arrow animates with a 180° rotation when the accordion panel opens.
+- **Inline Accordion Notification Panel**:
+  - Expands directly beneath the tapped app row in both the Home screen app list and the App Search sheet (`NotificationPanel.kt`).
+  - Clean Material 3 cards showing app icon/title, relative post time ("Just now", "5m ago"), and message body.
+  - Capped at 3 cards initially, with a "Show N more" / "Show less" toggle expanding to a scrollable container for up to 5 cards (~340dp max height).
+  - "Clear all" button appears when $\ge 2$ dismissible notifications exist, clearing all cards in one tap.
+  - Tapping a notification card opens its `PendingIntent` and collapses the panel.
+- **System-Level Swipe-to-Dismiss & Mark as Read**:
+  - Swiping a notification card left or right past a 40% threshold cancels it from the Android system notification shade (`NotificationListenerService.cancelNotification`).
+  - When enabled (default ON), automatically invokes `SEMANTIC_ACTION_MARK_AS_READ` or "mark read" actions on dismissible messaging notifications before cancellation, clearing badge counts in apps like WhatsApp, Telegram, or Gmail.
+- **Notification Access & Privacy Safeguards**:
+  - Completely opt-in: Remains dormant with zero background overhead until Notification Access is explicitly granted.
+  - **Zero Content Persistence**: Notification titles, text, and extras are strictly held in transient memory (`NotificationBadgeStore.kt`) and are never written to disk, SQLite/Room, or logs.
+  - "Hide message text" toggle replaces sensitive notification text with generic placeholders ("New notification").
+  - Intelligent filtering ignores ongoing/pinned playback controls, foreground service notices, and group summaries when individual child notifications exist.
+- **Per-App Muting & Scope Control**:
+  - Mute notifications for any specific app via the long-press Quick Card menu (`ManageFavoritesSheet.kt`).
+  - Notification Scope selector in Settings: choose between **All Apps** or **Pinned Only** (home screen apps).
+- **Settings Dashboard Integration**:
+  - Added dedicated **Notifications** card in [SettingsScreen.kt](file:///d:/myproject/ff_luancher/app/src/main/java/com/ff/launcher/ui/settings/SettingsScreen.kt) with live access permission status banner, direct link to Android Notification Listener settings, scope selector, mark-as-read toggle, silent notification toggle, muted apps manager, and one-tap defaults reset.
+
+---
+
 ## [1.2.6] - 2026-11-15
 
 ### 🎛️ Default Home Widget Size Customization & Conditional Visibility

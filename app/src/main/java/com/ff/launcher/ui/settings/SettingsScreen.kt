@@ -22,10 +22,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -46,6 +49,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -78,6 +82,8 @@ import com.ff.launcher.data.TriggerPreferencesRepository.Companion.VERTICAL_BIAS
 import com.ff.launcher.data.TriggerPreferencesRepository.Companion.WIDTH_RANGE_F
 import com.ff.launcher.data.glance.HeaderMode
 import com.ff.launcher.data.glance.HeaderSize
+import com.ff.launcher.data.notification.BadgeScope
+import com.ff.launcher.notification.NotificationAccessHelper
 import com.ff.launcher.ui.quickaction.QuickActionIcons
 import com.ff.launcher.ui.quickaction.QuickActionPickerSheet
 import com.ff.launcher.ui.theme.FavoriteAmber
@@ -106,6 +112,8 @@ fun SettingsScreen(
     val isDefaultLauncher by viewModel.isDefaultLauncher.collectAsState()
     val isQuickActionPickerOpen by viewModel.isQuickActionPickerOpen.collectAsState()
     val weatherData by viewModel.weatherData.collectAsState()
+    val badgePreferences by viewModel.badgePreferences.collectAsState()
+    val hasNotificationAccess by viewModel.hasNotificationAccess.collectAsState()
 
     val context = LocalContext.current
     var hasLocationPermission by remember {
@@ -541,6 +549,317 @@ fun SettingsScreen(
                                     )
                                 }
                             }
+                        }
+                    }
+                }
+            }
+
+            // Notifications Card
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                ),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(R.string.section_notifications),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                            Text(
+                                text = stringResource(R.string.setting_notification_arrows_desc),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        Switch(
+                            checked = badgePreferences.enabled,
+                            onCheckedChange = { viewModel.setBadgeEnabled(it) },
+                        )
+                    }
+
+                    // Notification Access Status Banner
+                    if (!hasNotificationAccess) {
+                        Surface(
+                            shape = RoundedCornerShape(14.dp),
+                            color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(14.dp),
+                                verticalArrangement = Arrangement.spacedBy(10.dp),
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Warning,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.size(20.dp),
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.setting_notification_access_title),
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onErrorContainer,
+                                    )
+                                }
+                                Text(
+                                    text = stringResource(R.string.setting_notification_access_needed),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                Button(
+                                    onClick = { NotificationAccessHelper.openSettings(context) },
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.error,
+                                        contentColor = MaterialTheme.colorScheme.onError,
+                                    ),
+                                    modifier = Modifier.fillMaxWidth(),
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.setting_notification_access_grant_button),
+                                        fontWeight = FontWeight.Bold,
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        Surface(
+                            shape = RoundedCornerShape(14.dp),
+                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f),
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Check,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(18.dp),
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.setting_notification_access_granted),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.Medium,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                    )
+                                }
+                                TextButton(
+                                    onClick = { NotificationAccessHelper.openSettings(context) },
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.setting_notification_access_manage),
+                                        style = MaterialTheme.typography.labelSmall,
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    if (badgePreferences.enabled) {
+                        HorizontalDivider(
+                            modifier = Modifier.fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                        )
+
+                        // Notification Scope
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(6.dp),
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(
+                                text = stringResource(R.string.setting_notification_scope),
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                                SegmentedButton(
+                                    selected = badgePreferences.scope == BadgeScope.ALL,
+                                    onClick = { viewModel.setBadgeScope(BadgeScope.ALL) },
+                                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.scope_all_apps),
+                                        style = MaterialTheme.typography.labelMedium,
+                                    )
+                                }
+                                SegmentedButton(
+                                    selected = badgePreferences.scope == BadgeScope.PINNED_ONLY,
+                                    onClick = { viewModel.setBadgeScope(BadgeScope.PINNED_ONLY) },
+                                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.scope_pinned_only),
+                                        style = MaterialTheme.typography.labelMedium,
+                                    )
+                                }
+                            }
+                        }
+
+                        // Mark as read on dismiss toggle
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = stringResource(R.string.setting_mark_as_read_on_dismiss),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                )
+                                Text(
+                                    text = stringResource(R.string.setting_mark_as_read_desc),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                            Switch(
+                                checked = badgePreferences.markAsReadOnDismiss,
+                                onCheckedChange = { viewModel.setMarkAsReadOnDismiss(it) },
+                            )
+                        }
+
+                        // Hide message text toggle
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = stringResource(R.string.setting_hide_message_text),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                )
+                                Text(
+                                    text = stringResource(R.string.setting_hide_message_text_desc),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                            Switch(
+                                checked = badgePreferences.hideMessageText,
+                                onCheckedChange = { viewModel.setHideMessageText(it) },
+                            )
+                        }
+
+                        // Include silent notifications toggle
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = stringResource(R.string.setting_include_silent),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                )
+                                Text(
+                                    text = stringResource(R.string.setting_include_silent_desc),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                            Switch(
+                                checked = badgePreferences.includeSilent,
+                                onCheckedChange = { viewModel.setIncludeSilent(it) },
+                            )
+                        }
+
+                        // Muted Apps Section
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(
+                                text = stringResource(R.string.setting_muted_apps),
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                            if (badgePreferences.mutedPackages.isEmpty()) {
+                                Text(
+                                    text = stringResource(R.string.setting_no_muted_apps),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            } else {
+                                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    badgePreferences.mutedPackages.forEach { pkg ->
+                                        val appName = allInstalledApps.firstOrNull { it.packageName == pkg }?.label ?: pkg
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically,
+                                        ) {
+                                            Text(
+                                                text = appName,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                modifier = Modifier.weight(1f),
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis,
+                                            )
+                                            OutlinedButton(
+                                                onClick = { viewModel.unmutePackage(pkg) },
+                                                shape = RoundedCornerShape(8.dp),
+                                            ) {
+                                                Text(
+                                                    text = stringResource(R.string.setting_unmute),
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Reset to defaults
+                        OutlinedButton(
+                            onClick = { viewModel.resetBadgePreferences() },
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(
+                                text = stringResource(R.string.quick_action_reset),
+                                style = MaterialTheme.typography.labelMedium,
+                            )
                         }
                     }
                 }

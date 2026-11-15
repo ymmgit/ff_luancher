@@ -118,6 +118,8 @@ fun ManageFavoritesSheet(
     onHideApp: (AppInfo) -> Unit,
     onOpenAppInfo: (AppInfo) -> Unit,
     onUninstallApp: (AppInfo) -> Unit,
+    isAppMuted: (String) -> Boolean = { false },
+    onToggleMuteApp: (String) -> Unit = {},
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -260,10 +262,13 @@ fun ManageFavoritesSheet(
             // Optional Long-Pressed Target App Quick Card
             if (showTargetCard && targetApp != null) {
                 val isTargetFav = targetApp.componentKey in favoriteKeys
+                val isMuted = isAppMuted(targetApp.packageName)
                 TargetAppQuickCard(
                     app = targetApp,
                     isFavorite = isTargetFav,
+                    isMuted = isMuted,
                     onToggleFavorite = { onToggleFavorite(targetApp) },
+                    onToggleMute = { onToggleMuteApp(targetApp.packageName) },
                     onOpenAppInfo = {
                         onDismiss()
                         onOpenAppInfo(targetApp)
@@ -740,7 +745,9 @@ private fun FloatingDraggableSequenceRow(
 private fun TargetAppQuickCard(
     app: AppInfo,
     isFavorite: Boolean,
+    isMuted: Boolean,
     onToggleFavorite: () -> Unit,
+    onToggleMute: () -> Unit,
     onOpenAppInfo: () -> Unit,
     onHideApp: () -> Unit,
     onUninstallApp: () -> Unit,
@@ -759,7 +766,7 @@ private fun TargetAppQuickCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -856,6 +863,23 @@ private fun TargetAppQuickCard(
                         Text(stringResource(R.string.menu_uninstall), fontSize = 12.sp)
                     }
                 }
+            }
+
+            // Notification Mute / Unmute Button
+            OutlinedButton(
+                onClick = onToggleMute,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(38.dp),
+                shape = RoundedCornerShape(12.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp),
+            ) {
+                Text(
+                    text = stringResource(if (isMuted) R.string.menu_unmute_notifications else R.string.menu_mute_notifications),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = if (isMuted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
     }

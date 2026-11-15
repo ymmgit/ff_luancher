@@ -1,8 +1,13 @@
 package com.ff.launcher.ui.home
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import com.ff.launcher.notification.BadgeKey
+import com.ff.launcher.notification.NotificationCard
+import com.ff.launcher.ui.notification.NotificationArrow
+import com.ff.launcher.ui.notification.NotificationPanel
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -86,6 +91,14 @@ fun AppSearchSheet(
     onAppClick: (AppInfo) -> Unit,
     onAppLongClick: (AppInfo) -> Unit,
     onOpenSettings: () -> Unit = {},
+    hasNotification: (AppInfo) -> Boolean = { false },
+    expandedBadgeKey: BadgeKey? = null,
+    expandedCards: List<NotificationCard> = emptyList(),
+    markAsReadEnabled: Boolean = true,
+    onToggleAppNotifications: (AppInfo) -> Unit = {},
+    onDismissNotificationCard: (NotificationCard) -> Unit = {},
+    onClearAllNotificationCards: (AppInfo) -> Unit = {},
+    onOpenNotificationCard: (NotificationCard) -> Unit = {},
     onDismiss: () -> Unit,
 ) {
     var searchQuery by remember { mutableStateOf("") }
@@ -315,8 +328,13 @@ fun AppSearchSheet(
                     }
                 } else {
                     items(filteredApps, key = { "search_${it.componentKey}" }) { app ->
+                        val isAppExpanded = expandedBadgeKey?.packageName == app.packageName
                         SearchResultRow(
                             app = app,
+                            hasNotification = hasNotification(app),
+                            isExpanded = isAppExpanded,
+                            cards = if (isAppExpanded) expandedCards else emptyList(),
+                            markAsReadEnabled = markAsReadEnabled,
                             onClick = {
                                 onDismiss()
                                 onAppClick(app)
@@ -325,6 +343,13 @@ fun AppSearchSheet(
                                 onDismiss()
                                 onAppLongClick(app)
                             },
+                            onToggleNotifications = { onToggleAppNotifications(app) },
+                            onCardClick = { card ->
+                                onDismiss()
+                                onOpenNotificationCard(card)
+                            },
+                            onDismissCard = onDismissNotificationCard,
+                            onClearAll = { onClearAllNotificationCards(app) },
                         )
                     }
                 }
@@ -399,63 +424,96 @@ private fun AppGridItem(
 @Composable
 private fun SearchResultRow(
     app: AppInfo,
+    hasNotification: Boolean,
+    isExpanded: Boolean,
+    cards: List<NotificationCard>,
+    markAsReadEnabled: Boolean,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
+    onToggleNotifications: () -> Unit,
+    onCardClick: (NotificationCard) -> Unit,
+    onDismissCard: (NotificationCard) -> Unit,
+    onClearAll: () -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
 
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp)
-            .clip(RoundedCornerShape(14.dp))
-            .combinedClickable(
-                onClick = onClick,
-                onLongClick = {
-                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onLongClick()
-                },
-            )
-            .padding(horizontal = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            .animateContentSize(),
     ) {
-        val icon = app.icon
-        if (icon != null) {
-            Image(
-                bitmap = remember(icon) { icon.asImageBitmap() },
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(10.dp)),
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .combinedClickable(
+                    onClick = onClick,
+                    onLongClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onLongClick()
+                    },
+                )
+                .padding(horizontal = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            val icon = app.icon
+            if (icon != null) {
+                Image(
+                    bitmap = remember(icon) { icon.asImageBitmap() },
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(10.dp)),
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = app.label.take(1).uppercase(),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
+
+            Spacer(Modifier.width(14.dp))
+
+            Text(
+                text = app.label,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = false),
             )
-        } else {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = app.label.take(1).uppercase(),
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
+
+            if (hasNotification) {
+                Spacer(Modifier.width(4.dp))
+                NotificationArrow(
+                    visible = true,
+                    isExpanded = isExpanded,
+                    onClick = onToggleNotifications,
                 )
             }
         }
 
-        Spacer(Modifier.width(14.dp))
-
-        Text(
-            text = app.label,
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f),
-        )
+        if (isExpanded && cards.isNotEmpty()) {
+            NotificationPanel(
+                cards = cards,
+                markAsReadEnabled = markAsReadEnabled,
+                onCardClick = onCardClick,
+                onDismissCard = onDismissCard,
+                onClearAll = onClearAll,
+            )
+        }
     }
 }

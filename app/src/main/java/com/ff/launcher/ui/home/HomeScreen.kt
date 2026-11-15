@@ -6,7 +6,12 @@ import android.os.Process
 import android.util.Log
 import android.view.ViewGroup
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateContentSize
 import androidx.activity.compose.BackHandler
+import com.ff.launcher.notification.BadgeKey
+import com.ff.launcher.notification.NotificationCard
+import com.ff.launcher.ui.notification.NotificationArrow
+import com.ff.launcher.ui.notification.NotificationPanel
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -126,6 +131,15 @@ fun HomeScreen(
     onOpenDeck: () -> Unit,
     onOpenSettings: () -> Unit = {},
     onOpenSearch: () -> Unit = {},
+    hasNotification: (AppInfo, Boolean) -> Boolean = { _, _ -> false },
+    expandedBadgeKey: BadgeKey? = null,
+    expandedCards: List<NotificationCard> = emptyList(),
+    markAsReadEnabled: Boolean = true,
+    onToggleAppNotifications: (AppInfo) -> Unit = {},
+    onDismissNotificationCard: (NotificationCard) -> Unit = {},
+    onClearAllNotificationCards: (AppInfo) -> Unit = {},
+    onOpenNotificationCard: (NotificationCard) -> Unit = {},
+    onCollapseNotifications: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val scope = rememberCoroutineScope()
@@ -135,6 +149,7 @@ fun HomeScreen(
     LaunchedEffect(homeResetTrigger) {
         if (homeResetTrigger > 0L) {
             Log.d("HomeScreen", "homeResetTrigger fired ($homeResetTrigger) -> folding full list back to favorites")
+            onCollapseNotifications()
             revealed = false
             runCatching { listState.scrollToItem(0) }
             runCatching { favListState.scrollToItem(0) }
@@ -210,10 +225,14 @@ fun HomeScreen(
         }
     }
 
-    // System back gesture folds the revealed list back to favorites-only.
-    BackHandler(enabled = revealed) {
-        Log.d("HomeScreen", "BackHandler: returning to favorites view")
-        revealed = false
+    // System back gesture closes open notification panel or folds the revealed list back to favorites-only.
+    BackHandler(enabled = revealed || expandedBadgeKey != null) {
+        if (expandedBadgeKey != null) {
+            onCollapseNotifications()
+        } else {
+            Log.d("HomeScreen", "BackHandler: returning to favorites view")
+            revealed = false
+        }
     }
 
     // Niagara-style: home shows pinned favorites only; the full list reveals on scroller
@@ -260,11 +279,24 @@ fun HomeScreen(
                     ) { row ->
                         when (row) {
                             is HomeRow.Header -> SectionHeader(row.label)
-                            is HomeRow.AppRow -> AppListRow(
-                                row = row,
-                                onClick = onAppClick,
-                                onLongClick = onAppLongClick,
-                            )
+                            is HomeRow.AppRow -> {
+                                val app = row.app
+                                val isAppExpanded = expandedBadgeKey?.packageName == app.packageName
+                                AppListRow(
+                                    row = row,
+                                    isPinned = false,
+                                    hasNotification = hasNotification(app, false),
+                                    isExpanded = isAppExpanded,
+                                    cards = if (isAppExpanded) expandedCards else emptyList(),
+                                    markAsReadEnabled = markAsReadEnabled,
+                                    onClick = onAppClick,
+                                    onLongClick = onAppLongClick,
+                                    onToggleNotifications = { onToggleAppNotifications(app) },
+                                    onCardClick = onOpenNotificationCard,
+                                    onDismissCard = onDismissNotificationCard,
+                                    onClearAll = { onClearAllNotificationCards(app) },
+                                )
+                            }
                             HomeRow.Divider -> HomeDivider()
                         }
                     }
@@ -370,10 +402,21 @@ fun HomeScreen(
                             .filterIsInstance<HomeRow.AppRow>(),
                         key = { "fav_${it.app.componentKey}" },
                     ) { row ->
+                        val app = row.app
+                        val isAppExpanded = expandedBadgeKey?.packageName == app.packageName
                         AppListRow(
                             row = row,
+                            isPinned = true,
+                            hasNotification = hasNotification(app, true),
+                            isExpanded = isAppExpanded,
+                            cards = if (isAppExpanded) expandedCards else emptyList(),
+                            markAsReadEnabled = markAsReadEnabled,
                             onClick = onAppClick,
                             onLongClick = onAppLongClick,
+                            onToggleNotifications = { onToggleAppNotifications(app) },
+                            onCardClick = onOpenNotificationCard,
+                            onDismissCard = onDismissNotificationCard,
+                            onClearAll = { onClearAllNotificationCards(app) },
                         )
                     }
                     item(key = "fav_search_pull_hint") {
@@ -442,38 +485,71 @@ private fun rowKey(row: HomeRow): String = when (row) {
 @Composable
 private fun AppListRow(
     row: HomeRow.AppRow,
+    isPinned: Boolean,
+    hasNotification: Boolean,
+    isExpanded: Boolean,
+    cards: List<NotificationCard>,
+    markAsReadEnabled: Boolean,
     onClick: (AppInfo) -> Unit,
     onLongClick: (AppInfo) -> Unit,
+    onToggleNotifications: () -> Unit,
+    onCardClick: (NotificationCard) -> Unit,
+    onDismissCard: (NotificationCard) -> Unit,
+    onClearAll: () -> Unit,
 ) {
     val app = row.app
     val haptics = LocalHapticFeedback.current
 
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .height(58.dp)
-            .clip(RoundedCornerShape(14.dp))
-            .combinedClickable(
-                onClick = { onClick(app) },
-                onLongClick = {
-                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onLongClick(app)
-                },
-            )
-            .padding(horizontal = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            .animateContentSize(),
     ) {
-        AppIcon(app)
-        Spacer(Modifier.width(14.dp))
-        Text(
-            text = app.label,
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f),
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(58.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .combinedClickable(
+                    onClick = { onClick(app) },
+                    onLongClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onLongClick(app)
+                    },
+                )
+                .padding(horizontal = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            AppIcon(app)
+            Spacer(Modifier.width(14.dp))
+            Text(
+                text = app.label,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = false),
+            )
+            if (hasNotification) {
+                Spacer(Modifier.width(4.dp))
+                NotificationArrow(
+                    visible = true,
+                    isExpanded = isExpanded,
+                    onClick = onToggleNotifications,
+                )
+            }
+        }
+
+        if (isExpanded && cards.isNotEmpty()) {
+            NotificationPanel(
+                cards = cards,
+                markAsReadEnabled = markAsReadEnabled,
+                onCardClick = onCardClick,
+                onDismissCard = onDismissCard,
+                onClearAll = onClearAll,
+            )
+        }
     }
 }
 

@@ -16,6 +16,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Process
+import android.os.UserManager
 import android.provider.AlarmClock
 import android.provider.MediaStore
 import android.provider.Settings
@@ -45,6 +46,14 @@ import com.ff.launcher.data.glance.TimeData
 import com.ff.launcher.data.glance.TimeProvider
 import com.ff.launcher.data.glance.WeatherData
 import com.ff.launcher.data.glance.WeatherRepository
+import com.ff.launcher.data.notification.BadgePreferences
+import com.ff.launcher.data.notification.BadgePreferencesRepository
+import com.ff.launcher.data.notification.BadgeScope
+import com.ff.launcher.notification.BadgeKey
+import com.ff.launcher.notification.BadgeNotificationListener
+import com.ff.launcher.notification.NotificationAccessHelper
+import com.ff.launcher.notification.NotificationBadgeStore
+import com.ff.launcher.notification.NotificationCard
 import com.ff.launcher.data.db.DEFAULT_WIDGET_SLOTS
 import com.ff.launcher.data.db.HOME_WIDGET_SLOT_ID
 import com.ff.launcher.data.db.HiddenAppEntity
@@ -107,6 +116,27 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     private val calendarProvider = CalendarProvider(application)
     private val weatherRepository = WeatherRepository(application)
     private val headerPreferencesRepository = HeaderPreferencesRepository(application)
+    private val badgePreferencesRepository = BadgePreferencesRepository(application)
+
+    private val userManager = application.getSystemService(Context.USER_SERVICE) as? UserManager
+
+    val badgePreferences: StateFlow<BadgePreferences> = badgePreferencesRepository.preferences
+        .stateIn(viewModelScope, SharingStarted.Eagerly, BadgePreferences())
+
+    private val _hasNotificationAccess = MutableStateFlow(NotificationAccessHelper.hasAccess(application))
+    val hasNotificationAccess: StateFlow<Boolean> = _hasNotificationAccess.asStateFlow()
+
+    fun checkNotificationAccess() {
+        _hasNotificationAccess.value = NotificationAccessHelper.hasAccess(getApplication())
+    }
+
+    val notificationKeys: StateFlow<Map<BadgeKey, Set<String>>> = NotificationBadgeStore.badgeKeys
+
+    private val _expandedBadgeKey = MutableStateFlow<BadgeKey?>(null)
+    val expandedBadgeKey: StateFlow<BadgeKey?> = _expandedBadgeKey.asStateFlow()
+
+    private val _expandedCards = MutableStateFlow<List<NotificationCard>>(emptyList())
+    val expandedCards: StateFlow<List<NotificationCard>> = _expandedCards.asStateFlow()
 
     val timeState: StateFlow<TimeData> = timeProvider.timeState
 
@@ -313,6 +343,35 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         refreshDefaultLauncherState()
         refreshCalendar()
         refreshWeather()
+        checkNotificationAccess()
+
+        viewModelScope.launch {
+            badgePreferences.collect { prefs ->
+                NotificationBadgeStore.includeSilent = prefs.includeSilent
+                BadgeNotificationListener.requestSync()
+            }
+        }
+
+        viewModelScope.launch {
+            NotificationBadgeStore.badgeKeys.collect { keysMap ->
+                val expanded = _expandedBadgeKey.value
+                if (expanded != null) {
+                    val remaining = keysMap[expanded]
+                    if (remaining.isNullOrEmpty()) {
+                        collapseNotifications()
+                    } else {
+                        val listener = BadgeNotificationListener.getInstance()
+                        val hideText = badgePreferences.value.hideMessageText
+                        val cards = listener?.getCardsForApp(expanded.packageName, expanded.userSerial, hideText) ?: emptyList()
+                        if (cards.isEmpty()) {
+                            collapseNotifications()
+                        } else {
+                            _expandedCards.value = cards
+                        }
+                    }
+                }
+            }
+        }
         runCatching {
             cameraManager?.registerTorchCallback(torchCallback, null)
             Log.i(TAG, "Registered torch callback")
@@ -406,6 +465,119 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     fun setHeaderSize(size: HeaderSize) {
         Log.i(TAG, "setHeaderSize: $size")
         viewModelScope.launch { headerPreferencesRepository.setHeaderSize(size) }
+    }
+
+    fun appToBadgeKey(app: AppInfo): BadgeKey {
+        val serial = userManager?.getSerialNumberForUser(app.userHandle) ?: 0L
+        return BadgeKey(app.packageName, serial)
+    }
+
+    fun hasNotification(app: AppInfo, isPinned: Boolean): Boolean {
+        val prefs = badgePreferences.value
+        if (!prefs.enabled) return false
+        if (!_hasNotificationAccess.value) return false
+        if (prefs.mutedPackages.contains(app.packageName)) return false
+        if (prefs.scope == BadgeScope.PINNED_ONLY && !isPinned) return false
+
+        val key = appToBadgeKey(app)
+        return NotificationBadgeStore.hasNotifications(key)
+    }
+
+    fun toggleAppNotifications(app: AppInfo) {
+        val key = appToBadgeKey(app)
+        if (_expandedBadgeKey.value == key) {
+            collapseNotifications()
+        } else {
+            val listener = BadgeNotificationListener.getInstance()
+            val hideText = badgePreferences.value.hideMessageText
+            val cards = listener?.getCardsForApp(app.packageName, key.userSerial, hideText) ?: emptyList()
+            if (cards.isNotEmpty()) {
+                _expandedBadgeKey.value = key
+                _expandedCards.value = cards
+            } else {
+                collapseNotifications()
+            }
+        }
+    }
+
+    fun dismissNotificationCard(card: NotificationCard) {
+        val listener = BadgeNotificationListener.getInstance()
+        val markAsRead = badgePreferences.value.markAsReadOnDismiss
+        listener?.dismissNotification(card.key, markAsRead)
+
+        val updated = _expandedCards.value.filter { it.key != card.key }
+        _expandedCards.value = updated
+        if (updated.isEmpty()) {
+            _expandedBadgeKey.value = null
+        }
+    }
+
+    fun clearAllNotificationCards(app: AppInfo) {
+        val listener = BadgeNotificationListener.getInstance()
+        val markAsRead = badgePreferences.value.markAsReadOnDismiss
+        val key = appToBadgeKey(app)
+        listener?.clearAllForApp(app.packageName, key.userSerial, markAsRead)
+        collapseNotifications()
+    }
+
+    fun openNotificationCard(card: NotificationCard) {
+        runCatching {
+            card.contentIntent?.send()
+        }.onFailure {
+            Log.w(TAG, "Failed to send notification contentIntent")
+        }
+        collapseNotifications()
+    }
+
+    fun collapseNotifications() {
+        _expandedBadgeKey.value = null
+        _expandedCards.value = emptyList()
+    }
+
+    fun isAppMuted(packageName: String): Boolean {
+        return badgePreferences.value.mutedPackages.contains(packageName)
+    }
+
+    fun toggleMuteApp(packageName: String) {
+        viewModelScope.launch {
+            badgePreferencesRepository.toggleMutePackage(packageName)
+        }
+    }
+
+    fun setBadgeEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            badgePreferencesRepository.setEnabled(enabled)
+        }
+    }
+
+    fun setMarkAsReadOnDismiss(value: Boolean) {
+        viewModelScope.launch {
+            badgePreferencesRepository.setMarkAsReadOnDismiss(value)
+        }
+    }
+
+    fun setHideMessageText(value: Boolean) {
+        viewModelScope.launch {
+            badgePreferencesRepository.setHideMessageText(value)
+        }
+    }
+
+    fun setBadgeScope(scope: BadgeScope) {
+        viewModelScope.launch {
+            badgePreferencesRepository.setScope(scope)
+        }
+    }
+
+    fun setIncludeSilent(value: Boolean) {
+        viewModelScope.launch {
+            badgePreferencesRepository.setIncludeSilent(value)
+        }
+    }
+
+    fun resetBadgePreferences() {
+        viewModelScope.launch {
+            badgePreferencesRepository.resetToDefaults()
+        }
     }
 
     fun moveFavorite(componentKey: String, delta: Int) {

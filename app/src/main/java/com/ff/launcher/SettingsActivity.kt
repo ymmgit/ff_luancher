@@ -57,6 +57,7 @@ class SettingsActivity : ComponentActivity() {
         super.onResume()
         Log.i(TAG, "onResume called")
         viewModel.refreshDefaultLauncherState()
+        viewModel.checkNotificationAccess()
     }
 
     companion object {

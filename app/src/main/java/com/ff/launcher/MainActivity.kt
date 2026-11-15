@@ -100,6 +100,8 @@ class MainActivity : ComponentActivity() {
         // Re-check the default-home role: the user may have just confirmed the system
         // dialog (or changed it in system settings).
         viewModel.refreshDefaultLauncherState()
+        viewModel.checkNotificationAccess()
+        com.ff.launcher.notification.BadgeNotificationListener.requestSync()
     }
 
     override fun onPause() {

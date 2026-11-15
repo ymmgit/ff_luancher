@@ -25,6 +25,10 @@ import com.ff.launcher.data.glance.HeaderPreferencesRepository
 import com.ff.launcher.data.glance.HeaderSize
 import com.ff.launcher.data.glance.WeatherData
 import com.ff.launcher.data.glance.WeatherRepository
+import com.ff.launcher.data.notification.BadgePreferences
+import com.ff.launcher.data.notification.BadgePreferencesRepository
+import com.ff.launcher.data.notification.BadgeScope
+import com.ff.launcher.notification.NotificationAccessHelper
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -49,6 +53,49 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     private val quickActionRepository = QuickActionPreferencesRepository(application)
     private val headerPreferencesRepository = HeaderPreferencesRepository(application)
     private val weatherRepository = WeatherRepository(application)
+    private val badgePreferencesRepository = BadgePreferencesRepository(application)
+
+    val badgePreferences: StateFlow<BadgePreferences> = badgePreferencesRepository.preferences
+        .stateIn(viewModelScope, SharingStarted.Eagerly, BadgePreferences())
+
+    private val _hasNotificationAccess = MutableStateFlow(NotificationAccessHelper.hasAccess(application))
+    val hasNotificationAccess: StateFlow<Boolean> = _hasNotificationAccess.asStateFlow()
+
+    fun checkNotificationAccess() {
+        _hasNotificationAccess.value = NotificationAccessHelper.hasAccess(getApplication())
+    }
+
+    fun openNotificationAccessSettings() {
+        NotificationAccessHelper.openSettings(getApplication())
+    }
+
+    fun setBadgeEnabled(enabled: Boolean) {
+        viewModelScope.launch { badgePreferencesRepository.setEnabled(enabled) }
+    }
+
+    fun setMarkAsReadOnDismiss(value: Boolean) {
+        viewModelScope.launch { badgePreferencesRepository.setMarkAsReadOnDismiss(value) }
+    }
+
+    fun setHideMessageText(value: Boolean) {
+        viewModelScope.launch { badgePreferencesRepository.setHideMessageText(value) }
+    }
+
+    fun setBadgeScope(scope: BadgeScope) {
+        viewModelScope.launch { badgePreferencesRepository.setScope(scope) }
+    }
+
+    fun setIncludeSilent(value: Boolean) {
+        viewModelScope.launch { badgePreferencesRepository.setIncludeSilent(value) }
+    }
+
+    fun unmutePackage(packageName: String) {
+        viewModelScope.launch { badgePreferencesRepository.unmutePackage(packageName) }
+    }
+
+    fun resetBadgePreferences() {
+        viewModelScope.launch { badgePreferencesRepository.resetToDefaults() }
+    }
 
     val weatherData: StateFlow<WeatherData> = weatherRepository.cachedWeather
         .stateIn(viewModelScope, SharingStarted.Eagerly, WeatherData())

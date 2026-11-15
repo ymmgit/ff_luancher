@@ -138,6 +138,10 @@ fun LauncherRoot(viewModel: LauncherViewModel) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
+    val badgePreferences by viewModel.badgePreferences.collectAsStateWithLifecycle()
+    val expandedBadgeKey by viewModel.expandedBadgeKey.collectAsStateWithLifecycle()
+    val expandedCards by viewModel.expandedCards.collectAsStateWithLifecycle()
+
     // Default-launcher re-prompt: shows a top banner when the user returns after
     // switching to another launcher, session-dismissable but reset when the role toggles.
     val bannerDismissed = remember { mutableStateOf(false) }
@@ -261,6 +265,15 @@ fun LauncherRoot(viewModel: LauncherViewModel) {
                     context.startActivity(Intent(context, SettingsActivity::class.java))
                 },
                 onOpenSearch = viewModel::openAppSearch,
+                hasNotification = viewModel::hasNotification,
+                expandedBadgeKey = expandedBadgeKey,
+                expandedCards = expandedCards,
+                markAsReadEnabled = badgePreferences.markAsReadOnDismiss,
+                onToggleAppNotifications = viewModel::toggleAppNotifications,
+                onDismissNotificationCard = viewModel::dismissNotificationCard,
+                onClearAllNotificationCards = viewModel::clearAllNotificationCards,
+                onOpenNotificationCard = { card -> viewModel.openNotificationCard(card) },
+                onCollapseNotifications = viewModel::collapseNotifications,
             )
         }
 
@@ -376,6 +389,8 @@ fun LauncherRoot(viewModel: LauncherViewModel) {
                 onHideApp = viewModel::hideApp,
                 onOpenAppInfo = viewModel::openAppInfo,
                 onUninstallApp = viewModel::uninstallApp,
+                isAppMuted = viewModel::isAppMuted,
+                onToggleMuteApp = viewModel::toggleMuteApp,
                 onDismiss = viewModel::closeManageFavorites,
             )
         }
@@ -398,7 +413,18 @@ fun LauncherRoot(viewModel: LauncherViewModel) {
                     viewModel.closeAppSearch()
                     context.startActivity(Intent(context, SettingsActivity::class.java))
                 },
-                onDismiss = viewModel::closeAppSearch,
+                hasNotification = { app -> viewModel.hasNotification(app, isPinned = false) },
+                expandedBadgeKey = expandedBadgeKey,
+                expandedCards = expandedCards,
+                markAsReadEnabled = badgePreferences.markAsReadOnDismiss,
+                onToggleAppNotifications = viewModel::toggleAppNotifications,
+                onDismissNotificationCard = viewModel::dismissNotificationCard,
+                onClearAllNotificationCards = viewModel::clearAllNotificationCards,
+                onOpenNotificationCard = { card -> viewModel.openNotificationCard(card) },
+                onDismiss = {
+                    viewModel.collapseNotifications()
+                    viewModel.closeAppSearch()
+                },
             )
         }
 

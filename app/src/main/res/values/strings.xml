@@ -152,4 +152,44 @@
     <string name="quick_action_setting_size">Button Size</string>
     <string name="quick_action_setting_opacity">Button Opacity</string>
     <string name="quick_action_reset">Reset to defaults</string>
+
+    <!-- Notification Indicator & Panel -->
+    <string name="notification_listener_service_label">FF Launcher Notification Listener</string>
+    <string name="section_notifications">Notifications</string>
+    <string name="setting_notification_arrows">Notification Arrows</string>
+    <string name="setting_notification_arrows_desc">Show a down arrow on apps with notifications to read and clear them.</string>
+    <string name="setting_notification_access_title">Notification Access</string>
+    <string name="setting_notification_access_granted">Notification access is active</string>
+    <string name="setting_notification_access_needed">Notification access is required to detect notifications.</string>
+    <string name="setting_notification_access_grant_button">Grant Notification Access</string>
+    <string name="setting_notification_access_manage">Manage</string>
+    <string name="setting_mark_as_read_on_dismiss">Also mark as read when dismissing</string>
+    <string name="setting_mark_as_read_desc">Send read receipts/mark as read in apps that support it.</string>
+    <string name="setting_hide_message_text">Hide message text in panel</string>
+    <string name="setting_hide_message_text_desc">Keep message contents private until the app is opened.</string>
+    <string name="setting_include_silent">Include silent notifications</string>
+    <string name="setting_include_silent_desc">Show indicators even for low-priority notifications.</string>
+    <string name="setting_notification_scope">Notification Scope</string>
+    <string name="scope_all_apps">All Apps</string>
+    <string name="scope_pinned_only">Pinned Only</string>
+    <string name="setting_muted_apps">Muted Apps</string>
+    <string name="setting_no_muted_apps">No apps muted</string>
+    <string name="setting_unmute">Unmute</string>
+    <string name="menu_mute_notifications">Mute notifications</string>
+    <string name="menu_unmute_notifications">Unmute notifications</string>
+    <string name="action_show_notifications">Show notifications</string>
+    <string name="action_hide_notifications">Hide notifications</string>
+    <string name="notification_clear_all">Clear all</string>
+    <string name="notification_show_more">Show %d more</string>
+    <string name="notification_show_less">Show less</string>
+    <string name="notification_action_mark_read">Mark read</string>
+    <string name="notification_action_dismiss">Dismiss</string>
+    <string name="notification_relative_now">Just now</string>
+    <string name="notification_relative_minutes">%dm ago</string>
+    <string name="notification_relative_hours">%dh ago</string>
+    <string name="notification_relative_days">%dd ago</string>
+    <string name="notification_generic_new">New notification</string>
+    <string name="notification_generic_hidden">Hidden content</string>
+    <string name="notification_count_label">%d notification</string>
+    <string name="notification_counts_label">%d notifications</string>
 </resources>
