@@ -347,18 +347,22 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun setHeaderMode(mode: HeaderMode) {
+        Log.i(TAG, "setHeaderMode: $mode")
         viewModelScope.launch { headerPreferencesRepository.setHeaderMode(mode) }
     }
 
     fun setHeaderUseFahrenheit(useFahrenheit: Boolean) {
+        Log.i(TAG, "setHeaderUseFahrenheit: $useFahrenheit")
         viewModelScope.launch { headerPreferencesRepository.setUseFahrenheit(useFahrenheit) }
     }
 
     fun moveFavorite(componentKey: String, delta: Int) {
+        Log.i(TAG, "moveFavorite: $componentKey, delta=$delta")
         viewModelScope.launch { favoritesRepository.moveFavorite(componentKey, delta) }
     }
 
     fun updateFavoriteOrder(orderedKeys: List<String>) {
+        Log.i(TAG, "updateFavoriteOrder: count=${orderedKeys.size}")
         viewModelScope.launch { favoritesRepository.updateOrder(orderedKeys) }
     }
 
@@ -437,6 +441,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun launchApp(app: AppInfo) {
+        Log.i(TAG, "launchApp: ${app.label} (${app.componentKey})")
         viewModelScope.launch {
             runCatching {
                 database.recentAppDao().recordLaunch(
@@ -481,6 +486,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun toggleFavorite(app: AppInfo) {
+        Log.i(TAG, "toggleFavorite: ${app.label} (${app.componentKey})")
         viewModelScope.launch { favoritesRepository.toggle(app.componentKey) }
     }
 

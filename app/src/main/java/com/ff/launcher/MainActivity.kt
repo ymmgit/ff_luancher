@@ -30,6 +30,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.i("MainActivity", "onCreate called, savedInstanceState=${savedInstanceState != null}")
         enableEdgeToEdge()
         setContent {
             FFLauncherTheme {
@@ -79,12 +80,15 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        Log.i("MainActivity", "onResume called")
         // Ensure this home launcher task is never retained in the recent apps carousel:
         val am = getSystemService(ActivityManager::class.java)
         am?.appTasks?.forEach { appTask ->
             val info = runCatching { appTask.taskInfo }.getOrNull()
             if (info != null && info.taskId != taskId) {
-                runCatching { appTask.finishAndRemoveTask() }
+                if (info.baseIntent.component?.className != MainActivity::class.java.name) {
+                    runCatching { appTask.finishAndRemoveTask() }
+                }
             } else {
                 runCatching { appTask.setExcludeFromRecents(true) }
             }
@@ -97,11 +101,13 @@ class MainActivity : ComponentActivity() {
 
     override fun onPause() {
         super.onPause()
+        Log.i("MainActivity", "onPause called")
         viewModel.setHostResumed(false)
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        Log.i("MainActivity", "onNewIntent called with intent=$intent")
         // Return mechanic #2: the bottom-up Home gesture re-delivers ACTION_MAIN +
         // CATEGORY_HOME to this singleTask activity — collapse the Secondary Screen.
         handleHomeIntent(intent)
@@ -109,8 +115,14 @@ class MainActivity : ComponentActivity() {
 
     override fun onStop() {
         super.onStop()
+        Log.i("MainActivity", "onStop called")
         // Do not force-close the Secondary Screen onStop: when the user taps a widget
         // and later taps Back, they return to the Secondary Screen they launched it from.
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.i("MainActivity", "onDestroy called")
     }
 
     private fun handleHomeIntent(intent: Intent?) {

@@ -54,7 +54,7 @@
             android:exported="true"
             android:noHistory="true"
             android:stateNotNeeded="true"
-            android:taskAffinity=""
+            android:taskAffinity="com.ff.launcher.appentry"
             android:theme="@android:style/Theme.Translucent.NoTitleBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

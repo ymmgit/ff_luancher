@@ -3,6 +3,7 @@ package com.ff.launcher
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 
 /**
  * Trampoline activity exposed with [Intent.CATEGORY_LAUNCHER] so that other launchers
@@ -16,12 +17,14 @@ class AppEntryActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.i("AppEntryActivity", "onCreate: trampoline invoked, redirecting to MainActivity")
         val homeIntent = Intent(this, MainActivity::class.java).apply {
             action = Intent.ACTION_MAIN
             addCategory(Intent.CATEGORY_HOME)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
         }
         startActivity(homeIntent)
-        finishAndRemoveTask()
+        Log.i("AppEntryActivity", "finishing trampoline activity")
+        finish()
     }
 }

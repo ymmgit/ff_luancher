@@ -7,6 +7,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import android.view.View
 import android.widget.RemoteViews
 import com.ff.launcher.R
@@ -34,6 +35,7 @@ class WeatherWidgetProvider : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray,
     ) {
+        Log.i("WeatherWidgetProvider", "onUpdate called for ${appWidgetIds.size} widgets")
         val pendingResult = goAsync()
         scope.launch {
             try {
@@ -53,6 +55,7 @@ class WeatherWidgetProvider : AppWidgetProvider() {
 
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
+        Log.i("WeatherWidgetProvider", "onReceive action=${intent.action}")
         if (intent.action == ACTION_REFRESH_WEATHER) {
             val pendingResult = goAsync()
             scope.launch {
