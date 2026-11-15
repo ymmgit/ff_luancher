@@ -11,7 +11,9 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
@@ -302,7 +304,7 @@ fun LauncherRoot(viewModel: LauncherViewModel) {
             isSecondScreenOpen = isSecondScreenOpen,
             // Tapping the trigger opens the deck; tapping it again closes it.
             onActivate = { viewModel.setSecondScreenOpen(!isSecondScreenOpen) },
-            gesturesEnabled = !showOnboarding && (isSecondScreenOpen || !overlapsScroller),
+            gesturesEnabled = !showOnboarding && !isArrangeFavoritesOpen && (isSecondScreenOpen || !overlapsScroller),
             modifier = Modifier
                 .align(if (slideFromEnd) AbsoluteAlignment.TopRight else AbsoluteAlignment.TopLeft)
                 .offset(y = triggerTop),
@@ -337,13 +339,19 @@ fun LauncherRoot(viewModel: LauncherViewModel) {
             )
         }
 
-        if (isArrangeFavoritesOpen) {
+        AnimatedVisibility(
+            visible = isArrangeFavoritesOpen,
+            enter = fadeIn(tween(180)) + slideInVertically(tween(220)) { full -> full / 8 },
+            exit = fadeOut(tween(140)) + slideOutVertically(tween(180)) { full -> full / 8 },
+            modifier = Modifier.fillMaxSize(),
+        ) {
             ManageFavoritesSheet(
                 targetApp = selectedAppForManage,
                 favoriteApps = favoriteAppsList,
                 allApps = allInstalledApps,
                 onToggleFavorite = viewModel::toggleFavorite,
                 onMoveFavorite = viewModel::moveFavorite,
+                onReorderFavorites = viewModel::updateFavoriteOrder,
                 onHideApp = viewModel::hideApp,
                 onOpenAppInfo = viewModel::openAppInfo,
                 onUninstallApp = viewModel::uninstallApp,

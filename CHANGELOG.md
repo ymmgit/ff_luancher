@@ -34,6 +34,13 @@ All notable changes, new features, and bug fixes for FF Launcher.
 - **`WeatherRepository.kt`**: Connects to the free Open-Meteo REST API, maps WMO weather codes to localized descriptions and emojis, resolves coarse device location, and caches results in DataStore for 1 hour to conserve data and battery.
 - **`HeaderPreferencesRepository.kt`**: Stores header layout mode and temperature unit preferences in Jetpack DataStore Preferences.
 
+#### 4. Immersive Pinned Apps UI Redesign (`ManageFavoritesSheet.kt`)
+- **Wallpaper Background Overlay**: Eliminated the solid bottom sheet container in favor of an immersive wallpaper overlay with a semi-transparent dark readability scrim.
+- **Floating Semi-Transparent Boxes**: Wrapped every application item in a floating, rounded translucent card with glass borders and elevation.
+- **Interactive Checkboxes**: Added a native Checkbox next to every app in the drawer list—pinned apps are checked, unpinned apps remain in the drawer.
+- **Vertical Alphabet Wave Scroller**: Maintained the right-edge A–Z wave scroller for instant alphabetical section jumping across all installed applications.
+- **Drag-and-Drop + Arrow Reordering**: In the Pinned Sequence view, users can drag and drop items via the `≡` handle for instant reordering with haptic feedback, while retaining Up and Down arrow buttons for tap-based adjustment.
+
 ---
 
 ## [1.0.0] - 2026-11-15

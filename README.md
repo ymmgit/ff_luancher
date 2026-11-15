@@ -13,7 +13,7 @@ See [CHANGELOG.md](CHANGELOG.md) for recent updates and bug fixes, and [SPEC.md]
 ### 📱 Primary Home Screen
 - **Material 3 Smart Header (At-a-Glance)**: Integrated customizable header at the top of the home screen featuring real-time clock, date, upcoming calendar events, and live weather conditions from Open-Meteo. Long-press to switch modes (Combined At-a-Glance, Clock Focus, Calendar Focus, Weather Focus, or Hidden) and toggle °C / °F units.
 - **Minimalist Pinned Favorites**: Shows only your pinned favorite applications on the home screen for a distraction-free environment.
-- **Unified Favorites Manager & Reordering**: Long-press any app in the drawer or home screen to open a consolidated Material 3 bottom sheet to pin/unpin apps and adjust their exact display sequence with live Room database persistence.
+- **Immersive Floating Pinned Apps Manager**: Floating glass design over wallpaper where every app drawer application sits in a semi-transparent box with an interactive checkbox. Pinned apps are checked, unpinned apps remain in the drawer. Includes a right-edge vertical A–Z scroller and dual reordering via **Drag & Drop** and Up/Down arrows.
 - **Wide Touch Targets**: App rows provide an expanded clickable surface (>80% screen width) for effortless, natural tapping.
 - **A–Z Wave Scroller**: Docked to the right edge with zero-latency section jumping, ICU-backed international alphabet collating, dynamic wave bubble indicator, and haptic feedback (`HapticFeedbackType.TextHandleMove`).
 - **Quick Settings Access**: Dedicated gear icon (⚙) at the bottom of the alphabet scroller opens Launcher Settings directly.
