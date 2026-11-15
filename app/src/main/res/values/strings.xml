@@ -44,6 +44,7 @@
     <string name="header_mode_calendar">Calendar</string>
     <string name="header_mode_weather">Weather</string>
     <string name="header_mode_hidden">Hidden</string>
+    <string name="setting_header_size">Header size</string>
     <string name="home_widget_replace">Replace with a widget…</string>
     <string name="home_widget_restore">Restore default header</string>
     <string name="home_widget_options">Home widget options</string>

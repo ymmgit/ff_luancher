@@ -54,6 +54,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -85,6 +88,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.ff.launcher.R
 import com.ff.launcher.data.AppInfo
@@ -674,6 +678,8 @@ private fun HomeHeaderArea(
     if (appWidgetId != null) {
         HomeCustomWidgetView(
             appWidgetId = appWidgetId,
+            headerSize = headerConfig.size,
+            onSizeChange = onHeaderSizeChange,
             obtainHostView = obtainHostView,
             onReplaceWidget = onReplaceHomeWidget,
             onRestoreDefaultClock = onRestoreDefaultClock,
@@ -699,6 +705,8 @@ private fun HomeHeaderArea(
 @Composable
 fun HomeCustomWidgetView(
     appWidgetId: Int,
+    headerSize: HeaderSize = HeaderSize.MEDIUM,
+    onSizeChange: (HeaderSize) -> Unit = {},
     obtainHostView: (Context, Int, Int) -> LauncherAppWidgetHostView?,
     onReplaceWidget: () -> Unit,
     onRestoreDefaultClock: () -> Unit,
@@ -722,6 +730,12 @@ fun HomeCustomWidgetView(
 
     val hostView = remember(appWidgetId) {
         obtainHostView(context, HOME_WIDGET_SLOT_ID, appWidgetId)
+    }
+
+    val widgetHeightModifier = when (headerSize) {
+        HeaderSize.SMALL -> Modifier.height(110.dp)
+        HeaderSize.MEDIUM -> Modifier.height(170.dp)
+        HeaderSize.LARGE -> Modifier.height(230.dp)
     }
 
     Box(
@@ -762,13 +776,15 @@ fun HomeCustomWidgetView(
                 onRelease = { view -> view.onLongPress = null },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .wrapContentHeight(),
+                    .then(widgetHeightModifier),
             )
         }
     }
 
     if (showSheet) {
         HomeWidgetOptionsSheet(
+            currentSize = headerSize,
+            onSizeChange = onSizeChange,
             onReplace = {
                 showSheet = false
                 onReplaceWidget()
@@ -785,6 +801,8 @@ fun HomeCustomWidgetView(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun HomeWidgetOptionsSheet(
+    currentSize: HeaderSize,
+    onSizeChange: (HeaderSize) -> Unit,
     onReplace: () -> Unit,
     onRestore: () -> Unit,
     onDismiss: () -> Unit,
@@ -799,7 +817,7 @@ private fun HomeWidgetOptionsSheet(
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp)
                 .padding(bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             Text(
                 text = stringResource(R.string.home_widget_options),
@@ -807,6 +825,40 @@ private fun HomeWidgetOptionsSheet(
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
             )
+
+            Text(
+                text = stringResource(R.string.setting_header_size).uppercase(),
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+                letterSpacing = 1.sp,
+            )
+
+            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                SegmentedButton(
+                    selected = currentSize == HeaderSize.SMALL,
+                    onClick = { onSizeChange(HeaderSize.SMALL) },
+                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3),
+                ) {
+                    Text(stringResource(R.string.size_small))
+                }
+                SegmentedButton(
+                    selected = currentSize == HeaderSize.MEDIUM,
+                    onClick = { onSizeChange(HeaderSize.MEDIUM) },
+                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3),
+                ) {
+                    Text(stringResource(R.string.size_medium))
+                }
+                SegmentedButton(
+                    selected = currentSize == HeaderSize.LARGE,
+                    onClick = { onSizeChange(HeaderSize.LARGE) },
+                    shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3),
+                ) {
+                    Text(stringResource(R.string.size_large))
+                }
+            }
+
+            Spacer(Modifier.height(4.dp))
 
             FilledTonalButton(
                 onClick = onReplace,

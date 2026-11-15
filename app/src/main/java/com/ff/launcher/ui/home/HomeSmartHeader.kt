@@ -196,9 +196,9 @@ private fun CombinedGlanceView(
     onLongClick: () -> Unit,
 ) {
     val clockFontSize = when (size) {
-        HeaderSize.SMALL -> 34.sp
-        HeaderSize.MEDIUM -> 45.sp
-        HeaderSize.LARGE -> 58.sp
+        HeaderSize.SMALL -> 32.sp
+        HeaderSize.MEDIUM -> 46.sp
+        HeaderSize.LARGE -> 62.sp
     }
     val clockLetterSpacing = when (size) {
         HeaderSize.SMALL -> (-0.5).sp
@@ -206,7 +206,7 @@ private fun CombinedGlanceView(
         HeaderSize.LARGE -> (-1.5).sp
     }
     val weatherEmojiSize = when (size) {
-        HeaderSize.SMALL -> 14.sp
+        HeaderSize.SMALL -> 13.sp
         HeaderSize.MEDIUM -> 16.sp
         HeaderSize.LARGE -> 20.sp
     }
@@ -221,7 +221,7 @@ private fun CombinedGlanceView(
         HeaderSize.LARGE -> 12.dp
     }
     val weatherPaddingVertical = when (size) {
-        HeaderSize.SMALL -> 4.dp
+        HeaderSize.SMALL -> 3.dp
         HeaderSize.MEDIUM -> 6.dp
         HeaderSize.LARGE -> 8.dp
     }
@@ -238,7 +238,7 @@ private fun CombinedGlanceView(
     val containerVerticalPadding = when (size) {
         HeaderSize.SMALL -> 2.dp
         HeaderSize.MEDIUM -> 6.dp
-        HeaderSize.LARGE -> 10.dp
+        HeaderSize.LARGE -> 12.dp
     }
 
     Column(
@@ -365,9 +365,9 @@ private fun ClockFocusView(
     onClockClick: () -> Unit,
 ) {
     val timeFontSize = when (size) {
-        HeaderSize.SMALL -> 46.sp
-        HeaderSize.MEDIUM -> 57.sp
-        HeaderSize.LARGE -> 72.sp
+        HeaderSize.SMALL -> 42.sp
+        HeaderSize.MEDIUM -> 58.sp
+        HeaderSize.LARGE -> 78.sp
     }
     val dateStyle = when (size) {
         HeaderSize.SMALL -> MaterialTheme.typography.bodyMedium
@@ -806,40 +806,11 @@ private fun HeaderSettingsSheet(
                 }
             }
 
-            Spacer(Modifier.height(20.dp))
-
-            Text(
-                text = stringResource(R.string.setting_temperature_unit).uppercase(),
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
-                letterSpacing = 1.sp,
-            )
-
-            Spacer(Modifier.height(8.dp))
-
-            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                SegmentedButton(
-                    selected = !config.useFahrenheit,
-                    onClick = { onUnitChange(false) },
-                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
-                ) {
-                    Text(stringResource(R.string.unit_celsius))
-                }
-                SegmentedButton(
-                    selected = config.useFahrenheit,
-                    onClick = { onUnitChange(true) },
-                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
-                ) {
-                    Text(stringResource(R.string.unit_fahrenheit))
-                }
-            }
-
             if (config.mode != HeaderMode.HIDDEN) {
                 Spacer(Modifier.height(20.dp))
 
                 Text(
-                    text = stringResource(R.string.setting_widget_size).uppercase(),
+                    text = stringResource(R.string.setting_header_size).uppercase(),
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
@@ -869,6 +840,37 @@ private fun HeaderSettingsSheet(
                         shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3),
                     ) {
                         Text(stringResource(R.string.size_large))
+                    }
+                }
+            }
+
+            if (config.mode == HeaderMode.COMBINED || config.mode == HeaderMode.WEATHER_ONLY) {
+                Spacer(Modifier.height(20.dp))
+
+                Text(
+                    text = stringResource(R.string.setting_temperature_unit).uppercase(),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    letterSpacing = 1.sp,
+                )
+
+                Spacer(Modifier.height(8.dp))
+
+                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                    SegmentedButton(
+                        selected = !config.useFahrenheit,
+                        onClick = { onUnitChange(false) },
+                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                    ) {
+                        Text(stringResource(R.string.unit_celsius))
+                    }
+                    SegmentedButton(
+                        selected = config.useFahrenheit,
+                        onClick = { onUnitChange(true) },
+                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                    ) {
+                        Text(stringResource(R.string.unit_fahrenheit))
                     }
                 }
             }
