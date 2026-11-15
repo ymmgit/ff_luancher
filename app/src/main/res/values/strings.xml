@@ -29,6 +29,9 @@
     <string name="home_widget_replace">Replace with Widget…</string>
     <string name="home_widget_restore">Restore Default Clock / Smart Header</string>
     <string name="home_widget_options">Home Widget Options</string>
+    <string name="home_widget_custom_active">Custom Widget Active</string>
+    <string name="home_widget_custom_desc">A third-party widget is currently placed at the top of your home screen, replacing the default clock header.</string>
+    <string name="action_restore">Restore Default</string>
     <string name="setting_temperature_unit">Temperature Unit</string>
     <string name="unit_celsius">Celsius (°C)</string>
     <string name="unit_fahrenheit">Fahrenheit (°F)</string>

@@ -14,8 +14,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Refresh
+import com.ff.launcher.data.db.WidgetSlotEntity
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -81,8 +86,11 @@ fun TriggerTuningSheet(
     config: TriggerConfig,
     overlapsScroller: Boolean,
     headerConfig: HeaderConfig = HeaderConfig(),
+    homeWidgetSlot: WidgetSlotEntity? = null,
     onHeaderModeChange: (HeaderMode) -> Unit = {},
     onHeaderUnitChange: (Boolean) -> Unit = {},
+    onReplaceHomeWidget: () -> Unit = {},
+    onRestoreDefaultHomeWidget: () -> Unit = {},
     onTriggerEnabledChange: (Boolean) -> Unit = {},
     quickActionConfig: QuickActionConfig = QuickActionConfig(),
     quickActionTargetApp: AppInfo? = null,
@@ -197,75 +205,182 @@ fun TriggerTuningSheet(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
 
-                    Text(
-                        text = stringResource(R.string.setting_header_mode),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    val hasCustomWidget = homeWidgetSlot?.appWidgetId != null
 
-                    val modes = listOf(
-                        HeaderMode.COMBINED to stringResource(R.string.header_mode_combined),
-                        HeaderMode.CLOCK_ONLY to stringResource(R.string.header_mode_clock),
-                        HeaderMode.CALENDAR_ONLY to stringResource(R.string.header_mode_calendar),
-                        HeaderMode.WEATHER_ONLY to stringResource(R.string.header_mode_weather),
-                        HeaderMode.HIDDEN to stringResource(R.string.header_mode_hidden),
-                    )
-
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        modes.forEach { (mode, label) ->
-                            val selected = headerConfig.mode == mode
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
+                    if (hasCustomWidget) {
+                        Surface(
+                            shape = RoundedCornerShape(14.dp),
+                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f),
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .clickable { onHeaderModeChange(mode) },
+                                    .padding(14.dp),
+                                verticalArrangement = Arrangement.spacedBy(10.dp),
                             ) {
                                 Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 14.dp, vertical = 10.dp),
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Edit,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(20.dp),
+                                    )
                                     Text(
-                                        text = label,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
+                                        text = stringResource(R.string.home_widget_custom_active),
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
                                     )
-                                    RadioButton(
-                                        selected = selected,
-                                        onClick = { onHeaderModeChange(mode) },
-                                    )
+                                }
+                                Text(
+                                    text = stringResource(R.string.home_widget_custom_desc),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    FilledTonalButton(
+                                        onClick = {
+                                            onDismiss()
+                                            onReplaceHomeWidget()
+                                        },
+                                        shape = RoundedCornerShape(12.dp),
+                                        modifier = Modifier.weight(1f),
+                                    ) {
+                                        Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
+                                        Spacer(Modifier.width(6.dp))
+                                        Text(
+                                            text = stringResource(R.string.home_widget_replace),
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                        )
+                                    }
+
+                                    OutlinedButton(
+                                        onClick = onRestoreDefaultHomeWidget,
+                                        shape = RoundedCornerShape(12.dp),
+                                        modifier = Modifier.weight(1f),
+                                    ) {
+                                        Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
+                                        Spacer(Modifier.width(6.dp))
+                                        Text(
+                                            text = stringResource(R.string.action_restore),
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                        )
+                                    }
                                 }
                             }
                         }
-                    }
+                    } else {
+                        FilledTonalButton(
+                            onClick = {
+                                onDismiss()
+                                onReplaceHomeWidget()
+                            },
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                text = stringResource(R.string.home_widget_replace),
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
 
-                    if (headerConfig.mode != HeaderMode.HIDDEN) {
                         HorizontalDivider(
                             modifier = Modifier.padding(vertical = 4.dp),
                             thickness = 1.dp,
                             color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
                         )
+
                         Text(
-                            text = stringResource(R.string.setting_temperature_unit),
+                            text = stringResource(R.string.setting_header_mode),
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                            SegmentedButton(
-                                selected = !headerConfig.useFahrenheit,
-                                onClick = { onHeaderUnitChange(false) },
-                                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
-                            ) { Text(stringResource(R.string.unit_celsius)) }
-                            SegmentedButton(
-                                selected = headerConfig.useFahrenheit,
-                                onClick = { onHeaderUnitChange(true) },
-                                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
-                            ) { Text(stringResource(R.string.unit_fahrenheit)) }
+
+                        val modes = listOf(
+                            HeaderMode.COMBINED to stringResource(R.string.header_mode_combined),
+                            HeaderMode.CLOCK_ONLY to stringResource(R.string.header_mode_clock),
+                            HeaderMode.CALENDAR_ONLY to stringResource(R.string.header_mode_calendar),
+                            HeaderMode.WEATHER_ONLY to stringResource(R.string.header_mode_weather),
+                            HeaderMode.HIDDEN to stringResource(R.string.header_mode_hidden),
+                        )
+
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            modes.forEach { (mode, label) ->
+                                val selected = headerConfig.mode == mode
+                                Surface(
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .clickable { onHeaderModeChange(mode) },
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                    ) {
+                                        Text(
+                                            text = label,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                                            color = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
+                                        )
+                                        RadioButton(
+                                            selected = selected,
+                                            onClick = { onHeaderModeChange(mode) },
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        if (headerConfig.mode != HeaderMode.HIDDEN) {
+                            HorizontalDivider(
+                                modifier = Modifier.padding(vertical = 4.dp),
+                                thickness = 1.dp,
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                            )
+                            Text(
+                                text = stringResource(R.string.setting_temperature_unit),
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                                SegmentedButton(
+                                    selected = !headerConfig.useFahrenheit,
+                                    onClick = { onHeaderUnitChange(false) },
+                                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                                ) { Text(stringResource(R.string.unit_celsius)) }
+                                SegmentedButton(
+                                    selected = headerConfig.useFahrenheit,
+                                    onClick = { onHeaderUnitChange(true) },
+                                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                                ) { Text(stringResource(R.string.unit_fahrenheit)) }
+                            }
                         }
                     }
                 }

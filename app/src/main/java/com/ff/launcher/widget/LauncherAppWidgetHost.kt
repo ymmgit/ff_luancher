@@ -6,6 +6,7 @@ import android.appwidget.AppWidgetProviderInfo
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
+import android.os.SystemClock
 import android.util.SizeF
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
@@ -67,10 +68,15 @@ class LauncherAppWidgetHostView(context: Context) : AppWidgetHostView(context) {
         val callback = onLongPress ?: return@Runnable
         longPressTriggered = true
         performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+        // Synthesize ACTION_CANCEL so child views abort pending clicks or pressed states
+        val now = SystemClock.uptimeMillis()
+        val cancelEvent = MotionEvent.obtain(now, now, MotionEvent.ACTION_CANCEL, downX, downY, 0)
+        super.dispatchTouchEvent(cancelEvent)
+        cancelEvent.recycle()
         callback.invoke()
     }
 
-    override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         when (ev.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
                 longPressTriggered = false
@@ -79,58 +85,58 @@ class LauncherAppWidgetHostView(context: Context) : AppWidgetHostView(context) {
                 removeCallbacks(longPressRunnable)
                 postDelayed(longPressRunnable, longPressTimeout)
             }
-
             MotionEvent.ACTION_MOVE -> {
                 if (hypot(ev.x - downX, ev.y - downY) > touchSlop) {
                     removeCallbacks(longPressRunnable)
                 }
             }
-
-            MotionEvent.ACTION_UP,
-            MotionEvent.ACTION_CANCEL,
-            MotionEvent.ACTION_POINTER_DOWN -> {
-                removeCallbacks(longPressRunnable)
-            }
-        }
-        // Once the long-press fires, returning true steals the touch stream from child
-        // RemoteViews (Android automatically dispatches ACTION_CANCEL to them).
-        return longPressTriggered || super.onInterceptTouchEvent(ev)
-    }
-
-    override fun onTouchEvent(event: MotionEvent): Boolean {
-        when (event.actionMasked) {
-            MotionEvent.ACTION_MOVE -> {
-                if (!longPressTriggered && hypot(event.x - downX, event.y - downY) > touchSlop) {
-                    removeCallbacks(longPressRunnable)
-                }
-            }
-
             MotionEvent.ACTION_UP,
             MotionEvent.ACTION_CANCEL -> {
                 removeCallbacks(longPressRunnable)
                 if (longPressTriggered) {
                     longPressTriggered = false
-                    return true
+                    return true // Consume ACTION_UP after long press so child never fires click
                 }
             }
+            MotionEvent.ACTION_POINTER_DOWN,
+            MotionEvent.ACTION_POINTER_UP -> {
+                removeCallbacks(longPressRunnable)
+            }
         }
-        // Consume the touch stream even if the widget background has no clickable
-        // children, so the long-press timer stays alive until timeout or finger lift,
-        // and taps on blank widget areas don't dismiss the deck.
-        return true
+
+        if (longPressTriggered) {
+            return true
+        }
+
+        return super.dispatchTouchEvent(ev)
+    }
+
+    override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
+        // Once long press is triggered, intercept everything so child views don't receive it
+        return longPressTriggered || super.onInterceptTouchEvent(ev)
+    }
+
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        if (longPressTriggered) {
+            if (event.actionMasked == MotionEvent.ACTION_UP || event.actionMasked == MotionEvent.ACTION_CANCEL) {
+                longPressTriggered = false
+            }
+            return true
+        }
+        return super.onTouchEvent(event)
     }
 
     override fun cancelLongPress() {
         super.cancelLongPress()
-        removeCallbacks(longPressRunnable)
+        // Do NOT cancel longPressRunnable here.
+        // Android framework automatically calls cancelLongPress() on ViewGroup when a child
+        // view handles ACTION_DOWN. Cancelling here would break long-press on clickable widgets!
     }
 
     override fun requestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
-        if (disallowIntercept) {
-            // A scrollable child (collection widget: calendar agenda, mail list…) has
-            // claimed the gesture — its scrolling must never be mistaken for a long-press.
-            removeCallbacks(longPressRunnable)
-        }
+        // Child views (including clickable Buttons and FrameLayouts in RemoteViews) often
+        // call requestDisallowInterceptTouchEvent(true) on touch down.
+        // We only cancel the long-press if the finger actually moves beyond touchSlop.
         super.requestDisallowInterceptTouchEvent(disallowIntercept)
     }
 
