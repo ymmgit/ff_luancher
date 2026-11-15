@@ -95,20 +95,13 @@ import com.ff.launcher.ui.theme.TextSecondary
 import com.ff.launcher.viewmodel.HomeListState
 import com.ff.launcher.widget.LauncherAppWidgetHostView
 import com.ff.launcher.viewmodel.HomeRow
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-/** How long the revealed app list stays on screen after the scroller is released. */
-private const val LIST_LINGER_MS = 2_500L
-
 /**
- * Primary home screen, Niagara-style (confirmed product decision): collapsed state shows
- * only pinned favorites; touching the wave scroller reveals the full locale-collated
- * list, which lingers briefly after release and folds back. With nothing pinned, the
- * full list IS the home. Long-pressing a row opens a context menu (favorite toggle,
- * App info, Uninstall) instead of mutating state directly.
+ * Primary home screen, Niagara-style: collapsed state shows only pinned favorites;
+ * touching the wave scroller reveals the full locale-collated app drawer list.
+ * Remains open while browsing, and smoothly returns to favorites on Back or Home gesture.
+ * Long-pressing a row opens a context menu (favorite toggle, App info, Uninstall).
  */
 @Composable
 fun HomeScreen(
@@ -135,14 +128,11 @@ fun HomeScreen(
 ) {
     val scope = rememberCoroutineScope()
     var revealed by remember { mutableStateOf(false) }
-    val collapseJob = remember { mutableStateOf<Job?>(null) }
     val favListState = rememberLazyListState()
 
     LaunchedEffect(homeResetTrigger) {
         if (homeResetTrigger > 0L) {
             Log.d("HomeScreen", "homeResetTrigger fired ($homeResetTrigger) -> folding full list back to favorites")
-            collapseJob.value?.cancel()
-            collapseJob.value = null
             revealed = false
             runCatching { listState.scrollToItem(0) }
             runCatching { favListState.scrollToItem(0) }
@@ -211,43 +201,16 @@ fun HomeScreen(
         }
     }
 
-    fun scheduleCollapse() {
-        collapseJob.value?.cancel()
-        Log.d("HomeScreen", "scheduleCollapse: waiting ${LIST_LINGER_MS}ms before folding")
-        collapseJob.value = scope.launch {
-            delay(LIST_LINGER_MS)
-            Log.d("HomeScreen", "collapseJob timer expired: revealed -> false")
-            revealed = false
-        }
-    }
-
     fun onScrollerReveal(active: Boolean) {
-        Log.d("HomeScreen", "onScrollerReveal: active=$active, previous revealed=$revealed")
         if (active) {
-            collapseJob.value?.cancel()
-            collapseJob.value = null
+            Log.d("HomeScreen", "onScrollerReveal: active=true -> entering app drawer (revealed=true)")
             revealed = true
-        } else {
-            // Linger: keep the list readable at the landing spot, then fold back.
-            scheduleCollapse()
-        }
-    }
-
-    // Scrolling the revealed list directly also (re-)arms the collapse timer.
-    LaunchedEffect(listState) {
-        snapshotFlow { listState.isScrollInProgress }.collect { scrolling ->
-            if (scrolling) {
-                collapseJob.value?.cancel()
-            } else if (revealed) {
-                scheduleCollapse()
-            }
         }
     }
 
     // System back gesture folds the revealed list back to favorites-only.
     BackHandler(enabled = revealed) {
-        collapseJob.value?.cancel()
-        collapseJob.value = null
+        Log.d("HomeScreen", "BackHandler: returning to favorites view")
         revealed = false
     }
 
@@ -365,7 +328,6 @@ fun HomeScreen(
                         EmptyFavoritesGuide(
                             onBrowseApps = {
                                 revealed = true
-                                scheduleCollapse()
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
