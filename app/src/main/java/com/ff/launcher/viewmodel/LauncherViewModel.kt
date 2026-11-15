@@ -45,6 +45,7 @@ import com.ff.launcher.data.glance.TimeProvider
 import com.ff.launcher.data.glance.WeatherData
 import com.ff.launcher.data.glance.WeatherRepository
 import com.ff.launcher.data.db.DEFAULT_WIDGET_SLOTS
+import com.ff.launcher.data.db.HOME_WIDGET_SLOT_ID
 import com.ff.launcher.data.db.HiddenAppEntity
 import com.ff.launcher.data.db.LauncherDatabase
 import com.ff.launcher.data.db.SLOT_WEIGHT_LARGE
@@ -240,6 +241,11 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         database.widgetSlotDao().observeAll()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    /** Slot 0 is reserved for the primary Home Screen widget (or default smart clock when null). */
+    val homeWidgetSlot: StateFlow<WidgetSlotEntity?> = widgetSlots
+        .map { slots -> slots.firstOrNull { it.slotId == HOME_WIDGET_SLOT_ID } }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
     /**
      * Grouping/sorting runs on [Dispatchers.Default] — it rebuilds the ICU index and
      * re-sorts hundreds of localized labels, and re-runs on every favorite toggle.
@@ -310,10 +316,14 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             cameraManager?.registerTorchCallback(torchCallback, null)
             Log.i(TAG, "Registered torch callback")
         }.onFailure { Log.w(TAG, "Failed to register torch callback", it) }
-        // SPEC Module 4: listen ONLY while the deck is open AND the activity is resumed.
+        // Listen while the activity is resumed AND (secondary deck is open OR a home widget is bound).
         viewModelScope.launch {
-            _isDeckActive.collect { active ->
-                if (active) {
+            combine(_isDeckActive, _hostResumed, homeWidgetSlot) { isDeckActive, hostResumed, slot ->
+                val hasHomeWidget = slot?.appWidgetId != null
+                hostResumed && (isDeckActive || hasHomeWidget)
+            }.collect { shouldListen ->
+                Log.d(TAG, "widget listening state: shouldListen=$shouldListen (isListening=$isListening)")
+                if (shouldListen) {
                     ensureListening()
                 } else if (isListening) {
                     isListening = false
@@ -727,6 +737,16 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             database.widgetSlotDao().clearWidget(slotId)
             slot?.appWidgetId?.let(::releaseAppWidgetIdAsync)
         }
+    }
+
+    /** Opens widget picker for the home screen (slot 0). */
+    fun replaceHomeWidget() {
+        requestWidgetForSlot(HOME_WIDGET_SLOT_ID)
+    }
+
+    /** Clears slot 0, reverting the home screen to the default Smart Clock header. */
+    fun restoreDefaultClockWidget() {
+        removeWidgetFromSlot(HOME_WIDGET_SLOT_ID)
     }
 
     /**

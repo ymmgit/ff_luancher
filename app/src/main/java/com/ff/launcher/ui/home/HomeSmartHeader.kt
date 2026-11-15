@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
@@ -55,10 +56,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ff.launcher.R
 import com.ff.launcher.data.glance.CalendarState
 import com.ff.launcher.data.glance.HeaderConfig
 import com.ff.launcher.data.glance.HeaderMode
@@ -80,6 +83,7 @@ fun HomeSmartHeader(
     onModeChange: (HeaderMode) -> Unit,
     onUnitChange: (Boolean) -> Unit,
     onRefreshWeather: () -> Unit,
+    onReplaceWidget: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     if (config.mode == HeaderMode.HIDDEN) return
@@ -87,6 +91,11 @@ fun HomeSmartHeader(
     val context = LocalContext.current
     val haptics = LocalHapticFeedback.current
     var showConfigSheet by remember { mutableStateOf(false) }
+
+    val onHeaderLongClick = {
+        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+        showConfigSheet = true
+    }
 
     Box(
         modifier = modifier
@@ -99,13 +108,10 @@ fun HomeSmartHeader(
                         HeaderMode.CLOCK_ONLY -> openClockApp(context)
                         HeaderMode.CALENDAR_ONLY -> openCalendarApp(context)
                         HeaderMode.WEATHER_ONLY -> openWeatherApp(context, weatherData)
-                        else -> openCalendarApp(context)
+                        else -> {}
                     }
                 },
-                onLongClick = {
-                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    showConfigSheet = true
-                },
+                onLongClick = onHeaderLongClick,
             ),
     ) {
         when (config.mode) {
@@ -118,6 +124,7 @@ fun HomeSmartHeader(
                     onClockClick = { openClockApp(context) },
                     onCalendarClick = { openCalendarApp(context) },
                     onWeatherClick = { openWeatherApp(context, weatherData) },
+                    onLongClick = onHeaderLongClick,
                 )
             }
             HeaderMode.CLOCK_ONLY -> {
@@ -150,11 +157,16 @@ fun HomeSmartHeader(
             onModeChange = onModeChange,
             onUnitChange = onUnitChange,
             onRefreshWeather = onRefreshWeather,
+            onReplaceWidget = {
+                showConfigSheet = false
+                onReplaceWidget()
+            },
             onDismiss = { showConfigSheet = false },
         )
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun CombinedGlanceView(
     timeData: TimeData,
@@ -164,6 +176,7 @@ private fun CombinedGlanceView(
     onClockClick: () -> Unit,
     onCalendarClick: () -> Unit,
     onWeatherClick: () -> Unit,
+    onLongClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -179,8 +192,12 @@ private fun CombinedGlanceView(
             Row(
                 verticalAlignment = Alignment.Bottom,
                 modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .padding(vertical = 2.dp),
+                    .clip(RoundedCornerShape(12.dp))
+                    .combinedClickable(
+                        onClick = onClockClick,
+                        onLongClick = onLongClick,
+                    )
+                    .padding(horizontal = 4.dp, vertical = 2.dp),
             ) {
                 Text(
                     text = timeData.timeText,
@@ -205,7 +222,11 @@ private fun CombinedGlanceView(
                 shape = RoundedCornerShape(16.dp),
                 color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f),
                 modifier = Modifier
-                    .clip(RoundedCornerShape(16.dp)),
+                    .clip(RoundedCornerShape(16.dp))
+                    .combinedClickable(
+                        onClick = onWeatherClick,
+                        onLongClick = onLongClick,
+                    ),
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
@@ -234,7 +255,12 @@ private fun CombinedGlanceView(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 2.dp),
+                .clip(RoundedCornerShape(10.dp))
+                .combinedClickable(
+                    onClick = onCalendarClick,
+                    onLongClick = onLongClick,
+                )
+                .padding(horizontal = 4.dp, vertical = 4.dp),
         ) {
             Text(
                 text = timeData.dateText,
@@ -438,6 +464,7 @@ private fun HeaderSettingsSheet(
     onModeChange: (HeaderMode) -> Unit,
     onUnitChange: (Boolean) -> Unit,
     onRefreshWeather: () -> Unit,
+    onReplaceWidget: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     ModalBottomSheet(
@@ -457,7 +484,7 @@ private fun HeaderSettingsSheet(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "Home Screen Widget Header",
+                    text = stringResource(R.string.section_smart_header),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -471,9 +498,29 @@ private fun HeaderSettingsSheet(
                 }
             }
 
+            Spacer(Modifier.height(14.dp))
+
+            FilledTonalButton(
+                onClick = onReplaceWidget,
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.home_widget_replace),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+
             Spacer(Modifier.height(16.dp))
             Text(
-                text = "DISPLAY MODE",
+                text = stringResource(R.string.setting_header_mode).uppercase(),
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary,
@@ -483,11 +530,11 @@ private fun HeaderSettingsSheet(
             Spacer(Modifier.height(8.dp))
 
             val modes = listOf(
-                HeaderMode.COMBINED to "Combined (At-a-Glance)",
-                HeaderMode.CLOCK_ONLY to "Clock Focus",
-                HeaderMode.CALENDAR_ONLY to "Calendar Focus",
-                HeaderMode.WEATHER_ONLY to "Weather Focus",
-                HeaderMode.HIDDEN to "Hide Header",
+                HeaderMode.COMBINED to stringResource(R.string.header_mode_combined),
+                HeaderMode.CLOCK_ONLY to stringResource(R.string.header_mode_clock),
+                HeaderMode.CALENDAR_ONLY to stringResource(R.string.header_mode_calendar),
+                HeaderMode.WEATHER_ONLY to stringResource(R.string.header_mode_weather),
+                HeaderMode.HIDDEN to stringResource(R.string.header_mode_hidden),
             )
 
             modes.forEach { (mode, label) ->
@@ -514,7 +561,7 @@ private fun HeaderSettingsSheet(
             Spacer(Modifier.height(20.dp))
 
             Text(
-                text = "TEMPERATURE UNIT",
+                text = stringResource(R.string.setting_temperature_unit).uppercase(),
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary,
@@ -529,14 +576,14 @@ private fun HeaderSettingsSheet(
                     onClick = { onUnitChange(false) },
                     shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
                 ) {
-                    Text("Celsius (°C)")
+                    Text(stringResource(R.string.unit_celsius))
                 }
                 SegmentedButton(
                     selected = config.useFahrenheit,
                     onClick = { onUnitChange(true) },
                     shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
                 ) {
-                    Text("Fahrenheit (°F)")
+                    Text(stringResource(R.string.unit_fahrenheit))
                 }
             }
 
@@ -567,11 +614,13 @@ private fun openClockApp(context: Context) {
     val commonClockPackages = listOf(
         "com.google.android.deskclock",
         "com.android.deskclock",
+        "com.android.alarmclock",
         "com.sec.android.app.clockpackage",
         "com.coloros.alarmclock",
         "com.oppo.alarmclock",
         "com.oneplus.deskclock",
         "com.xiaomi.deskclock",
+        "com.asus.deskclock",
     )
     for (pkg in commonClockPackages) {
         val launchIntent = context.packageManager.getLaunchIntentForPackage(pkg)
@@ -601,6 +650,29 @@ private fun openCalendarApp(context: Context) {
 }
 
 private fun openWeatherApp(context: Context, weather: WeatherData) {
+    val commonWeatherPackages = listOf(
+        "com.miui.weather2",
+        "com.google.android.apps.weather",
+        "com.sec.android.daemonapp",
+        "com.coloros.weather2",
+        "com.oppo.weather",
+        "com.oneplus.weather",
+        "com.huawei.android.totemweather",
+    )
+    for (pkg in commonWeatherPackages) {
+        val launchIntent = context.packageManager.getLaunchIntentForPackage(pkg)
+        if (launchIntent != null) {
+            launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            if (runCatching { context.startActivity(launchIntent) }.isSuccess) return
+        }
+    }
+
+    val categoryIntent = Intent(Intent.ACTION_MAIN).apply {
+        addCategory(Intent.CATEGORY_APP_WEATHER)
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+    if (runCatching { context.startActivity(categoryIntent) }.isSuccess) return
+
     val query = Uri.encode(weather.locationName)
     val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/search?q=weather+$query")).apply {
         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)

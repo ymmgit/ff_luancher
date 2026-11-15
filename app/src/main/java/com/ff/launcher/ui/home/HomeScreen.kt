@@ -1,6 +1,10 @@
 package com.ff.launcher.ui.home
 
+import android.appwidget.AppWidgetManager
+import android.content.Context
 import android.os.Process
+import android.util.Log
+import android.view.ViewGroup
 import androidx.compose.animation.Crossfade
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -25,6 +29,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -32,15 +37,21 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
@@ -60,6 +71,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
@@ -68,6 +80,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import com.ff.launcher.R
 import com.ff.launcher.data.AppInfo
 import com.ff.launcher.data.glance.CalendarState
@@ -75,9 +88,12 @@ import com.ff.launcher.data.glance.HeaderConfig
 import com.ff.launcher.data.glance.HeaderMode
 import com.ff.launcher.data.glance.TimeData
 import com.ff.launcher.data.glance.WeatherData
+import com.ff.launcher.data.db.HOME_WIDGET_SLOT_ID
+import com.ff.launcher.data.db.WidgetSlotEntity
 import com.ff.launcher.ui.theme.TextPrimary
 import com.ff.launcher.ui.theme.TextSecondary
 import com.ff.launcher.viewmodel.HomeListState
+import com.ff.launcher.widget.LauncherAppWidgetHostView
 import com.ff.launcher.viewmodel.HomeRow
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -99,6 +115,7 @@ fun HomeScreen(
     state: HomeListState,
     listState: LazyListState,
     homeResetTrigger: Long = 0L,
+    homeWidgetSlot: WidgetSlotEntity? = null,
     timeData: TimeData = TimeData(),
     calendarState: CalendarState = CalendarState(),
     weatherData: WeatherData = WeatherData(),
@@ -106,6 +123,9 @@ fun HomeScreen(
     onHeaderModeChange: (HeaderMode) -> Unit = {},
     onHeaderUnitChange: (Boolean) -> Unit = {},
     onRefreshWeather: () -> Unit = {},
+    onReplaceHomeWidget: () -> Unit = {},
+    onRestoreDefaultClock: () -> Unit = {},
+    obtainHostView: (Context, Int, Int) -> LauncherAppWidgetHostView? = { _, _, _ -> null },
     onAppClick: (AppInfo) -> Unit,
     onAppLongClick: (AppInfo) -> Unit,
     onOpenDeck: () -> Unit,
@@ -120,6 +140,7 @@ fun HomeScreen(
 
     LaunchedEffect(homeResetTrigger) {
         if (homeResetTrigger > 0L) {
+            Log.d("HomeScreen", "homeResetTrigger fired ($homeResetTrigger) -> folding full list back to favorites")
             collapseJob.value?.cancel()
             collapseJob.value = null
             revealed = false
@@ -192,13 +213,16 @@ fun HomeScreen(
 
     fun scheduleCollapse() {
         collapseJob.value?.cancel()
+        Log.d("HomeScreen", "scheduleCollapse: waiting ${LIST_LINGER_MS}ms before folding")
         collapseJob.value = scope.launch {
             delay(LIST_LINGER_MS)
+            Log.d("HomeScreen", "collapseJob timer expired: revealed -> false")
             revealed = false
         }
     }
 
     fun onScrollerReveal(active: Boolean) {
+        Log.d("HomeScreen", "onScrollerReveal: active=$active, previous revealed=$revealed")
         if (active) {
             collapseJob.value?.cancel()
             collapseJob.value = null
@@ -247,6 +271,22 @@ fun HomeScreen(
                         .nestedScroll(nestedScrollConnection),
                     contentPadding = listContentPadding,
                 ) {
+                    item(key = "home_header_area") {
+                        HomeHeaderArea(
+                            homeWidgetSlot = homeWidgetSlot,
+                            timeData = timeData,
+                            calendarState = calendarState,
+                            weatherData = weatherData,
+                            headerConfig = headerConfig,
+                            onHeaderModeChange = onHeaderModeChange,
+                            onHeaderUnitChange = onHeaderUnitChange,
+                            onRefreshWeather = onRefreshWeather,
+                            onReplaceHomeWidget = onReplaceHomeWidget,
+                            onRestoreDefaultClock = onRestoreDefaultClock,
+                            obtainHostView = obtainHostView,
+                            modifier = Modifier.padding(bottom = 12.dp),
+                        )
+                    }
                     items(
                         items = state.rows,
                         key = ::rowKey,
@@ -305,15 +345,19 @@ fun HomeScreen(
                         .nestedScroll(nestedScrollConnection),
                     contentPadding = listContentPadding,
                 ) {
-                    item(key = "smart_header") {
-                        HomeSmartHeader(
+                    item(key = "home_header_area") {
+                        HomeHeaderArea(
+                            homeWidgetSlot = homeWidgetSlot,
                             timeData = timeData,
                             calendarState = calendarState,
                             weatherData = weatherData,
-                            config = headerConfig,
-                            onModeChange = onHeaderModeChange,
-                            onUnitChange = onHeaderUnitChange,
+                            headerConfig = headerConfig,
+                            onHeaderModeChange = onHeaderModeChange,
+                            onHeaderUnitChange = onHeaderUnitChange,
                             onRefreshWeather = onRefreshWeather,
+                            onReplaceHomeWidget = onReplaceHomeWidget,
+                            onRestoreDefaultClock = onRestoreDefaultClock,
+                            obtainHostView = obtainHostView,
                             modifier = Modifier.padding(bottom = 12.dp),
                         )
                     }
@@ -337,15 +381,19 @@ fun HomeScreen(
                         .nestedScroll(nestedScrollConnection),
                     contentPadding = listContentPadding,
                 ) {
-                    item(key = "smart_header") {
-                        HomeSmartHeader(
+                    item(key = "home_header_area") {
+                        HomeHeaderArea(
+                            homeWidgetSlot = homeWidgetSlot,
                             timeData = timeData,
                             calendarState = calendarState,
                             weatherData = weatherData,
-                            config = headerConfig,
-                            onModeChange = onHeaderModeChange,
-                            onUnitChange = onHeaderUnitChange,
+                            headerConfig = headerConfig,
+                            onHeaderModeChange = onHeaderModeChange,
+                            onHeaderUnitChange = onHeaderUnitChange,
                             onRefreshWeather = onRefreshWeather,
+                            onReplaceHomeWidget = onReplaceHomeWidget,
+                            onRestoreDefaultClock = onRestoreDefaultClock,
+                            obtainHostView = obtainHostView,
                             modifier = Modifier.padding(bottom = 12.dp),
                         )
                     }
@@ -561,4 +609,187 @@ private fun HomeDivider() {
         thickness = 1.dp,
         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
     )
+}
+
+@Composable
+private fun HomeHeaderArea(
+    homeWidgetSlot: WidgetSlotEntity?,
+    timeData: TimeData,
+    calendarState: CalendarState,
+    weatherData: WeatherData,
+    headerConfig: HeaderConfig,
+    onHeaderModeChange: (HeaderMode) -> Unit,
+    onHeaderUnitChange: (Boolean) -> Unit,
+    onRefreshWeather: () -> Unit,
+    onReplaceHomeWidget: () -> Unit,
+    onRestoreDefaultClock: () -> Unit,
+    obtainHostView: (Context, Int, Int) -> LauncherAppWidgetHostView?,
+    modifier: Modifier = Modifier,
+) {
+    val appWidgetId = homeWidgetSlot?.appWidgetId
+    if (appWidgetId != null) {
+        HomeCustomWidgetView(
+            appWidgetId = appWidgetId,
+            obtainHostView = obtainHostView,
+            onReplaceWidget = onReplaceHomeWidget,
+            onRestoreDefaultClock = onRestoreDefaultClock,
+            modifier = modifier,
+        )
+    } else {
+        HomeSmartHeader(
+            timeData = timeData,
+            calendarState = calendarState,
+            weatherData = weatherData,
+            config = headerConfig,
+            onModeChange = onHeaderModeChange,
+            onUnitChange = onHeaderUnitChange,
+            onRefreshWeather = onRefreshWeather,
+            onReplaceWidget = onReplaceHomeWidget,
+            modifier = modifier,
+        )
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun HomeCustomWidgetView(
+    appWidgetId: Int,
+    obtainHostView: (Context, Int, Int) -> LauncherAppWidgetHostView?,
+    onReplaceWidget: () -> Unit,
+    onRestoreDefaultClock: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val context = LocalContext.current
+    val haptics = LocalHapticFeedback.current
+    var showSheet by remember { mutableStateOf(false) }
+
+    val providerAlive = remember(appWidgetId) {
+        AppWidgetManager.getInstance(context).getAppWidgetInfo(appWidgetId) != null
+    }
+
+    LaunchedEffect(appWidgetId, providerAlive) {
+        if (!providerAlive) {
+            onRestoreDefaultClock()
+        }
+    }
+
+    if (!providerAlive) return
+
+    val hostView = remember(appWidgetId) {
+        obtainHostView(context, HOME_WIDGET_SLOT_ID, appWidgetId)
+    }
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 4.dp, vertical = 6.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .combinedClickable(
+                onClick = {},
+                onLongClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    showSheet = true
+                },
+            ),
+    ) {
+        if (hostView != null) {
+            AndroidView(
+                factory = { _ ->
+                    (hostView.parent as? ViewGroup)?.removeView(hostView)
+                    hostView.onLongPress = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        showSheet = true
+                    }
+                    hostView.post {
+                        hostView.updateAppWidgetSizeFromLayout()
+                        hostView.requestLayout()
+                        hostView.invalidate()
+                    }
+                    hostView
+                },
+                update = { view ->
+                    view.onLongPress = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        showSheet = true
+                    }
+                    view.post { view.updateAppWidgetSizeFromLayout() }
+                },
+                onRelease = { view -> view.onLongPress = null },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight(),
+            )
+        }
+    }
+
+    if (showSheet) {
+        HomeWidgetOptionsSheet(
+            onReplace = {
+                showSheet = false
+                onReplaceWidget()
+            },
+            onRestore = {
+                showSheet = false
+                onRestoreDefaultClock()
+            },
+            onDismiss = { showSheet = false },
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun HomeWidgetOptionsSheet(
+    onReplace: () -> Unit,
+    onRestore: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.home_widget_options),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+
+            FilledTonalButton(
+                onClick = onReplace,
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.home_widget_replace),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+
+            OutlinedButton(
+                onClick = onRestore,
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.home_widget_restore),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+        }
+    }
 }

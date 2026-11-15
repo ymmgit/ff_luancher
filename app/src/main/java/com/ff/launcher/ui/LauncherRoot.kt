@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ff.launcher.data.QuickActionType
 import com.ff.launcher.data.TriggerEdgeSide
+import com.ff.launcher.data.db.HOME_WIDGET_SLOT_ID
 import com.ff.launcher.ui.home.AppSearchSheet
 import com.ff.launcher.ui.home.HomeScreen
 import com.ff.launcher.ui.home.ManageFavoritesSheet
@@ -116,6 +117,7 @@ fun LauncherRoot(viewModel: LauncherViewModel) {
     val pickingWidgetSlotId by viewModel.pickingWidgetSlotId.collectAsStateWithLifecycle()
     val homeState by viewModel.homeState.collectAsStateWithLifecycle()
     val widgetSlots by viewModel.widgetSlots.collectAsStateWithLifecycle()
+    val homeWidgetSlot by viewModel.homeWidgetSlot.collectAsStateWithLifecycle()
     val hiddenApps by viewModel.hiddenApps.collectAsStateWithLifecycle()
     val onboardingDone by viewModel.onboardingDone.collectAsStateWithLifecycle()
     val isDefaultLauncher by viewModel.isDefaultLauncher.collectAsStateWithLifecycle()
@@ -192,11 +194,18 @@ fun LauncherRoot(viewModel: LauncherViewModel) {
             cachePurgeJob.value?.cancel()
             cachePurgeJob.value = null
         } else {
-            hostViewCache.values.forEach { it.setLayerType(View.LAYER_TYPE_NONE, null) }
+            hostViewCache.filterKeys { it != HOME_WIDGET_SLOT_ID }.values.forEach {
+                it.setLayerType(View.LAYER_TYPE_NONE, null)
+            }
             cachePurgeJob.value?.cancel()
             cachePurgeJob.value = scope.launch {
                 delay(WIDGET_CACHE_IDLE_MS)
-                hostViewCache.clear()
+                val secondarySlotIds = hostViewCache.keys.filter { it != HOME_WIDGET_SLOT_ID }
+                secondarySlotIds.forEach { slotId ->
+                    hostViewCache.remove(slotId)?.let { v ->
+                        (v.parent as? ViewGroup)?.removeView(v)
+                    }
+                }
             }
         }
     }
@@ -233,6 +242,7 @@ fun LauncherRoot(viewModel: LauncherViewModel) {
                 state = homeState,
                 listState = listState,
                 homeResetTrigger = homeResetTrigger,
+                homeWidgetSlot = homeWidgetSlot,
                 timeData = timeState,
                 calendarState = calendarState,
                 weatherData = weatherState,
@@ -240,6 +250,9 @@ fun LauncherRoot(viewModel: LauncherViewModel) {
                 onHeaderModeChange = viewModel::setHeaderMode,
                 onHeaderUnitChange = viewModel::setHeaderUseFahrenheit,
                 onRefreshWeather = viewModel::refreshWeather,
+                onReplaceHomeWidget = viewModel::replaceHomeWidget,
+                onRestoreDefaultClock = viewModel::restoreDefaultClockWidget,
+                obtainHostView = ::obtainHostView,
                 onAppClick = viewModel::launchApp,
                 onAppLongClick = viewModel::openManageFavorites,
                 onOpenDeck = { viewModel.setSecondScreenOpen(true) },
@@ -278,7 +291,7 @@ fun LauncherRoot(viewModel: LauncherViewModel) {
             },
         ) {
             SecondaryScreen(
-                slots = widgetSlots,
+                slots = widgetSlots.filter { it.slotId != HOME_WIDGET_SLOT_ID },
                 onRequestWidget = viewModel::requestWidgetForSlot,
                 onRemoveWidget = viewModel::removeWidgetFromSlot,
                 onOpenTuning = { viewModel.setTuningSheetOpen(true) },

@@ -21,11 +21,14 @@
     <string name="section_smart_header">Home Screen Header &amp; Widgets</string>
     <string name="smart_header_desc">Display clock, calendar, and weather at the top of your home screen.</string>
     <string name="setting_header_mode">Display Style</string>
-    <string name="header_mode_combined">Combined</string>
+    <string name="header_mode_combined">Combined (Clock, Calendar, Weather)</string>
     <string name="header_mode_clock">Clock</string>
     <string name="header_mode_calendar">Calendar</string>
     <string name="header_mode_weather">Weather</string>
     <string name="header_mode_hidden">Hidden</string>
+    <string name="home_widget_replace">Replace with Widget…</string>
+    <string name="home_widget_restore">Restore Default Clock / Smart Header</string>
+    <string name="home_widget_options">Home Widget Options</string>
     <string name="setting_temperature_unit">Temperature Unit</string>
     <string name="unit_celsius">Celsius (°C)</string>
     <string name="unit_fahrenheit">Fahrenheit (°F)</string>

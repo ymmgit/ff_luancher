@@ -185,7 +185,11 @@ val SLOT_WEIGHT_SMALL = 2f
 val SLOT_WEIGHT_MEDIUM = 3f
 val SLOT_WEIGHT_LARGE = 4f
 
+/** Slot 0 is reserved for the primary Home Screen widget (or default smart clock when null). */
+const val HOME_WIDGET_SLOT_ID = 0
+
 val DEFAULT_WIDGET_SLOTS = listOf(
+    WidgetSlotEntity(slotId = HOME_WIDGET_SLOT_ID, appWidgetId = null, heightWeight = 1f),
     WidgetSlotEntity(slotId = 1, appWidgetId = null, heightWeight = SLOT_WEIGHT_SMALL),
     WidgetSlotEntity(slotId = 2, appWidgetId = null, heightWeight = SLOT_WEIGHT_MEDIUM),
     WidgetSlotEntity(slotId = 3, appWidgetId = null, heightWeight = SLOT_WEIGHT_LARGE),
