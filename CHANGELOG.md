@@ -4,6 +4,16 @@ All notable changes, new features, and bug fixes for FF Launcher.
 
 ---
 
+## [1.2.5] - 2026-11-15
+
+### ⚙️ Standalone Settings Activity & App Drawer Visibility
+- **Dedicated Standalone Activity**: Replaced the in-app bottom sheet (`TriggerTuningSheet`) with a full-fledged [SettingsActivity.kt](file:///d:/myproject/ff_luancher/app/src/main/java/com/ff/launcher/SettingsActivity.kt), backed by a dedicated [SettingsViewModel.kt](file:///d:/myproject/ff_luancher/app/src/main/java/com/ff/launcher/viewmodel/SettingsViewModel.kt) and Material 3 [SettingsScreen.kt](file:///d:/myproject/ff_luancher/app/src/main/java/com/ff/launcher/ui/settings/SettingsScreen.kt).
+- **Recent Apps / Overview Resumption**: Assigned `android:taskAffinity="com.ff.launcher.settings"` and `excludeFromRecents="false"`. Preserved its task in `MainActivity.onResume()` so users can switch back and forth between Settings and other apps/home using the Android Recent Apps carousel.
+- **Drawer Visibility Control**: Kept hidden in FF Launcher's own app drawer via package filtering (`AppRepository.kt`), while registering an intent filter with `ACTION_MAIN` and `CATEGORY_LAUNCHER` (`FF Launcher Settings`) so it surfaces in external launchers when the user switches to another launcher.
+- **TopAppBar & Edge Navigation**: Added a modern Material 3 top app bar with title and back arrow icon, plus native back gesture support and seamless home widget replacement routing.
+
+---
+
 ## [1.2.1] - 2026-11-15
 
 ### 🛡️ Hardening, Performance & QA Polish (Master Plan Milestone M1)

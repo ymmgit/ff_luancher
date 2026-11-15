@@ -1,6 +1,7 @@
 package com.ff.launcher.ui
 
 import android.content.Context
+import android.content.Intent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
@@ -39,8 +40,8 @@ import com.ff.launcher.ui.home.HomeScreen
 import com.ff.launcher.ui.home.ManageFavoritesSheet
 import com.ff.launcher.ui.quickaction.QuickActionButton
 import com.ff.launcher.ui.quickaction.QuickActionPickerSheet
+import com.ff.launcher.SettingsActivity
 import com.ff.launcher.ui.secondary.SecondaryScreen
-import com.ff.launcher.ui.secondary.TriggerTuningSheet
 import com.ff.launcher.ui.secondary.WidgetPickerSheet
 import com.ff.launcher.ui.onboarding.WelcomeOnboardingScreen
 import com.ff.launcher.ui.trigger.EdgeTrigger
@@ -106,7 +107,6 @@ private const val WIDGET_CACHE_IDLE_MS = 5 * 60_000L
 fun LauncherRoot(viewModel: LauncherViewModel) {
     val isSecondScreenOpen by viewModel.isSecondScreenOpen.collectAsStateWithLifecycle()
     val triggerConfig by viewModel.triggerDisplay.collectAsStateWithLifecycle()
-    val isTuningSheetOpen by viewModel.isTuningSheetOpen.collectAsStateWithLifecycle()
     val isArrangeFavoritesOpen by viewModel.isArrangeFavoritesOpen.collectAsStateWithLifecycle()
     val selectedAppForManage by viewModel.selectedAppForManage.collectAsStateWithLifecycle()
     val favoriteAppsList by viewModel.favoriteAppsList.collectAsStateWithLifecycle()
@@ -256,7 +256,9 @@ fun LauncherRoot(viewModel: LauncherViewModel) {
                 onAppClick = viewModel::launchApp,
                 onAppLongClick = viewModel::openManageFavorites,
                 onOpenDeck = { viewModel.setSecondScreenOpen(true) },
-                onOpenSettings = { viewModel.setTuningSheetOpen(true) },
+                onOpenSettings = {
+                    context.startActivity(Intent(context, SettingsActivity::class.java))
+                },
                 onOpenSearch = viewModel::openAppSearch,
             )
         }
@@ -294,7 +296,9 @@ fun LauncherRoot(viewModel: LauncherViewModel) {
                 slots = widgetSlots.filter { it.slotId != HOME_WIDGET_SLOT_ID },
                 onRequestWidget = viewModel::requestWidgetForSlot,
                 onRemoveWidget = viewModel::removeWidgetFromSlot,
-                onOpenTuning = { viewModel.setTuningSheetOpen(true) },
+                onOpenTuning = {
+                    context.startActivity(Intent(context, SettingsActivity::class.java))
+                },
                 onUpdateSlotWeight = viewModel::setSlotHeightWeight,
                 obtainHostView = ::obtainHostView,
                 onDismiss = { viewModel.setSecondScreenOpen(false) },
@@ -355,51 +359,6 @@ fun LauncherRoot(viewModel: LauncherViewModel) {
             )
         }
 
-        // Composed inside BoxWithConstraints so the hand-over geometry (maxHeight) is
-        // available; the sheet renders into its own window either way.
-        if (isTuningSheetOpen) {
-            TriggerTuningSheet(
-                config = triggerConfig,
-                overlapsScroller = overlapsScroller,
-                headerConfig = headerConfig,
-                homeWidgetSlot = homeWidgetSlot,
-                onHeaderModeChange = viewModel::setHeaderMode,
-                onHeaderUnitChange = viewModel::setHeaderUseFahrenheit,
-                onReplaceHomeWidget = viewModel::replaceHomeWidget,
-                onRestoreDefaultHomeWidget = viewModel::restoreDefaultClockWidget,
-                onTriggerEnabledChange = viewModel::setTriggerEnabled,
-                quickActionConfig = quickActionConfig,
-                quickActionTargetApp = quickActionTargetApp,
-                onQuickActionEnabledChange = viewModel::setQuickActionEnabled,
-                onOpenQuickActionPicker = viewModel::openQuickActionPicker,
-                onQuickActionEdgeSideChange = viewModel::setQuickActionEdgeSide,
-                onQuickActionVerticalBiasChange = viewModel::setQuickActionVerticalBias,
-                onQuickActionVerticalBiasPreview = viewModel::previewQuickActionVerticalBias,
-                onQuickActionSizeChange = viewModel::setQuickActionSizeDp,
-                onQuickActionSizePreview = viewModel::previewQuickActionSizeDp,
-                onQuickActionOpacityChange = viewModel::setQuickActionOpacity,
-                onQuickActionOpacityPreview = viewModel::previewQuickActionOpacity,
-                onResetQuickAction = viewModel::resetQuickActionToDefaults,
-                hiddenApps = hiddenApps,
-                isDefaultLauncher = isDefaultLauncher,
-                onRequestDefaultLauncher = {
-                    homeRoleLauncher.launch(viewModel.buildSetDefaultIntent())
-                },
-                onUnhide = viewModel::unhideApp,
-                onDismiss = { viewModel.setTuningSheetOpen(false) },
-                onEdgeSideChange = viewModel::setTriggerEdgeSide,
-                onModeChange = viewModel::setTriggerMode,
-                onVerticalBiasPreview = viewModel::previewTriggerVerticalBias,
-                onVerticalBiasCommit = viewModel::setTriggerVerticalBias,
-                onHeightPreview = viewModel::previewTriggerHeightDp,
-                onHeightCommit = viewModel::setTriggerHeightDp,
-                onWidthPreview = viewModel::previewTriggerWidthDp,
-                onWidthCommit = viewModel::setTriggerWidthDp,
-                onOpacityPreview = viewModel::previewTriggerOpacity,
-                onOpacityCommit = viewModel::setTriggerOpacity,
-            )
-        }
-
         AnimatedVisibility(
             visible = isArrangeFavoritesOpen,
             enter = fadeIn(tween(180)) + slideInVertically(tween(220)) { full -> full / 8 },
@@ -436,7 +395,7 @@ fun LauncherRoot(viewModel: LauncherViewModel) {
                 onAppLongClick = viewModel::openManageFavorites,
                 onOpenSettings = {
                     viewModel.closeAppSearch()
-                    viewModel.setTuningSheetOpen(true)
+                    context.startActivity(Intent(context, SettingsActivity::class.java))
                 },
                 onDismiss = viewModel::closeAppSearch,
             )

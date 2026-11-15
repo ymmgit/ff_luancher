@@ -73,7 +73,8 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private companion object {
+    companion object {
+        const val ACTION_REPLACE_HOME_WIDGET = "com.ff.launcher.action.REPLACE_HOME_WIDGET"
         private const val REQUEST_CONFIGURE_WIDGET = 1001
         private const val REQUEST_BIND_WIDGET = 1002
     }
@@ -81,12 +82,14 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         Log.i("MainActivity", "onResume called")
-        // Ensure this home launcher task is never retained in the recent apps carousel:
+        // Ensure this home launcher task is never retained in the recent apps carousel,
+        // and clean up any transient AppEntryActivity trampoline task, while preserving
+        // the standalone SettingsActivity so the user can switch back to it via Recent Apps:
         val am = getSystemService(ActivityManager::class.java)
         am?.appTasks?.forEach { appTask ->
             val info = runCatching { appTask.taskInfo }.getOrNull()
             if (info != null && info.taskId != taskId) {
-                if (info.baseIntent.component?.className != MainActivity::class.java.name) {
+                if (info.baseIntent.component?.className == AppEntryActivity::class.java.name) {
                     runCatching { appTask.finishAndRemoveTask() }
                 }
             } else {
@@ -127,6 +130,10 @@ class MainActivity : ComponentActivity() {
 
     private fun handleHomeIntent(intent: Intent?) {
         Log.d("MainActivity", "handleHomeIntent: action=${intent?.action}, categories=${intent?.categories}")
+        if (intent?.action == ACTION_REPLACE_HOME_WIDGET) {
+            viewModel.replaceHomeWidget()
+            return
+        }
         if (intent != null &&
             ((intent.action == Intent.ACTION_MAIN && intent.hasCategory(Intent.CATEGORY_HOME)) ||
              intent.hasCategory(Intent.CATEGORY_HOME))

@@ -1,4 +1,4 @@
-package com.ff.launcher.ui.secondary
+package com.ff.launcher.ui.settings
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -6,22 +6,21 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Refresh
-import com.ff.launcher.data.db.WidgetSlotEntity
-import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -30,10 +29,11 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -41,9 +41,11 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -58,88 +60,82 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.ff.launcher.R
-import com.ff.launcher.data.AppInfo
-import com.ff.launcher.data.QuickActionConfig
 import com.ff.launcher.data.QuickActionPreferencesRepository
 import com.ff.launcher.data.QuickActionPreferencesRepository.Companion.SIZE_RANGE_F
 import com.ff.launcher.data.QuickActionType
-import com.ff.launcher.ui.quickaction.QuickActionIcons
-import com.ff.launcher.data.TriggerConfig
 import com.ff.launcher.data.TriggerEdgeSide
 import com.ff.launcher.data.TriggerMode
 import com.ff.launcher.data.TriggerPreferencesRepository
-import com.ff.launcher.data.glance.HeaderConfig
-import com.ff.launcher.data.glance.HeaderMode
 import com.ff.launcher.data.TriggerPreferencesRepository.Companion.HEIGHT_RANGE_F
 import com.ff.launcher.data.TriggerPreferencesRepository.Companion.VERTICAL_BIAS_RANGE
 import com.ff.launcher.data.TriggerPreferencesRepository.Companion.WIDTH_RANGE_F
+import com.ff.launcher.data.glance.HeaderMode
+import com.ff.launcher.ui.quickaction.QuickActionIcons
+import com.ff.launcher.ui.quickaction.QuickActionPickerSheet
 import com.ff.launcher.ui.theme.FavoriteAmber
-import com.ff.launcher.viewmodel.HiddenAppUi
+import com.ff.launcher.viewmodel.SettingsViewModel
 import kotlin.math.roundToInt
 
 /**
- * Modern Google Material 3 Edge Trigger tuning sheet.
+ * Modern Material 3 standalone Settings screen for FF Launcher.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TriggerTuningSheet(
-    config: TriggerConfig,
-    overlapsScroller: Boolean,
-    headerConfig: HeaderConfig = HeaderConfig(),
-    homeWidgetSlot: WidgetSlotEntity? = null,
-    onHeaderModeChange: (HeaderMode) -> Unit = {},
-    onHeaderUnitChange: (Boolean) -> Unit = {},
-    onReplaceHomeWidget: () -> Unit = {},
-    onRestoreDefaultHomeWidget: () -> Unit = {},
-    onTriggerEnabledChange: (Boolean) -> Unit = {},
-    quickActionConfig: QuickActionConfig = QuickActionConfig(),
-    quickActionTargetApp: AppInfo? = null,
-    onQuickActionEnabledChange: (Boolean) -> Unit = {},
-    onOpenQuickActionPicker: () -> Unit = {},
-    onQuickActionEdgeSideChange: (TriggerEdgeSide) -> Unit = {},
-    onQuickActionVerticalBiasChange: (Float) -> Unit = {},
-    onQuickActionVerticalBiasPreview: (Float) -> Unit = {},
-    onQuickActionSizeChange: (Int) -> Unit = {},
-    onQuickActionSizePreview: (Int) -> Unit = {},
-    onQuickActionOpacityChange: (Float) -> Unit = {},
-    onQuickActionOpacityPreview: (Float) -> Unit = {},
-    onResetQuickAction: () -> Unit = {},
-    hiddenApps: List<HiddenAppUi>,
-    isDefaultLauncher: Boolean,
+fun SettingsScreen(
+    viewModel: SettingsViewModel,
+    onBack: () -> Unit,
     onRequestDefaultLauncher: () -> Unit,
-    onUnhide: (String) -> Unit,
-    onDismiss: () -> Unit,
-    onEdgeSideChange: (TriggerEdgeSide) -> Unit,
-    onModeChange: (TriggerMode) -> Unit,
-    onVerticalBiasPreview: (Float) -> Unit,
-    onVerticalBiasCommit: (Float) -> Unit,
-    onHeightPreview: (Int) -> Unit,
-    onHeightCommit: (Int) -> Unit,
-    onWidthPreview: (Int) -> Unit,
-    onWidthCommit: (Int) -> Unit,
-    onOpacityPreview: (Float) -> Unit,
-    onOpacityCommit: (Float) -> Unit,
+    onReplaceHomeWidget: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-        dragHandle = { BottomSheetDefaults.DragHandle() },
-    ) {
+    val triggerConfig by viewModel.triggerConfig.collectAsState()
+    val headerConfig by viewModel.headerConfig.collectAsState()
+    val homeWidgetSlot by viewModel.homeWidgetSlot.collectAsState()
+    val quickActionConfig by viewModel.quickActionConfig.collectAsState()
+    val quickActionTargetApp by viewModel.quickActionTargetApp.collectAsState()
+    val allInstalledApps by viewModel.allInstalledApps.collectAsState()
+    val hiddenApps by viewModel.hiddenApps.collectAsState()
+    val isDefaultLauncher by viewModel.isDefaultLauncher.collectAsState()
+    val isQuickActionPickerOpen by viewModel.isQuickActionPickerOpen.collectAsState()
+
+    val overlapsScroller = triggerConfig.edgeSide == TriggerEdgeSide.RIGHT && triggerConfig.enabled
+
+    Scaffold(
+        modifier = modifier.fillMaxSize(),
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = stringResource(R.string.settings_title),
+                        fontWeight = FontWeight.Bold,
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.a11y_back),
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
+                ),
+            )
+        },
+        containerColor = MaterialTheme.colorScheme.surface,
+    ) { innerPadding ->
         Column(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
+                .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp)
                 .padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Text(
-                text = stringResource(R.string.settings_title),
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
             Text(
                 text = stringResource(R.string.settings_intro),
                 style = MaterialTheme.typography.bodyMedium,
@@ -247,10 +243,7 @@ fun TriggerTuningSheet(
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 ) {
                                     FilledTonalButton(
-                                        onClick = {
-                                            onDismiss()
-                                            onReplaceHomeWidget()
-                                        },
+                                        onClick = onReplaceHomeWidget,
                                         shape = RoundedCornerShape(12.dp),
                                         modifier = Modifier.weight(1f),
                                     ) {
@@ -266,7 +259,7 @@ fun TriggerTuningSheet(
                                     }
 
                                     OutlinedButton(
-                                        onClick = onRestoreDefaultHomeWidget,
+                                        onClick = viewModel::restoreDefaultHomeWidget,
                                         shape = RoundedCornerShape(12.dp),
                                         modifier = Modifier.weight(1f),
                                     ) {
@@ -285,10 +278,7 @@ fun TriggerTuningSheet(
                         }
                     } else {
                         FilledTonalButton(
-                            onClick = {
-                                onDismiss()
-                                onReplaceHomeWidget()
-                            },
+                            onClick = onReplaceHomeWidget,
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.fillMaxWidth(),
                         ) {
@@ -334,7 +324,7 @@ fun TriggerTuningSheet(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(12.dp))
-                                        .clickable { onHeaderModeChange(mode) },
+                                        .clickable { viewModel.setHeaderMode(mode) },
                                 ) {
                                     Row(
                                         modifier = Modifier
@@ -351,7 +341,7 @@ fun TriggerTuningSheet(
                                         )
                                         RadioButton(
                                             selected = selected,
-                                            onClick = { onHeaderModeChange(mode) },
+                                            onClick = { viewModel.setHeaderMode(mode) },
                                         )
                                     }
                                 }
@@ -372,12 +362,12 @@ fun TriggerTuningSheet(
                             SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                                 SegmentedButton(
                                     selected = !headerConfig.useFahrenheit,
-                                    onClick = { onHeaderUnitChange(false) },
+                                    onClick = { viewModel.setHeaderUseFahrenheit(false) },
                                     shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
                                 ) { Text(stringResource(R.string.unit_celsius)) }
                                 SegmentedButton(
                                     selected = headerConfig.useFahrenheit,
-                                    onClick = { onHeaderUnitChange(true) },
+                                    onClick = { viewModel.setHeaderUseFahrenheit(true) },
                                     shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
                                 ) { Text(stringResource(R.string.unit_fahrenheit)) }
                             }
@@ -419,12 +409,12 @@ fun TriggerTuningSheet(
                             )
                         }
                         Switch(
-                            checked = config.enabled,
-                            onCheckedChange = onTriggerEnabledChange,
+                            checked = triggerConfig.enabled,
+                            onCheckedChange = viewModel::setTriggerEnabled,
                         )
                     }
 
-                    if (!config.enabled) {
+                    if (!triggerConfig.enabled) {
                         Text(
                             text = stringResource(R.string.setting_second_screen_hidden_hint),
                             style = MaterialTheme.typography.bodySmall,
@@ -433,7 +423,7 @@ fun TriggerTuningSheet(
                         )
                     }
 
-                    if (config.enabled) {
+                    if (triggerConfig.enabled) {
                         Text(
                             text = stringResource(R.string.setting_edge_side),
                             style = MaterialTheme.typography.labelLarge,
@@ -441,47 +431,43 @@ fun TriggerTuningSheet(
                         )
                         SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                             SegmentedButton(
-                                selected = config.edgeSide == TriggerEdgeSide.LEFT,
-                                onClick = { onEdgeSideChange(TriggerEdgeSide.LEFT) },
+                                selected = triggerConfig.edgeSide == TriggerEdgeSide.LEFT,
+                                onClick = { viewModel.setTriggerEdgeSide(TriggerEdgeSide.LEFT) },
                                 shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
                             ) { Text(stringResource(R.string.edge_left)) }
                             SegmentedButton(
-                                selected = config.edgeSide == TriggerEdgeSide.RIGHT,
-                                onClick = { onEdgeSideChange(TriggerEdgeSide.RIGHT) },
+                                selected = triggerConfig.edgeSide == TriggerEdgeSide.RIGHT,
+                                onClick = { viewModel.setTriggerEdgeSide(TriggerEdgeSide.RIGHT) },
                                 shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
                             ) { Text(stringResource(R.string.edge_right)) }
                         }
 
                         TuningSlider(
                             label = stringResource(R.string.setting_vertical_position),
-                            externalValue = config.verticalBias,
+                            externalValue = triggerConfig.verticalBias,
                             valueText = { stringResource(R.string.value_percent, (it * 100).roundToInt()) },
-                            onPreview = onVerticalBiasPreview,
-                            onCommit = onVerticalBiasCommit,
+                            onCommit = viewModel::setTriggerVerticalBias,
                             valueRange = VERTICAL_BIAS_RANGE,
                         )
                         TuningSlider(
                             label = stringResource(R.string.setting_pill_height),
-                            externalValue = config.heightDp.toFloat(),
+                            externalValue = triggerConfig.heightDp.toFloat(),
                             valueText = { stringResource(R.string.value_dp, it.roundToInt()) },
-                            onPreview = { onHeightPreview(it.roundToInt()) },
-                            onCommit = { onHeightCommit(it.roundToInt()) },
+                            onCommit = { viewModel.setTriggerHeightDp(it.roundToInt()) },
                             valueRange = HEIGHT_RANGE_F,
                         )
                         TuningSlider(
                             label = stringResource(R.string.setting_pill_width),
-                            externalValue = config.widthDp.toFloat(),
+                            externalValue = triggerConfig.widthDp.toFloat(),
                             valueText = { stringResource(R.string.value_dp, it.roundToInt()) },
-                            onPreview = { onWidthPreview(it.roundToInt()) },
-                            onCommit = { onWidthCommit(it.roundToInt()) },
+                            onCommit = { viewModel.setTriggerWidthDp(it.roundToInt()) },
                             valueRange = WIDTH_RANGE_F,
                         )
                         TuningSlider(
                             label = stringResource(R.string.setting_opacity),
-                            externalValue = config.opacity,
+                            externalValue = triggerConfig.opacity,
                             valueText = { stringResource(R.string.value_percent, (it * 100).roundToInt()) },
-                            onPreview = onOpacityPreview,
-                            onCommit = onOpacityCommit,
+                            onCommit = viewModel::setTriggerOpacity,
                             valueRange = TriggerPreferencesRepository.OPACITY_RANGE,
                         )
 
@@ -492,18 +478,18 @@ fun TriggerTuningSheet(
                         )
                         SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                             SegmentedButton(
-                                selected = config.mode == TriggerMode.TAP_ONLY,
-                                onClick = { onModeChange(TriggerMode.TAP_ONLY) },
+                                selected = triggerConfig.mode == TriggerMode.TAP_ONLY,
+                                onClick = { viewModel.setTriggerMode(TriggerMode.TAP_ONLY) },
                                 shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3),
                             ) { Text(stringResource(R.string.mode_tap)) }
                             SegmentedButton(
-                                selected = config.mode == TriggerMode.SWIPE_ONLY,
-                                onClick = { onModeChange(TriggerMode.SWIPE_ONLY) },
+                                selected = triggerConfig.mode == TriggerMode.SWIPE_ONLY,
+                                onClick = { viewModel.setTriggerMode(TriggerMode.SWIPE_ONLY) },
                                 shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3),
                             ) { Text(stringResource(R.string.mode_swipe)) }
                             SegmentedButton(
-                                selected = config.mode == TriggerMode.TAP_AND_SWIPE,
-                                onClick = { onModeChange(TriggerMode.TAP_AND_SWIPE) },
+                                selected = triggerConfig.mode == TriggerMode.TAP_AND_SWIPE,
+                                onClick = { viewModel.setTriggerMode(TriggerMode.TAP_AND_SWIPE) },
                                 shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3),
                             ) { Text(stringResource(R.string.mode_tap_and_swipe)) }
                         }
@@ -545,7 +531,7 @@ fun TriggerTuningSheet(
                         }
                         Switch(
                             checked = quickActionConfig.enabled,
-                            onCheckedChange = onQuickActionEnabledChange,
+                            onCheckedChange = viewModel::setQuickActionEnabled,
                         )
                     }
 
@@ -562,7 +548,7 @@ fun TriggerTuningSheet(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(14.dp))
-                                .clickable(onClick = onOpenQuickActionPicker),
+                                .clickable(onClick = viewModel::openQuickActionPicker),
                         ) {
                             Row(
                                 modifier = Modifier
@@ -602,9 +588,10 @@ fun TriggerTuningSheet(
                                             modifier = Modifier.size(24.dp),
                                         )
                                         QuickActionType.APP -> {
-                                            if (quickActionTargetApp?.icon != null) {
+                                            val targetIcon = quickActionTargetApp?.icon
+                                            if (targetIcon != null) {
                                                 Image(
-                                                    bitmap = quickActionTargetApp.icon.asImageBitmap(),
+                                                    bitmap = targetIcon.asImageBitmap(),
                                                     contentDescription = null,
                                                     modifier = Modifier.size(28.dp),
                                                 )
@@ -638,7 +625,7 @@ fun TriggerTuningSheet(
                                 }
 
                                 FilledTonalButton(
-                                    onClick = onOpenQuickActionPicker,
+                                    onClick = viewModel::openQuickActionPicker,
                                     shape = RoundedCornerShape(10.dp),
                                 ) {
                                     Icon(
@@ -664,12 +651,12 @@ fun TriggerTuningSheet(
                         SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                             SegmentedButton(
                                 selected = quickActionConfig.edgeSide == TriggerEdgeSide.LEFT,
-                                onClick = { onQuickActionEdgeSideChange(TriggerEdgeSide.LEFT) },
+                                onClick = { viewModel.setQuickActionEdgeSide(TriggerEdgeSide.LEFT) },
                                 shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
                             ) { Text(stringResource(R.string.edge_left)) }
                             SegmentedButton(
                                 selected = quickActionConfig.edgeSide == TriggerEdgeSide.RIGHT,
-                                onClick = { onQuickActionEdgeSideChange(TriggerEdgeSide.RIGHT) },
+                                onClick = { viewModel.setQuickActionEdgeSide(TriggerEdgeSide.RIGHT) },
                                 shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
                             ) { Text(stringResource(R.string.edge_right)) }
                         }
@@ -678,8 +665,7 @@ fun TriggerTuningSheet(
                             label = stringResource(R.string.setting_vertical_position),
                             externalValue = quickActionConfig.verticalBias,
                             valueText = { stringResource(R.string.value_percent, (it * 100).roundToInt()) },
-                            onPreview = onQuickActionVerticalBiasPreview,
-                            onCommit = onQuickActionVerticalBiasChange,
+                            onCommit = viewModel::setQuickActionVerticalBias,
                             valueRange = 0.08f..0.92f,
                         )
 
@@ -687,8 +673,7 @@ fun TriggerTuningSheet(
                             label = stringResource(R.string.quick_action_setting_size),
                             externalValue = quickActionConfig.sizeDp.toFloat(),
                             valueText = { stringResource(R.string.value_dp, it.roundToInt()) },
-                            onPreview = { onQuickActionSizePreview(it.roundToInt()) },
-                            onCommit = { onQuickActionSizeChange(it.roundToInt()) },
+                            onCommit = { viewModel.setQuickActionSizeDp(it.roundToInt()) },
                             valueRange = SIZE_RANGE_F,
                         )
 
@@ -696,13 +681,12 @@ fun TriggerTuningSheet(
                             label = stringResource(R.string.quick_action_setting_opacity),
                             externalValue = quickActionConfig.opacity,
                             valueText = { stringResource(R.string.value_percent, (it * 100).roundToInt()) },
-                            onPreview = onQuickActionOpacityPreview,
-                            onCommit = onQuickActionOpacityChange,
+                            onCommit = viewModel::setQuickActionOpacity,
                             valueRange = QuickActionPreferencesRepository.OPACITY_RANGE,
                         )
 
                         OutlinedButton(
-                            onClick = onResetQuickAction,
+                            onClick = viewModel::resetQuickActionToDefaults,
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.align(Alignment.End),
                         ) {
@@ -758,7 +742,7 @@ fun TriggerTuningSheet(
                                     modifier = Modifier.weight(1f),
                                 )
                                 FilledTonalButton(
-                                    onClick = { onUnhide(hidden.componentKey) },
+                                    onClick = { viewModel.unhideApp(hidden.componentKey) },
                                     shape = RoundedCornerShape(10.dp),
                                 ) {
                                     Text(
@@ -774,6 +758,15 @@ fun TriggerTuningSheet(
             }
         }
     }
+
+    if (isQuickActionPickerOpen) {
+        QuickActionPickerSheet(
+            config = quickActionConfig,
+            allApps = allInstalledApps,
+            onSelectAction = viewModel::setQuickAction,
+            onDismiss = viewModel::closeQuickActionPicker,
+        )
+    }
 }
 
 @Composable
@@ -781,7 +774,6 @@ private fun TuningSlider(
     label: String,
     externalValue: Float,
     valueText: @Composable (Float) -> String,
-    onPreview: (Float) -> Unit,
     onCommit: (Float) -> Unit,
     valueRange: ClosedFloatingPointRange<Float>,
 ) {
@@ -814,7 +806,6 @@ private fun TuningSlider(
             onValueChange = {
                 isDragging = true
                 localValue = it
-                onPreview(it)
             },
             onValueChangeFinished = {
                 isDragging = false
